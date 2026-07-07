@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Ricerca personaggi — sprite autentici di Hawkthorne</title>
+<style>
+  body{margin:0;background:#0d0d14;color:#e8e8f0;font-family:"Courier New",monospace;padding:30px 20px 80px;display:flex;flex-direction:column;align-items:center}
+  h1{color:#f5d442;font-size:24px;margin:4px 0}
+  .sub{color:#9a9ab8;font-size:13px;margin-bottom:26px;text-align:center;max-width:900px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1000px}
+  .card{background:#151522;border:2px solid #2a2a3a;border-radius:6px;padding:14px;text-align:center}
+  .card h3{color:#5ae87a;font-size:15px;margin:2px 0 8px}
+  canvas{image-rendering:pixelated}
+  .big{background:#1c1c2e;border-radius:4px}
+  .strip{margin-top:8px;background:#10101c;border-radius:4px}
+  .lbl{color:#6a6a88;font-size:10px;margin-top:4px;letter-spacing:1px}
+  .note{max-width:900px;color:#9a9ab8;font-size:13px;margin-top:30px;line-height:1.6;background:#151522;border:2px solid #2a2a3a;border-radius:6px;padding:16px 20px}
+  .note b{color:#f5d442}
+</style>
+</head>
+<body>
+<h1>RICERCA PERSONAGGI — SPRITE AUTENTICI</h1>
+<div class="sub">Sprite sheet originali di <b>Project Hawkthorne</b> (il gioco open-source creato dai fan ricalcando la puntata 3×20).<br>
+Ogni personaggio: camminata animata (grande) + idle · salto · attacco · KO (striscia sotto).</div>
+<div class="grid" id="grid"></div>
+<div class="note">
+  <b>Fonte:</b> github.com/hawkthorne/hawkthorne-journey — 576×768 px per sheet, griglia 12×16 di frame 48×48,
+  con la mappa ufficiale delle animazioni del progetto (idle, walk, jump, attack, dead, dance, crawl, swim…).<br>
+  <b>Bonus disponibili nello stesso archivio:</b> decine di costumi alternativi per ogni personaggio
+  (Batman e Christmas per Abed, paintball, alieno…), altri personaggi di Greendale (Chang, il Dean, Leonard,
+  Fat Neil, Duncan, Vaughn, Vicki…) e i tileset degli ambienti.
+</div>
+<script>
+'use strict';
+const CHARS = ['jeff','britta','abed','troy','annie','shirley','pierce','gilbert'];
+const F = 48;
+// mappa ufficiale (col,row 1-indexed, direzione destra)
+const ANIM = {
+  walk:  [[2,2],[3,2],[4,2],[3,2]],
+  idle:  [[1,2]],
+  jump:  [[1,4]],
+  attack:[[1,10],[5,10]],
+  dead:  [[6,4]],
+};
+function frame(ctx, img, cr, dx, dy, s){
+  ctx.drawImage(img, (cr[0]-1)*F, (cr[1]-1)*F, F, F, dx, dy, F*s, F*s);
+}
+const grid = document.getElementById('grid');
+for (const name of CHARS){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = '<h3>' + name.toUpperCase() + '</h3>' +
+    '<canvas class="big" width="192" height="192"></canvas>' +
+    '<div class="lbl">CAMMINATA</div>' +
+    '<canvas class="strip" width="200" height="52"></canvas>' +
+    '<div class="lbl">IDLE · SALTO · ATTACCO ·  KO</div>';
+  grid.appendChild(card);
+  const big = card.querySelectorAll('canvas')[0].getContext('2d');
+  const strip = card.querySelectorAll('canvas')[1].getContext('2d');
+  big.imageSmoothingEnabled = false; strip.imageSmoothingEnabled = false;
+  const img = new Image();
+  img.src = 'assets/characters/' + name + '.png';
+  img.onload = () => {
+    [ANIM.idle[0], ANIM.jump[0], ANIM.attack[1], ANIM.dead[0]].forEach((cr,i)=>{
+      frame(strip, img, cr, 2 + i*50, 2, 1);
+    });
+    let t = 0;
+    setInterval(()=>{
+      big.clearRect(0,0,192,192);
+      frame(big, img, ANIM.walk[t % 4], 0, 0, 4);
+      t++;
+    }, 160);
+  };
+}
+</script>
+</body>
+</html>

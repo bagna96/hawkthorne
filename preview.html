@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Hawkthorne v3 — Anteprima personaggi e ambientazioni</title>
+<style>
+  body{margin:0;background:#0d0d14;color:#e8e8f0;font-family:"Courier New",monospace;display:flex;flex-direction:column;align-items:center;padding:30px 0 80px}
+  h1{color:#f5d442;font-size:26px;margin:6px 0 2px}
+  h2{color:#5ae87a;font-size:17px;margin:34px 0 10px;border-bottom:2px solid #2a2a3a;padding-bottom:6px;width:940px;text-align:left}
+  p{width:940px;color:#9a9ab8;font-size:13px;margin:4px 0}
+  canvas{image-rendering:pixelated;background:#151522;border:2px solid #2a2a3a;border-radius:4px;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>JOURNEY TO THE CENTER OF HAWKTHORNE — v3</h1>
+<p style="text-align:center">Anteprima per approvazione: sprite in stile "testone" fedele agli avatar della puntata 3×20.</p>
+
+<h2>1 · IL GRUPPO DI STUDIO (giocabili)</h2>
+<canvas id="cast" width="960" height="620"></canvas>
+
+<h2>2 · PERSONAGGI DELLA PUNTATA (NPC)</h2>
+<canvas id="npc" width="960" height="330"></canvas>
+
+<h2>3 · SPAWN — SALA D'ATTESA HAWTHORNE (hub del gioco)</h2>
+<p>Ricostruzione del primo screenshot: muro di lamiera, rete metallica, sedie da sala d'attesa, moquette blu, freccia-portale verde.</p>
+<canvas id="hub" width="960" height="300"></canvas>
+
+<h2>4 · GLI ALTRI MONDI (bozza direzione artistica)</h2>
+<canvas id="worlds" width="960" height="200"></canvas>
+
+<script>
+'use strict';
+let ctx, ox, oy, u;
+function px(c){ ctx.fillStyle = c; }
+function r(x, y, w, h){ ctx.fillRect(ox + x*u, oy + y*u, w*u, h*u); }
+
+// ============ AVATAR CHIBI (griglia 26x36) ============
+const PAINT = {
+jeff(){
+  px('#2e4a6e'); r(5,20,2,8); r(19,20,2,8); r(7,20,12,9);      // maniche+maglia navy
+  px('#243a58'); r(7,20,12,2);                                  // colletto
+  px('#e8e8e8'); r(12,23,1,1); r(12,25,1,1);                    // bottoni henley
+  px('#f0c8a0'); r(5,28,2,2); r(19,28,2,2);                     // mani
+  px('#5a5248'); r(8,29,4,5); r(14,29,4,5);                     // pantaloni
+  px('#4a3428'); r(8,34,4,2); r(14,34,4,2);                     // scarpe
+  px('#f0c8a0'); r(6,4,14,16);                                  // faccia
+  px('#b87838'); r(5,1,16,4); r(4,3,3,6); r(19,3,3,8);          // capelli
+  r(8,-1,10,3); r(13,-3,7,4);                                   // ciuffo alto pettinato
+  px('#1a1a24'); r(9,10,2,2); r(15,10,2,2);                     // occhi
+  px('#c89078'); r(12,13,2,2);                                  // naso
+  px('#8a5a48'); r(10,16,5,1); r(15,15,1,1);                    // smirk
+},
+britta(){
+  px('#7a3a8a'); r(5,20,2,8); r(19,20,2,8); r(7,20,12,9);       // top viola
+  px('#f8c8c0'); r(5,28,2,2); r(19,28,2,2);
+  px('#6a6a72'); r(8,29,4,5); r(14,29,4,5);                     // pantaloni grigi
+  px('#2a2a32'); r(8,34,4,2); r(14,34,4,2);
+  px('#f8c8c0'); r(6,4,14,15);                                  // faccia rosa
+  px('#e8c84a'); r(4,0,18,5); r(3,4,3,17); r(20,4,3,17);        // capelli lunghi
+  px('#f8ecb0'); r(5,6,1,13); r(21,6,1,13); r(9,1,3,2); r(15,1,2,1); // ciocche chiare
+  px('#1a1a24'); r(9,10,2,3); r(15,10,2,3);
+  px('#d89090'); r(12,13,2,1);
+  px('#b05a5a'); r(11,16,4,1);
+},
+abed(){
+  px('#2ab8a8'); r(4,20,2,8); r(20,20,2,8); r(6,20,14,10);      // cardigan teal
+  px('#8a8a92'); r(11,21,4,9);                                  // maglia grigia (zip aperta)
+  px('#1a7a6e'); r(6,20,2,10); r(18,20,2,10);                   // bordi cardigan
+  px('#e8b830'); r(4,28,2,2); r(20,28,2,2);                     // mani gialle
+  px('#3a4a6a'); r(8,30,4,4); r(14,30,4,4);                     // jeans
+  px('#d83a2a'); r(8,34,4,1); r(14,34,4,1);                     // sneakers rosse
+  px('#ffffff'); r(8,35,4,1); r(14,35,4,1);                     // suola
+  px('#e8b830'); r(7,2,12,19);                                  // faccia LUNGA gialla
+  px('#16100c'); r(6,0,14,4); r(6,4,2,9); r(18,4,2,9); r(8,4,10,2); // casco di capelli
+  px('#1a1a24'); r(9,12,3,1); r(15,12,3,1);                     // occhi assonnati
+  px('#c89818'); r(12,12,2,5);                                  // naso lungo (Moai)
+  px('#8a6a10'); r(11,19,4,1);                                  // bocca piccola
+},
+troy(){
+  px('#8a8a92'); r(4,20,2,8); r(20,20,2,8); r(6,20,14,10);      // hoodie grigio
+  px('#6e6e78'); r(7,19,12,2);                                  // cappuccio dietro il collo
+  px('#ffffff'); r(11,22,1,3); r(14,22,1,3);                    // lacci
+  px('#9c6238'); r(4,28,2,2); r(20,28,2,2);
+  px('#2e3a5e'); r(8,30,4,4); r(14,30,4,4);                     // pantaloni
+  px('#ffffff'); r(8,34,4,2); r(14,34,4,2);                     // sneakers bianche
+  px('#9c6238'); r(6,4,14,15);                                  // faccia rotonda
+  px('#16100c'); r(5,1,16,5); r(4,4,2,5); r(20,4,2,5);          // capelli corti rotondi
+  px('#1a1a24'); r(9,10,2,2); r(15,10,2,2);
+  px('#7a4828'); r(12,12,2,1);
+  px('#1a1a24'); r(8,13,10,1);                                  // contorno sorriso
+  px('#ffffff'); r(9,14,8,2);                                   // SORRISONE
+},
+annie(){
+  px('#ffffff'); r(5,20,2,7); r(19,20,2,7);                     // maniche camicetta
+  px('#2e3050'); r(7,20,12,8);                                  // scamiciato scuro
+  px('#ffffff'); r(10,20,6,3);                                  // colletto
+  px('#f8f0ea'); r(5,27,2,2); r(19,27,2,2);
+  px('#2e3050'); r(6,28,14,4);                                  // gonna svasata
+  px('#f8f0ea'); r(9,32,3,2); r(14,32,3,2);                     // gambe pallide
+  px('#2a1a12'); r(8,34,4,2); r(14,34,4,2);
+  px('#f8f0ea'); r(6,3,14,16);                                  // faccia pallidissima
+  px('#3a2418'); r(5,0,16,4); r(4,2,2,7);                       // capelli
+  r(19,1,6,10); r(20,11,4,5);                                   // coda laterale
+  px('#d86a8a'); r(18,1,3,2);                                   // fiocco rosa
+  px('#1a1a24'); r(8,9,3,4); r(14,9,3,4);                       // occhioni
+  px('#ffffff'); r(9,10,1,1); r(15,10,1,1);                     // riflesso
+  px('#e8b8b8'); r(6,13,2,1); r(17,13,2,1);                     // guanciotte
+  px('#c85a5a'); r(11,15,3,1);
+},
+shirley(){
+  px('#5a2a6a'); r(4,22,2,7); r(20,22,2,7); r(6,22,14,8);       // top viola
+  px('#9a5ab8'); r(6,22,3,2); r(9,24,3,2); r(12,26,3,2); r(15,28,3,2); // fascia drappeggio
+  px('#6a4028'); r(4,29,2,2); r(20,29,2,2);
+  px('#3a2440'); r(6,30,14,3);                                  // gonna
+  px('#6a4028'); r(9,33,3,2); r(14,33,3,2);
+  px('#2a1a12'); r(8,35,4,1); r(14,35,4,1);
+  px('#6a4028'); r(6,6,14,14);                                  // faccia
+  px('#1a1210'); r(3,1,20,7); r(2,5,4,9); r(20,5,4,9);          // chioma grande
+  px('#1a1a24'); r(9,12,2,2); r(15,12,2,2);
+  px('#4a2a18'); r(12,15,2,1);
+  px('#c86a6a'); r(11,17,4,1);                                  // sorriso gentile
+},
+pierce(){
+  px('#7a2828'); r(3,19,2,8); r(21,19,2,8); r(5,19,16,11);      // cardigan bordeaux
+  px('#5a1c1c'); r(5,19,16,2); r(12,21,2,9);                    // colletto + abbottonatura
+  px('#e8c8a8'); r(3,27,2,2); r(21,27,2,2);
+  px('#55555f'); r(7,30,5,4); r(14,30,5,4);
+  px('#3a2a20'); r(7,34,5,2); r(14,34,5,2);
+  px('#e8c8a8'); r(6,3,14,16);                                  // faccia
+  px('#d8d8d8'); r(4,7,3,7); r(19,7,3,7); r(8,1,3,2); r(15,0,2,2); // ciuffi bianchi
+  px('#1a1a24'); r(8,8,4,4); r(14,8,4,4); r(12,9,2,1);          // montatura occhiali
+  px('#ffffff'); r(9,9,2,2); r(15,9,2,2);                       // lenti
+  px('#1a1a24'); r(10,10,1,1); r(16,10,1,1);                    // pupille
+  px('#c8a080'); r(12,13,2,2);
+  px('#5a3a2a'); r(10,16,6,1); r(9,17,1,1); r(16,17,1,1);       // broncio (angoli in giù)
+},
+gilbert(){
+  px('#26262e'); r(5,20,2,8) ; r(19,20,2,8); r(7,20,12,9);      // completo scuro
+  px('#ffffff'); r(10,20,6,7);                                  // camicia
+  px('#26262e'); r(9,20,2,9); r(15,20,2,9);                     // gilet
+  px('#8c2e2e'); r(12,20,2,6);                                  // cravatta
+  px('#8a5a3a'); r(5,28,2,2); r(19,28,2,2);
+  px('#26262e'); r(8,29,4,5); r(14,29,4,5); r(8,34,4,2); r(14,34,4,2);
+  px('#8a5a3a'); r(6,4,14,16);                                  // faccia
+  px('#16100c'); r(5,1,16,4); r(4,3,2,5); r(20,3,2,5);
+  px('#1a1a24'); r(9,10,2,2); r(15,10,2,2);
+  px('#6a4028'); r(12,13,2,2);
+  px('#4a2a18'); r(10,16,6,1);                                  // serio
+},
+hilda(){
+  px('#e8e0d0'); r(5,20,2,7); r(19,20,2,7);                     // maniche
+  px('#4a7a3a'); r(7,20,12,9);                                  // vestito verde
+  px('#e8e0d0'); r(9,23,8,7);                                   // grembiule
+  px('#f0c8a0'); r(5,27,2,2); r(19,27,2,2);
+  px('#4a7a3a'); r(6,29,14,3);                                  // gonna
+  px('#f0c8a0'); r(9,32,3,2); r(14,32,3,2);
+  px('#5a3a20'); r(8,34,4,2); r(14,34,4,2);
+  px('#f0c8a0'); r(6,3,14,16);
+  px('#e8c84a'); r(5,0,16,4); r(4,3,3,5); r(19,3,3,5);
+  r(3,8,3,12); r(20,8,3,12);                                    // TRECCE
+  px('#c9a227'); r(3,11,3,1); r(20,11,3,1); r(3,15,3,1); r(20,15,3,1); // legature
+  px('#1a1a24'); r(9,10,2,3); r(15,10,2,3);
+  px('#c85a5a'); r(11,15,4,1);
+},
+cornelius(){
+  px('#5c1f1f'); r(3,19,2,8); r(21,19,2,8); r(5,19,16,11);      // giacca da camera
+  px('#8a6a3a'); r(5,19,16,2); r(12,21,1,9);                    // bordi dorati
+  px('#e8d8b0'); r(10,21,6,4);                                  // foulard
+  px('#d8c0a8'); r(3,27,2,2); r(21,27,2,2);
+  px('#26262e'); r(7,30,5,4); r(14,30,5,4); r(7,34,5,2); r(14,34,5,2);
+  px('#d8c0a8'); r(6,3,14,16);
+  px('#e8e8e8'); r(4,6,3,8); r(19,6,3,8);                       // capelli bianchi lati
+  px('#1a1a24'); r(8,9,3,2); r(15,9,3,2); r(7,8,4,1); r(15,8,4,1); // occhi severi + sopracciglia
+  px('#c8a080'); r(12,12,2,2);
+  px('#e8e8e8'); r(9,14,8,2);                                   // BAFFONI bianchi
+  px('#5a3a2a'); r(11,17,4,1);
+},
+baby(){
+  px('#e8e8e8'); r(8,26,10,7);                                  // pigiamino
+  px('#f0c8a0'); r(14,22,8,8);                                  // testa
+  px('#e8cc55'); r(15,21,5,2);                                  // ciuffo biondo
+  px('#1a1a24'); r(19,25,1,1);
+  px('#f0c8a0'); r(6,28,3,3); r(16,31,3,3);                     // manine/gambe gattonando
+},
+};
+function avatar(id, x, y, scale){ ox = x; oy = y; u = scale; PAINT[id](); }
+function label(t, x, y, c){
+  ctx.fillStyle = c || '#f5d442'; ctx.font = 'bold 15px "Courier New",monospace';
+  ctx.textAlign = 'center'; ctx.fillText(t, x, y); ctx.textAlign = 'left';
+}
+
+// ============ 1 · CAST ============
+ctx = document.getElementById('cast').getContext('2d');
+const row1 = [['jeff','JEFF'],['britta','BRITTA'],['abed','ABED'],['troy','TROY']];
+const row2 = [['annie','ANNIE'],['shirley','SHIRLEY'],['pierce','PIERCE']];
+row1.forEach((c,i)=>{ const x = 60 + i*225; avatar(c[0], x, 40, 6); label(c[1], x+78, 290); });
+row2.forEach((c,i)=>{ const x = 170 + i*225; avatar(c[0], x, 340, 6); label(c[1], x+78, 590); });
+
+// ============ 2 · NPC ============
+ctx = document.getElementById('npc').getContext('2d');
+[['gilbert','GILBERT LAWSON'],['hilda','HILDA'],['cornelius','CORNELIUS'],['baby','ESERCITO DI BAMBINI']].forEach((c,i)=>{
+  const x = 80 + i*225; avatar(c[0], x, 40, 5); label(c[1], x+65, 280, '#8ae8e8');
+});
+
+// ============ 3 · HUB (spawn della puntata) ============
+ctx = document.getElementById('hub').getContext('2d');
+(function(){
+  const S = 2; // scala scena
+  function sr(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x*S, y*S, w*S, h*S); }
+  // muro di lamiera ondulata
+  sr(0,0,480,58,'#74747c');
+  for (let y = 4; y < 54; y += 8){ sr(0,y,480,3,'#8a8a92'); sr(0,y+3,480,2,'#5e5e66'); }
+  sr(0,0,480,2,'#4a4a52');
+  // rete metallica
+  sr(0,58,480,46,'#5a5a62');
+  ctx.strokeStyle = '#9a9aa2'; ctx.lineWidth = 1.5;
+  for (let x = -46; x < 480; x += 12){
+    ctx.beginPath(); ctx.moveTo(x*S, 58*S); ctx.lineTo((x+46)*S, 104*S); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo((x+46)*S, 58*S); ctx.lineTo(x*S, 104*S); ctx.stroke();
+  }
+  for (let x = 0; x <= 480; x += 96) sr(x-2,58,4,46,'#3a3a42');
+  sr(0,58,480,2,'#3a3a42');
+  // moquette blu
+  sr(0,104,480,46,'#4a66c8');
+  sr(0,104,480,4,'#2e4494');
+  for (let i = 0; i < 60; i++) sr((i*37)%480, 112 + (i*13)%34, 2, 1, '#3a54ae');
+  // sedie da sala d'attesa (dietro i personaggi)
+  for (let i = 0; i < 4; i++){
+    const cx = 120 + i*76;
+    sr(cx,66,26,5,'#c86a5e');  sr(cx,71,4,20,'#b05648');       // schienale
+    sr(cx,88,30,6,'#d87868');  sr(cx+2,94,3,10,'#4a3a34'); sr(cx+25,94,3,10,'#4a3a34'); // seduta+gambe
+  }
+  // portale freccia verde
+  const ax = 440, ay = 42;
+  ctx.fillStyle = '#2ee89a';
+  ctx.beginPath(); ctx.moveTo(ax*S,(ay+14)*S); ctx.lineTo((ax+11)*S,ay*S); ctx.lineTo((ax+22)*S,(ay+14)*S); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(ax*S,(ay+26)*S); ctx.lineTo((ax+11)*S,(ay+12)*S); ctx.lineTo((ax+22)*S,(ay+26)*S); ctx.fill();
+  ctx.fillStyle = '#b8ffe0'; ctx.fillRect((ax+9)*S,(ay+4)*S,4*S,4*S);
+  sr(ax+3,70,16,34,'#62626a'); sr(ax+3,70,16,3,'#7e7e86');     // piedistallo
+})();
+// il gruppo in fila come nello screenshot della puntata
+const lineup = ['pierce','jeff','annie','troy','britta','abed','shirley'];
+lineup.forEach((id,i)=>{ avatar(id, 60 + i*112, 152 - 36*2.6 + 92, 2.6); });
+label('SPAWN — tutti e 7 materializzati davanti alle sedie, portale a destra', 480, 292, '#9a9ab8');
+
+// ============ 4 · MONDI ============
+ctx = document.getElementById('worlds').getContext('2d');
+(function(){
+  function panel(x0, sky1, sky2, name, paint){
+    const g = ctx.createLinearGradient(0,0,0,160);
+    g.addColorStop(0,sky1); g.addColorStop(1,sky2);
+    ctx.fillStyle = g; ctx.fillRect(x0,10,300,150);
+    paint(x0);
+    label(name, x0+150, 185, '#5ae87a');
+  }
+  panel(10,'#e8935a','#f5c98e','VILLAGGIO + FORGIA', x=>{
+    ctx.fillStyle='#3aa84a'; ctx.fillRect(x,140,300,20);
+    ctx.fillStyle='#d8c8a8'; ctx.fillRect(x+30,100,60,40);          // capanna
+    ctx.fillStyle='#8c4a2e'; ctx.beginPath();
+    ctx.moveTo(x+20,100); ctx.lineTo(x+60,72); ctx.lineTo(x+100,100); ctx.fill();
+    ctx.fillStyle='#6b4a2e'; ctx.fillRect(x+52,118,16,22);
+    ctx.fillStyle='#585862'; ctx.fillRect(x+150,124,40,10);          // incudine
+    ctx.fillStyle='#f5822a'; ctx.fillRect(x+154,116,32,8);           // fuoco forgia
+    ctx.fillStyle='#f5d442'; ctx.fillRect(x+162,110,10,6);
+    ctx.fillStyle='#6a6a72'; ctx.fillRect(x+220,90,50,50);           // bottega pietra
+    ctx.fillStyle='#f5d442'; ctx.fillRect(x+236,100,18,12);          // insegna
+  });
+  panel(320,'#12101e','#1c1830','CAVERNE + LAVA', x=>{
+    ctx.fillStyle='#3a3a44'; ctx.fillRect(x,130,300,30);
+    ctx.fillStyle='#d83a1e'; ctx.fillRect(x+110,140,80,20);          // lava
+    ctx.fillStyle='#f5822a'; ctx.fillRect(x+110,138,80,5);
+    ctx.fillStyle='#5ae8e8';                                          // cristalli
+    ctx.beginPath(); ctx.moveTo(x+50,140); ctx.lineTo(x+60,105); ctx.lineTo(x+70,140); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x+230,140); ctx.lineTo(x+244,95); ctx.lineTo(x+256,140); ctx.fill();
+    ctx.fillStyle='#6e6e7a';                                          // stalattiti
+    for(let i=0;i<6;i++){ ctx.beginPath(); ctx.moveTo(x+20+i*48,10); ctx.lineTo(x+34+i*48,10); ctx.lineTo(x+27+i*48,34+(i%3)*10); ctx.fill(); }
+  });
+  panel(640,'#1a0f26','#33184a','SALA DEL TRONO', x=>{
+    ctx.fillStyle='rgba(120,80,160,0.3)';
+    for(let i=0;i<4;i++) ctx.fillRect(x+30+i*70,10,16,150);
+    ctx.fillStyle='#3a2450'; ctx.fillRect(x+110,60,80,100);          // trono
+    ctx.fillStyle='#f5d442'; ctx.fillRect(x+116,66,68,8);
+    ctx.fillRect(x+116,66,8,94); ctx.fillRect(x+176,66,8,94);
+    ctx.fillRect(x+128,48,6,18); ctx.fillRect(x+147,42,6,24); ctx.fillRect(x+166,48,6,18);
+    ctx.fillStyle='#5c1f1f'; ctx.fillRect(x+126,78,48,82);
+    ctx.fillStyle='#4a66c8'; ctx.fillRect(x,150,300,10);
+  });
+})();
+</script>
+</body>
+</html>
