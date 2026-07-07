@@ -152,15 +152,9 @@ oggetti rubati), statua Luis Guzmán (easter egg, sheet `guzman` nel repo),
    via canvas, nemici = studenti coi costumi `paintball` già scaricati.
 3. **DREAMATORIUM** — astratto, griglie/ologrammi procedurali, gravità
    variabile a zone. Arena di Abed-Oscuro.
-4. **DARKEST TIMELINE remix** — non un mondo nuovo: pipeline che re-istanzia
-   mondi esistenti con palette invertita, nemici potenziati, spawn remixati.
-   Costo asset zero, contenuto raddoppiato.
-5. **LAGO DI GIN 2.0** — upgrade, non nuovo: nuoto (anim swim/swimwalk della
-   mappa ufficiale), ubriachezza (controlli invertiti dopo 5s immerso),
-   mini-boss betafish gigante.
-Mini-boss per mondi esistenti (sheet in `src/images/enemies/`): betafish
-(lago), icebat regina+sciami (caverne), turkey/"Fabbro fantasma" (villaggio),
-jumpingacorn mid-boss (radura).
+4. ~~Darkest remix~~ → assorbito in S3c. ~~Lago 2.0~~ → ✅ fatto in S2.
+Mini-boss restanti: turkey/"Fabbro fantasma" (villaggio), jumpingacorn
+mid-boss (radura). Betafish e icebat: ✅ fatti (registro MBOSSES).
 
 ## §POTERI E SISTEMI
 - **Super combinati co-op** (entrambi 100%, premuti insieme): matrice
