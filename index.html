@@ -11,6 +11,7 @@
 </head>
 <body>
 <canvas id="game" width="960" height="540"></canvas>
+<script src="assets.js"></script>
 <script>
 'use strict';
 // ============================================================
@@ -95,13 +96,16 @@ function isUnlocked(c){ return c.cost === 0 || SAVE.chars[c.id] || (c.id === 'gi
 
 // ------------------------------------------------ ASSETS
 const IMGS = {};
+const ASSET_FAIL = [];
 let assetsTotal = 0, assetsDone = 0;
 function loadImg(key, path){
   assetsTotal++;
   const im = new Image();
   im.onload = () => assetsDone++;
-  im.onerror = () => assetsDone++;
-  im.src = path;
+  im.onerror = () => { assetsDone++; ASSET_FAIL.push(key); };
+  // preferisci gli asset incorporati (base64): funzionano ovunque, anche da file://
+  const emb = window.HAWK_ASSETS && window.HAWK_ASSETS[key];
+  im.src = emb || path;
   IMGS[key] = im;
 }
 for (const c of CHARS) loadImg(c.id, 'assets/characters/' + c.id + '.png');
@@ -110,6 +114,10 @@ for (const id of ['jeff','britta','abed','troy','annie','shirley','pierce','gilb
 loadImg('npc_hilda', 'assets/npc/hilda.png');
 loadImg('npc_baby', 'assets/npc/babyabed.png');
 loadImg('npc_monkey', 'assets/npc/anniesboobs.png');
+loadImg('en_acorn', 'assets/enemies/acorn.png');
+loadImg('en_hippy', 'assets/enemies/hippy.png');
+loadImg('en_bat', 'assets/enemies/bat.png');
+loadImg('boss_cornelius', 'assets/enemies/cornelius.png');
 function ready(){ return assetsDone >= assetsTotal; }
 
 // ------------------------------------------------ ANIMAZIONI (mappa ufficiale Project Hawkthorne)
@@ -129,7 +137,13 @@ const ANIM = {
 };
 function drawActor(sheetKey, anim, t, x, y, dir, s){
   const img = IMGS[sheetKey];
-  if (!img || !img.complete || !img.naturalWidth) return;
+  if (!img || !img.complete || !img.naturalWidth){
+    // fallback d'emergenza: mai personaggi invisibili
+    ctx.fillStyle = '#e8b088'; ctx.fillRect(Math.round(x) + 14*s, Math.round(y) + 6*s, 20*s, 16*s);
+    ctx.fillStyle = '#3b4a6b'; ctx.fillRect(Math.round(x) + 12*s, Math.round(y) + 22*s, 24*s, 20*s);
+    ctx.fillStyle = '#1a1a24'; ctx.fillRect(Math.round(x) + 26*s, Math.round(y) + 12*s, 3*s, 3*s);
+    return;
+  }
   const a = ANIM[anim] || ANIM.idle;
   const i = a.loop ? Math.floor(t / a.spd) % a.fr.length : Math.min(a.fr.length - 1, Math.floor(t / a.spd));
   let [c, r] = a.fr[i];
@@ -686,7 +700,7 @@ function loadLevel(i){
   for (let y = 0; y < lvl.h; y++) for (let x = 0; x < lvl.w; x++){
     const c = rows[y][x];
     if (c === 'P'){ sx = x*TS + 6; sy = y*TS + 2; rows[y][x] = ' '; }
-    else if (c === 'e'){ enemies.push(mkWalker(x*TS, y*TS)); rows[y][x] = ' '; }
+    else if (c === 'e'){ const w2 = mkWalker(x*TS, y*TS); w2.sprite = i <= 2 ? 'en_acorn' : 'en_hippy'; enemies.push(w2); rows[y][x] = ' '; }
     else if (c === 'f'){ enemies.push(mkFlyer(x*TS, y*TS));  rows[y][x] = ' '; }
     else if (c === 'R'){ rival = mkRival(x*TS, y*TS); rows[y][x] = ' '; }
     else if (c === 'M'){ monkey = { x:x*TS, y:y*TS - 16, seen:false }; rows[y][x] = ' '; }
@@ -1198,8 +1212,8 @@ function updatePlay(){
   // camera sul baricentro dei vivi
   const fx = alive.reduce((s,p)=>s+p.x+p.w/2,0)/alive.length;
   const fy = alive.reduce((s,p)=>s+p.y+p.h/2,0)/alive.length;
-  cam.x = Math.max(0, Math.min(fx - W/2, lvl.w*TS - W));
-  cam.y = Math.max(0, Math.min(fy - H/2, Math.max(0, lvl.h*TS - H)));
+  cam.x = Math.round(Math.max(0, Math.min(fx - W/2, lvl.w*TS - W)));
+  cam.y = Math.round(Math.max(0, Math.min(fy - H/2, Math.max(0, lvl.h*TS - H))));
   // P2 troppo lontano → teletrasporto
   if (alive.length === 2 && Math.abs(alive[0].x - alive[1].x) > W + 80){
     alive[1].x = alive[0].x; alive[1].y = alive[0].y - 20; alive[1].inv = 60;
@@ -1380,12 +1394,29 @@ function updateCut(){
 
 // ------------------------------------------------ DISEGNO: MONDO
 function drawWalker(e){
+  const x = Math.round(e.x - cam.x), y = Math.round(e.y - cam.y);
+  const dir = Math.sign(e.vx || -1);
+  if (e.sprite === 'en_hippy' && IMGS.en_hippy && IMGS.en_hippy.complete && IMGS.en_hippy.naturalWidth){
+    const f = Math.floor(e.anim / 10) % 4;
+    ctx.save(); ctx.translate(x + 13, y + e.h - 44);
+    ctx.scale(dir > 0 ? -1 : 1, 1);
+    if (e.elite){ ctx.filter = 'hue-rotate(140deg)'; }
+    ctx.drawImage(IMGS.en_hippy, f*48, 0, 48, 48, -24, 0, 48, 48);
+    ctx.restore(); ctx.filter = 'none';
+    return;
+  }
+  if (IMGS.en_acorn && IMGS.en_acorn.complete && IMGS.en_acorn.naturalWidth){
+    const hop = Math.abs(Math.sin(e.anim * 0.15)) * 3;
+    ctx.save(); ctx.translate(x + 13, y + e.h - 38 - hop);
+    ctx.scale(dir > 0 ? -1 : 1, 1);
+    if (e.elite){ ctx.filter = 'saturate(2.2) hue-rotate(-30deg)'; }
+    ctx.drawImage(IMGS.en_acorn, 2*44, 0, 44, 40, -22, 0, 44, 40);
+    ctx.restore(); ctx.filter = 'none';
+    return;
+  }
   const f = Math.floor(e.anim / 12) % 2;
-  const x = e.x - cam.x, y = e.y - cam.y;
   ctx.fillStyle = '#7a4a2a'; ctx.fillRect(x, y + 4, 26, 16);
   ctx.fillStyle = '#9c6a3c'; ctx.fillRect(x + 2, y, 14, 10);
-  ctx.fillStyle = '#f5c842'; ctx.fillRect(x - 4, y + 3, 6, 4);
-  ctx.fillStyle = '#1a1a24'; ctx.fillRect(x + 5, y + 3, 3, 3);
   ctx.fillStyle = '#5c3a20';
   if (f){ ctx.fillRect(x + 3, y + 20, 5, 4); ctx.fillRect(x + 17, y + 20, 5, 4); }
   else { ctx.fillRect(x + 6, y + 20, 5, 4); ctx.fillRect(x + 14, y + 20, 5, 4); }
@@ -1404,37 +1435,45 @@ function drawGhost(e){
   ctx.restore();
 }
 function drawFlyer(e){
+  const x = Math.round(e.x - cam.x), y = Math.round(e.y - cam.y);
+  if (IMGS.en_bat && IMGS.en_bat.complete && IMGS.en_bat.naturalWidth){
+    const f = Math.floor(e.anim / 6) % 5;
+    ctx.save(); ctx.translate(x + 14, y);
+    ctx.scale(Math.cos(e.t || 0) > 0 ? -1.4 : 1.4, 1.4);
+    ctx.drawImage(IMGS.en_bat, f*30, 0, 30, 22, -15, 0, 30, 22);
+    ctx.restore();
+    return;
+  }
   const f = Math.floor(e.anim / 8) % 2;
-  const x = e.x - cam.x, y = e.y - cam.y;
   ctx.fillStyle = '#3a3a44'; ctx.fillRect(x + 6, y + 6, 16, 10);
   ctx.fillStyle = '#26262e';
   if (f){ ctx.fillRect(x, y, 8, 8); ctx.fillRect(x + 20, y, 8, 8); }
   else { ctx.fillRect(x, y + 8, 8, 8); ctx.fillRect(x + 20, y + 8, 8, 8); }
-  ctx.fillStyle = '#e84a4a'; ctx.fillRect(x + 10, y + 8, 3, 3);
-  ctx.fillStyle = '#f5c842'; ctx.fillRect(x + 20, y + 10, 5, 3);
 }
 function drawBoss(){
   const b = boss;
-  const x = b.x - cam.x, y = b.y - cam.y;
+  const x = Math.round(b.x - cam.x), y = Math.round(b.y - cam.y);
+  const img = IMGS.boss_cornelius;
+  if (img && img.complete && img.naturalWidth){
+    // sheet originale della puntata: 3x5 frame da 200x220
+    let col = 0, row = 0;
+    const enraged = b.hp <= b.maxhp * 0.66;
+    if (b.mode === 'stunned'){ row = 2; col = Math.floor(frame / 10) % 2 === 0 ? 0 : 2; }        // glitch!
+    else if (b.mode === 'swoop'){ row = 3; col = Math.floor(frame / 6) % 3; }                     // onda d'urto
+    else if (enraged){ row = 1; col = Math.floor(frame / 8) % 3; }                                // furia rossa
+    else { row = 0; col = Math.floor(frame / 16) % 3; }                                           // testa parlante
+    if (b.hurtT > 0 && Math.floor(frame / 3) % 2 === 0) ctx.globalAlpha = 0.5;
+    const s = 0.58;
+    ctx.drawImage(img, col*200, row*220, 200, 220, x + 48 - 100*s, y + 48 - 110*s, 200*s, 220*s);
+    ctx.globalAlpha = 1;
+    return;
+  }
+  // fallback procedurale
   const flash = b.hurtT > 0 && Math.floor(frame / 3) % 2 === 0;
   ctx.fillStyle = flash ? '#ffffff' : '#d8c0a8'; ctx.fillRect(x + 8, y + 8, 80, 80);
-  ctx.fillStyle = flash ? '#ffffff' : '#e8e8e8';
-  ctx.fillRect(x, y + 22, 10, 30); ctx.fillRect(x + 86, y + 22, 10, 30);
-  ctx.fillRect(x + 26, y + 60, 44, 8);
-  ctx.fillStyle = '#5c1f1f'; ctx.fillRect(x + 8, y + 88, 80, 8);
   ctx.fillStyle = '#1a1a24';
-  if (b.mode === 'stunned'){
-    ctx.fillRect(x + 24, y + 34, 4, 4); ctx.fillRect(x + 32, y + 34, 4, 4); ctx.fillRect(x + 28, y + 38, 4, 4);
-    ctx.fillRect(x + 60, y + 34, 4, 4); ctx.fillRect(x + 68, y + 34, 4, 4); ctx.fillRect(x + 64, y + 38, 4, 4);
-  } else {
-    ctx.fillRect(x + 24, y + 34, 12, 10); ctx.fillRect(x + 60, y + 34, 12, 10);
-    ctx.fillRect(x + 20, y + 28, 18, 4);  ctx.fillRect(x + 58, y + 28, 18, 4);
-    ctx.fillStyle = '#e84a4a'; ctx.fillRect(x + 27, y + 37, 5, 5); ctx.fillRect(x + 63, y + 37, 5, 5);
-  }
+  ctx.fillRect(x + 24, y + 34, 12, 10); ctx.fillRect(x + 60, y + 34, 12, 10);
   ctx.fillStyle = '#5c1f1f'; ctx.fillRect(x + 34, y + 74, 28, 6);
-  ctx.fillStyle = '#f5d442';
-  ctx.fillRect(x + 18, y - 4, 60, 10);
-  ctx.fillRect(x + 20, y - 14, 8, 10); ctx.fillRect(x + 44, y - 16, 8, 12); ctx.fillRect(x + 68, y - 14, 8, 10);
 }
 function drawRival(){
   const r = rival;
@@ -1693,7 +1732,7 @@ const crt = document.createElement('canvas');
 crt.width = W; crt.height = H;
 (function(){
   const c2 = crt.getContext('2d');
-  c2.fillStyle = 'rgba(0,0,0,0.10)';
+  c2.fillStyle = 'rgba(0,0,0,0.05)';
   for (let y = 0; y < H; y += 3) c2.fillRect(0, y, W, 1);
   const v = c2.createRadialGradient(W/2, H/2, H/2.2, W/2, H/2, H*0.95);
   v.addColorStop(0, 'rgba(0,0,0,0)');
@@ -1861,6 +1900,9 @@ function drawTV(){
     ctx.fillStyle = '#2a2a3a'; ctx.fillRect(W/2 - 200, H/2, 400, 14);
     ctx.fillStyle = '#5ae87a'; ctx.fillRect(W/2 - 200, H/2, 400 * (assetsDone / Math.max(1, assetsTotal)), 14);
     return;
+  }
+  if (ASSET_FAIL.length){
+    text('⚠ sprite non caricati: ' + ASSET_FAIL.slice(0,5).join(', ') + (ASSET_FAIL.length > 5 ? '…' : ''), W/2, 30, 12, '#e84a4a', 'center');
   }
   if (tvT < 150){
     const a = Math.min(1, tvT / 40) * (tvT > 110 ? (150 - tvT) / 40 : 1);
@@ -2134,7 +2176,7 @@ function hostSnapshot(){
     pl: players.map(p => [sheetOf(p), Math.round(p.x), Math.round(p.y), p.face,
       p.hp <= 0 ? 'dead' : p.atkT > 0 ? 'attack' : !p.onGround ? 'jump' : Math.abs(p.vx) > 0.3 ? 'walk' : 'idle',
       Math.round(p.anim), p.hp, p.maxhp, Math.round(p.soul), p.shield]),
-    en: enemies.map(e => [e.type, Math.round(e.x), Math.round(e.y), Math.round(e.anim)]),
+    en: enemies.map(e => [e.type, Math.round(e.x), Math.round(e.y), Math.round(e.anim), e.sprite || '', Math.sign(e.vx || -1)]),
     pr: projs.map(pr => [Math.round(pr.x), Math.round(pr.y), pr.w, pr.h, pr.fire ? 1 : pr.from === 'ally' ? 2 : 0]),
     bb: babies.map(b => [Math.round(b.x), Math.round(b.y), Math.round(b.anim), b.vx > 0 ? 1 : -1]),
     bo: boss && !boss.dead ? [Math.round(boss.x), Math.round(boss.y), boss.hp, boss.maxhp, boss.mode, boss.hurtT] : null,
@@ -2176,7 +2218,7 @@ function drawGuest(){
   drawTiles();
   drawGroups();
   for (const e of s.en){
-    const fake = { type:e[0], x:e[1], y:e[2], anim:e[3], t:e[3], w:28, h:24, hp:1 };
+    const fake = { type:e[0], x:e[1], y:e[2], anim:e[3], t:e[3], w:28, h:24, hp:1, sprite:e[4], vx:e[5] };
     e[0] === 'walker' ? drawWalker(fake) : e[0] === 'ghost' ? drawGhost(fake) : drawFlyer(fake);
   }
   if (s.ri) drawActor('gilbert', s.ri[4], s.ri[5], s.ri[0] + 11 - 24 - cam.x, s.ri[1] + 30 - 46 - cam.y, s.ri[2], 1);
