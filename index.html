@@ -707,6 +707,8 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
+const GAME_VERSION = 'v10.3';
+let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
 let players = [];
@@ -2276,24 +2278,73 @@ function drawTitle(){
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, '#0e0c2a'); g.addColorStop(1, '#2a1a4a');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  for (let i = 0; i < 60; i++){
-    const sx = (i * 137) % W, sy = (i * 89) % (H - 200);
-    ctx.fillStyle = 'rgba(255,255,255,' + (0.3 + 0.5 * Math.abs(Math.sin(frame * 0.02 + i))) + ')';
-    ctx.fillRect(sx, sy, 2, 2);
+  // stelle a parallasse
+  for (let i = 0; i < 80; i++){
+    const sx = (i * 137 + titleT * (0.2 + (i % 3) * 0.15)) % W;
+    const sy = (i * 89) % (H - 180);
+    ctx.fillStyle = 'rgba(255,255,255,' + (0.25 + 0.5 * Math.abs(Math.sin(titleT * 0.02 + i))) + ')';
+    ctx.fillRect(W - sx, sy, 2, 2);
   }
+  // castello di Hawkthorne con finestra pulsante
   ctx.fillStyle = '#1a1430';
-  ctx.fillRect(W/2 - 140, H - 220, 280, 220);
-  ctx.fillRect(W/2 - 180, H - 160, 40, 160); ctx.fillRect(W/2 + 140, H - 160, 40, 160);
-  ctx.fillRect(W/2 - 20, H - 280, 40, 60);
-  ctx.fillStyle = '#f5d442'; ctx.fillRect(W/2 - 8, H - 130, 16, 40);
-  for (let i = 0; i < 7; i++) drawActor(CHARS[i].id, 'walk', frame + i*3, W/2 - 190 + i * 56, 320, 1, 1);
-  text('JOURNEY TO THE CENTER OF', W/2, 140, 28, '#f5d442', 'center');
-  text('HAWKTHORNE', W/2, 200, 64, '#ffffff', 'center');
-  text('COMMUNITY 3×20 · sprite autentici di Project Hawkthorne', W/2, 240, 15, '#9a8ac8', 'center');
-  if (Math.floor(frame / 30) % 2 === 0) text('PREMI INVIO', W/2, 300, 24, '#5ae87a', 'center');
-  text('[O] CO-OP ONLINE (P2P)', W/2, H - 92, 16, '#8ae8e8', 'center');
-  text('P1: frecce+Z/X/C/V · P2 in gioco con F: WASD+F/G/H · joystick OK · P pausa · M audio · F2 CRT', W/2, H - 40, 12, 'rgba(255,255,255,0.55)', 'center');
-  text('20 personaggi · costumi · super-poteri · negozio di Hilda · Modalità Incubo', W/2, H - 66, 13, 'rgba(245,212,66,0.7)', 'center');
+  ctx.fillRect(W/2 - 140, H - 240, 280, 240);
+  ctx.fillRect(W/2 - 180, H - 180, 40, 180); ctx.fillRect(W/2 + 140, H - 180, 40, 180);
+  ctx.fillRect(W/2 - 20, H - 300, 40, 60);
+  ctx.fillStyle = 'rgba(245,212,66,' + (0.5 + 0.5 * Math.abs(Math.sin(titleT * 0.03))) + ')';
+  ctx.fillRect(W/2 - 8, H - 150, 16, 40);
+  // gli occhi di Cornelius nella torre
+  if (Math.floor(titleT / 180) % 2 === 0){
+    ctx.fillStyle = '#e84a4a'; ctx.fillRect(W/2 - 12, H - 288, 8, 6); ctx.fillRect(W/2 + 4, H - 288, 8, 6);
+  }
+  // il cast si teletrasporta in scena uno alla volta (beam della puntata)
+  const shown = Math.min(7, Math.floor(titleT / 34));
+  for (let i = 0; i < shown; i++){
+    const cx = W/2 - 195 + i * 58, cy = H - 96;
+    const age = titleT - (i + 1) * 34;
+    if (age < 26){
+      const bimg = IMGS[CHARS[i].id + '__beam'];
+      if (bimg && bimg.complete && bimg.naturalWidth){
+        ctx.globalAlpha = Math.min(1, (26 - age) / 12);
+        ctx.drawImage(bimg, Math.min(3, Math.floor(age / 7))*36, 0, 36, 300, cx + 6, cy - 252, 36, 300);
+        ctx.globalAlpha = 1;
+      }
+    }
+    if (age > 12) drawActor(CHARS[i].id, age > 26 ? 'idle' : 'jump', 0, cx, cy, 1, 1);
+  }
+  // logo con ombra e pulsazione
+  const pu = 1 + Math.sin(titleT * 0.04) * 0.02;
+  ctx.save();
+  ctx.translate(W/2, 150); ctx.scale(pu, pu);
+  text('JOURNEY TO THE CENTER OF', 0, -44, 26, '#9a8ac8', 'center');
+  text('HAWKTHORNE', 4, 24, 66, 'rgba(0,0,0,0.55)', 'center');
+  text('HAWKTHORNE', 0, 20, 66, '#f5d442', 'center');
+  ctx.restore();
+  text('COMMUNITY 3×20 · "Digital Estate Planning"', W/2, 205, 14, 'rgba(255,255,255,0.6)', 'center');
+  // menù vero
+  const items = titleItems();
+  const my = 268;
+  for (let i = 0; i < items.length; i++){
+    const sel = i === titleSel;
+    if (sel){
+      ctx.fillStyle = 'rgba(245,212,66,0.12)';
+      ctx.fillRect(W/2 - 190, my + i*38 - 22, 380, 32);
+      drawActor('abed', 'walk', titleT, W/2 - 230, my + i*38 - 38, 1, 0.75);
+    }
+    text((sel ? '▶ ' : '') + items[i].label, W/2, my + i*38, 20, sel ? '#5ae87a' : 'rgba(255,255,255,0.75)', 'center');
+  }
+  text('↑↓ scegli · INVIO conferma  (o ✕ sul pad)', W/2, my + items.length*38 + 14, 12, 'rgba(255,255,255,0.4)', 'center');
+  // versione in angolo
+  text(GAME_VERSION, W - 10, H - 10, 12, 'rgba(255,255,255,0.45)', 'right');
+  text('sei stagioni e un film', 10, H - 10, 11, 'rgba(255,255,255,0.3)');
+}
+function titleItems(){
+  const it = [
+    { label:'GIOCA', act(){ state = 'select'; sfx('coin'); } },
+    { label:'CO-OP ONLINE (P2P)', act(){ state = 'online'; sfx('text'); } },
+    { label:'COMANDI', act(){ startCut(tutorialPages(), () => { state = 'title'; }); } },
+  ];
+  if (SAVE.finished) it.push({ label:'MODALITÀ INCUBO: ' + (nightmare ? 'SÌ ☠' : 'no'), act(){ nightmare = !nightmare; sfx(nightmare ? 'organ' : 'text'); } });
+  return it;
 }
 function drawSelect(){
   ctx.fillStyle = '#0e0c2a'; ctx.fillRect(0, 0, W, H);
@@ -2707,13 +2758,18 @@ function update(){
       if (tvT === 1) sfx('organ');
       if (tvT === 150) sfx('organ');
       if (tvT > 330 || OKJ()){
-        startCut(labPages(), () => { state = 'title'; setSong('title'); }, 'lab');
+        startCut(labPages(), () => { state = 'title'; setSong('title'); titleT = 0; }, 'lab');
       }
       break;
-    case 'title':
+    case 'title': {
+      titleT++;
       if (jp('KeyO')){ state = 'online'; sfx('text'); break; }
-      if (OKJ()){ state = 'select'; sfx('coin'); }
-      break;
+      const items = titleItems();
+      if (jp('ArrowUp') || jp('KeyW') || gpJP(0,'jump'))  { titleSel = (titleSel + items.length - 1) % items.length; sfx('text'); }
+      if (jp('ArrowDown') || jp('KeyS') || gpJP(0,'down')){ titleSel = (titleSel + 1) % items.length; sfx('text'); }
+      if (titleSel >= items.length) titleSel = 0;
+      if (jp('Enter') || jp('Space') || jp('KeyZ') || gpJP(0,'ok')) items[titleSel].act();
+      break; }
     case 'online':
       if (jp('Digit1')){ netSetup('host'); sfx('coin'); }
       if (jp('Digit2')){ netSetup('guest'); sfx('coin'); }
@@ -2763,7 +2819,7 @@ function update(){
       }
       break;
     case 'win':
-      if (jp('Enter')){ state = 'title'; setSong('title'); }
+      if (jp('Enter')){ state = 'title'; setSong('title'); titleT = 0; }
       break;
   }
   updateMusic();

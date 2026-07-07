@@ -13,7 +13,7 @@
 - Netcode robusto declassato a nice-to-have (Sessione 6).
 - Mondi: da 2 previsti a 5 nuovi, generabili come righe-dato.
 
-## CONTESTO (stato v10.2 — Sessioni 1-2 completate)
+## CONTESTO (stato v10.3 — Sessioni 1-2 completate + title screen v2)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -191,10 +191,23 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
   Atto I, achievement, strobo verificato pixel-stabile frame-per-frame.
 - **S2 — Atto II**: ✅ COMPLETATA (v10.2). Nuoto, betafish, icebat regina,
   quest campioni, Gilbert alleato/giocabile/NPC hub, tutorial comandi.
-- **S3 — Greendale**: mondo, Dean+quest, Chang boss, Leonard, Atto III
-  completo. Mini-boss villaggio.
-- **S4 — Paintball + Atto IV**: livello segreto, pipeline Darkest Timeline
-  remix, personaggi malvagi, Dreamatorium + Abed-Oscuro.
+- **S3 — SCHELETRO GENERATIVO** (decisione architetturale con l'utente,
+  ispirata a Spelunky/Hades/Dead Cells: "spina autoriale, carne procedurale"):
+  a) libreria CHUNKS[]: spezzoni di righe-mappa handmade per bioma (10-16
+     colonne l'uno), con tag {bioma, difficoltà, ingresso/uscita quota};
+  b) assemblatore seeded: cuce i chunk garantendo il percorso, inietta
+     spawn dal registro ENEMIES per bioma, casse, cristalli, slot mini-boss;
+  c) pipeline REMIX/Darkest Timeline: re-istanzia mondi (autoriali o
+     generati) con palette invertita e nemici potenziati — costo asset zero;
+  d) DAILY SEED condivisibile (#seed nell'URL) + modalità "PARTITA INFINITA"
+     dal menù (mondi generati a difficoltà crescente finché non muori);
+  e) i mondi autoriali esistenti restano intatti: i loro pezzi migliori
+     vengono ritagliati come chunk e arricchiscono il pool.
+- **S4 — Greendale + Atto III** (autoriale, e i suoi chunk alimentano S3):
+  mondo campus, Dean+quest, Chang boss, Leonard, Atto III completo.
+  Mini-boss villaggio. Poi Paintball + Atto IV: livello segreto, personaggi
+  malvagi, Dreamatorium + Abed-Oscuro (arena generata: qui il procedurale
+  è mandato narrativo).
 - **S5 — Sistemi, polish e HOGWARTS DI GREENDALE**: combo super, livelli
   super, boss rush, incubo, pagina achievement, speedrun, parallax/meteo/
   transizioni/stinger, VFX esterni, side-quest, slot save + export/import.
@@ -241,12 +254,13 @@ Al termine di OGNI sessione, in quest'ordine:
 1. Verifica criteri di accettazione della sessione (sotto).
 2. Commit + push (messaggio: `vX.Y: <sintesi>`).
 3. Aggiorna memoria `hawkthorne-assets` se hai introdotto layout/API/asset.
-4. **Rigenera questo file** come `PROMPT-V10.md` aggiornato (stesso nome,
+4. Incrementa `GAME_VERSION` in index.html (mostrata nell'angolo del titolo).
+5. **Rigenera questo file** come `PROMPT-V10.md` aggiornato (stesso nome,
    sovrascrivi): spunta la sessione completata in §SESSIONI, integra lezioni
    apprese in §REGOLE o §TOKEN (max 3 righe nuove, elimina regole diventate
    ovvie), aggiorna CONTESTO con lo stato reale. Il prompt deve MIGLIORARE
    ad ogni ciclo, non gonfiarsi: budget massimo 260 righe totali.
-5. Riporta all'utente: cosa è stato fatto, cosa testare a mano su Safari,
+6. Riporta all'utente: cosa è stato fatto, cosa testare a mano su Safari,
    qual è la prossima sessione.
 
 ## §CRITERI DI ACCETTAZIONE (ogni feature)
