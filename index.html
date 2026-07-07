@@ -341,6 +341,98 @@ function updateMusic(){
 // 'o' moneta 'g' cristallo 'h' cuore 'e' guardia 'f' avvoltoio
 // 'P' start 'X' porta 'C' checkpoint 'T' albero 'u' capanna 'w' rudere
 // marker: 'p' pierce 'b' britta 't' troy&abed 'a' annie&shirley 'H' hilda 'R' gilbert 'M' scimmia
+// ------------------------------------------------ REGISTRI DATA-DRIVEN (V10)
+// Nemici: una riga = un nemico. ai: patrol | fly | chase
+const ENEMIES = {
+  acorn: { ai:'patrol', sheet:'en_acorn', hp:1, speed:0.8, w:26, h:24 },
+  hippy: { ai:'patrol', sheet:'en_hippy', hp:1, speed:0.8, w:26, h:24 },
+  bat:   { ai:'fly',    sheet:'en_bat',   hp:1, w:28, h:20 },
+  ghost: { ai:'chase',  proc:true,        hp:1, speed:0.9, w:30, h:34 },
+};
+function mkEnemy(id, x, y){
+  const d = ENEMIES[id] || ENEMIES.acorn;
+  if (d.ai === 'fly') return { type:'flyer', x0:x, y0:y, x, y, w:d.w, h:d.h, t:Math.random()*99, hp:d.hp, anim:0, sprite:d.sheet, eid:id };
+  if (d.ai === 'chase') return { type:'ghost', x, y, w:d.w, h:d.h, hp:d.hp, anim:Math.random()*99, t:0, eid:id };
+  return { type:'walker', x:x+3, y:y+8, w:d.w, h:d.h, vx:-d.speed, vy:0, hp:d.hp, anim:Math.random()*99, sprite:d.sheet, eid:id };
+}
+// VFX: un player generico per gli sheet di effetti
+const VFX = {
+  bolt: { sheet:'fx_bolt', fw:144, fh:192, cols:3, spd:4, alpha:0.85 },
+};
+function drawVFX(id, x, y, s){
+  const d = VFX[id]; if (!d) return;
+  const img = IMGS[d.sheet];
+  if (!img || !img.complete || !img.naturalWidth) return;
+  const col = Math.floor(frame / d.spd) % d.cols;
+  ctx.globalAlpha = d.alpha;
+  ctx.drawImage(img, col*d.fw, 0, d.fw, d.fh, x - d.fw/2*s, y - d.fh/2*s, d.fw*s, d.fh*s);
+  ctx.globalAlpha = 1;
+}
+// Achievement: {id, nome, counter+n oppure evento diretto}
+const ACHIEVEMENTS = [
+  { id:'primo_sangue',  nome:'Benvenuto a Greendale',   counter:'kill',       n:1 },
+  { id:'zitto_leonard', nome:'Zitto, Leonard',          counter:'kill_hippy', n:50 },
+  { id:'ghiande_tostate',nome:'Ghiande tostate',        counter:'kill_acorn', n:25 },
+  { id:'streets_ahead', nome:'Streets Ahead',           evento:'no_morti' },
+  { id:'sei_stagioni',  nome:'Sei stagioni e un film',  evento:'tutti_sbloccati' },
+  { id:'testamento',    nome:'Esecutore testamentario', evento:'atto1' },
+];
+function award(id){
+  if (!SAVE.ach) SAVE.ach = {};
+  if (SAVE.ach[id]) return;
+  const a = ACHIEVEMENTS.find(x => x.id === id);
+  if (!a) return;
+  SAVE.ach[id] = 1; saveGame();
+  showToast('🏆 ACHIEVEMENT: ' + a.nome);
+  sfx('craft');
+}
+function bump(counter, eid){
+  if (!SAVE.cnt) SAVE.cnt = {};
+  SAVE.cnt[counter] = (SAVE.cnt[counter] || 0) + 1;
+  if (eid) SAVE.cnt[counter + '_' + eid] = (SAVE.cnt[counter + '_' + eid] || 0) + 1;
+  for (const a of ACHIEVEMENTS)
+    if (a.counter && !(SAVE.ach || {})[a.id] && (SAVE.cnt[a.counter] || 0) >= a.n) award(a.id);
+  saveGame();
+}
+
+// ------------------------------------------------ QUEST ENGINE (V10) — Atto I
+// tipo: collect (tile 'Z') | kill (target speciale). Una riga = una quest.
+const QUESTS = [
+  { id:'sig_radura',    atto:1, mondo:1, tipo:'collect', target:'Z', nome:'Il Sigillo della Radura',
+    hint:'Cerca il SIGILLO dorato sulle piattaforme della radura.' },
+  { id:'sig_foresta',   atto:1, mondo:2, tipo:'kill', target:'mboss', nome:'Il Sigillo del Re Ghianda',
+    hint:'Il Re Ghianda custodisce il secondo SIGILLO. Convincilo. Con la forza.' },
+  { id:'sig_villaggio', atto:1, mondo:3, tipo:'collect', target:'Z', nome:'Il Sigillo del Villaggio',
+    hint:'Il terzo SIGILLO è nascosto tra i tetti del villaggio.', fineAtto:1 },
+];
+function questDone(id){ return !!(SAVE.quests || {})[id]; }
+function activeQuest(){ return QUESTS.find(q => !questDone(q.id)) || null; }
+function questEvent(tipo, target){
+  const q = QUESTS.find(x => !questDone(x.id) && x.tipo === tipo && x.target === target && x.mondo === lvlIdx);
+  if (!q) return;
+  if (!SAVE.quests) SAVE.quests = {};
+  SAVE.quests[q.id] = 1; saveGame();
+  addWallet(15); sfx('craft'); addShake(6);
+  showToast('❖ SIGILLO OTTENUTO: ' + q.nome + ' (+15 monete)');
+  if (QUESTS.filter(x => x.atto === 1).every(x => questDone(x.id))){
+    award('testamento');
+    startCut([
+      { who:'abed', text:'Fine dell\'Atto I. Sviluppo dei personaggi: presente. Bottino: accettabile.' },
+      { who:'abed', text:'Cornelius non sarà contento. Il che, narrativamente, è sempre un buon segno.' },
+      { who:'narr', text:'ATTO I COMPLETATO — "L\'Eredità". Ricompensa: +50 monete.' },
+    ], () => { state = 'play'; addWallet(50); });
+  }
+}
+function maybeActIntro(){
+  if (lvlIdx !== 1 || (SAVE.flags || {}).atto1intro || !activeQuest()) return;
+  (SAVE.flags = SAVE.flags || {}).atto1intro = 1; saveGame();
+  startCut([
+    { who:'abed', text:'Atto primo: "L\'Eredità". Tre Sigilli del Testamento, tre mondi.' },
+    { who:'abed', text:'È chiaramente la struttura di un tutorial. Ma con più soldi in palio.' },
+    { who:'narr', text:'QUEST: trova i 3 SIGILLI DEL TESTAMENTO. Segui il simbolo ❖ in alto.' },
+  ], () => { state = 'play'; });
+}
+
 const LEVELS = [
 {
   name:'SALA D\'ATTESA HAWTHORNE', song:'title', sky:['#3a3a44','#4a4a55'], hub:true,
@@ -364,7 +456,7 @@ const LEVELS = [
 "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 ]},
 {
-  name:'MONDO 1 · LA RADURA DI HAWKTHORNE', song:'meadow', sky:['#4da6e8','#8ed0f5'], fall:true,
+  name:'MONDO 1 · LA RADURA DI HAWKTHORNE', song:'meadow', sky:['#4da6e8','#8ed0f5'], fall:true, spawn:{ e:'acorn', f:'bat' },
   taunt:'Benvenuti nel mio mondo, parassiti. Il trono è in fondo. Non ci arriverete mai.',
   rows:[
 "                                                                                                                                                            ",
@@ -374,7 +466,7 @@ const LEVELS = [
 "                                                         -----                                        g                                                    ",
 "                                                                                                     ---                                                   ",
 "                 o o                        o o o                    o o                        --                 o o o                                    ",
-"                -----                      ------                  ------                                         ------            h                      ",
+"                -----                      ------                  ------                                         --Z---            h                      ",
 "                                                                                       o o                                         ---                     ",
 "       o                                                                              ----          f                                          o o o       ",
 "      ---            o o o        f                                        --                                 e                                            ",
@@ -387,7 +479,7 @@ const LEVELS = [
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB          BB          BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 ]},
 {
-  name:'MONDO 2 · LA FORESTA DI HAWKTHORNE', song:'cave', sky:['#1e3a2e','#3a6a4a'],
+  name:'MONDO 2 · LA FORESTA DI HAWKTHORNE', song:'cave', sky:['#1e3a2e','#3a6a4a'], spawn:{ e:'acorn', f:'bat' },
   taunt:'Ho piantato questa foresta per nascondere il confine della mappa. Gli alberi sono più affidabili dei figli.',
   rows:[
 "                                                                                                                        ",
@@ -410,7 +502,7 @@ const LEVELS = [
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 ]},
 {
-  name:'MONDO 3 · IL VILLAGGIO DEI CONTADINI', song:'village', sky:['#e8935a','#f5c98e'], village:true,
+  name:'MONDO 3 · IL VILLAGGIO DEI CONTADINI', song:'village', sky:['#e8935a','#f5c98e'], village:true, spawn:{ e:'hippy', f:'bat' },
   taunt:'Un villaggio di contadini pigri. Mi ricordano i tuoi amici, Pierce.',
   rows:[
 "                                                                                                                                                            ",
@@ -424,7 +516,7 @@ const LEVELS = [
 "          o                                    o o o                          -----          o                  f                  ---                     ",
 "         ---              f                   ------                                        ---                                              o o           ",
 "                                                                    e                                     e                                 -----          ",
-"                                o                     e                       BB                  o                     e                                  ",
+"                                Z                     e                       BB                  o                     e                                  ",
 "     P u    u  b u     T       ###        C         ####   H t  o o         BB~~BB      T   w a ###       ####    T   #####       C     T          X      ",
 "    ###        ## ##          ## ##      ###       ##  ##      #####       BB ~~ BB            ## ##     ##  ##      ##   ##     ###              ###     ",
 "   ## ##   T  ##   ##    T   ##   ##    ## ##  T  ##    ##    ##   ##     BB  ~~  BB   T      ##   ##   ##    ##    ##     ##   ## ##     T      ## ##    ",
@@ -433,7 +525,7 @@ const LEVELS = [
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB    ~~    BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 ]},
 {
-  name:'MONDO 4 · IL LAGO DI GIN', song:'title', sky:['#2a1a4a','#c86a5e'], gin:true,
+  name:'MONDO 4 · IL LAGO DI GIN', song:'title', sky:['#2a1a4a','#c86a5e'], gin:true, spawn:{ e:'hippy', f:'bat' },
   taunt:'Il mio lago di gin. Distillato nel 1961, quando bere era un diritto e la felicità un difetto di fabbrica.',
   rows:[
 "                                                                                                                        ",
@@ -455,7 +547,7 @@ const LEVELS = [
 "BB~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BBBBBBBB",
 ]},
 {
-  name:'MONDO 5 · LE CAVERNE DI HAWKTHORNE', song:'cave', sky:['#12101e','#1c1830'], dark:true,
+  name:'MONDO 5 · LE CAVERNE DI HAWKTHORNE', song:'cave', sky:['#12101e','#1c1830'], dark:true, spawn:{ e:'hippy', f:'bat' },
   taunt:'Attenti alla lava. L\'ho fatta installare io: costava meno dei dipendenti.',
   rows:[
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
@@ -596,6 +688,9 @@ function killEnemy(e, byPlayer){
   addWallet(c);
   soulGain(byPlayer || players[0], 12);
   comboKill(); addShake(3);
+  bump('kill');
+  if (e.eid === 'hippy') bump('kill_hippy');
+  if (e.eid === 'acorn') bump('kill_acorn');
 }
 function setTile(tx, ty, c){
   lvl.rows[ty][tx] = c;
@@ -721,8 +816,8 @@ function loadLevel(i){
   for (let y = 0; y < lvl.h; y++) for (let x = 0; x < lvl.w; x++){
     const c = rows[y][x];
     if (c === 'P'){ sx = x*TS + 6; sy = y*TS + 2; rows[y][x] = ' '; }
-    else if (c === 'e'){ const w2 = mkWalker(x*TS, y*TS); w2.sprite = i <= 2 ? 'en_acorn' : 'en_hippy'; enemies.push(w2); rows[y][x] = ' '; }
-    else if (c === 'f'){ enemies.push(mkFlyer(x*TS, y*TS));  rows[y][x] = ' '; }
+    else if (c === 'e'){ enemies.push(mkEnemy((def.spawn || {}).e || 'acorn', x*TS, y*TS)); rows[y][x] = ' '; }
+    else if (c === 'f'){ enemies.push(mkEnemy((def.spawn || {}).f || 'bat', x*TS, y*TS)); rows[y][x] = ' '; }
     else if (c === 'R'){ rival = mkRival(x*TS, y*TS); rows[y][x] = ' '; }
     else if (c === 'Q'){ mboss = { x:x*TS, y:y*TS - 40, w:66, h:62, vx:0, vy:0, hp: nightmare ? 18 : 12, maxhp: nightmare ? 18 : 12,
       t:0, hurtT:0, dead:false, onGround:false, anim:0, intro:false }; rows[y][x] = ' '; }
@@ -1019,6 +1114,7 @@ function updateOnePlayer(p, atkBoxes){
     if (c === 'o'){ setTile(tx, ty, ' '); addWallet(1); sfx('coin'); burst(tx*TS+16, ty*TS+16, '#f5d442', 5, 1.5); }
     else if (c === 'g'){ setTile(tx, ty, ' '); cristalli++; sfx('gem'); burst(tx*TS+16, ty*TS+16, '#5ae8e8', 10, 2); showToast('+1 CRISTALLO DI HAWKTHORNE (' + cristalli + ')'); }
     else if (c === 'h'){ if (p.hp < p.maxhp){ setTile(tx, ty, ' '); p.hp = Math.min(p.maxhp, p.hp + (trait(p,'shirley') || trait(p,'duncan') ? 2 : 1)); sfx('heart'); burst(tx*TS+16, ty*TS+16, '#e85a7a', 8, 2); } }
+    else if (c === 'Z'){ setTile(tx, ty, ' '); burst(tx*TS+16, ty*TS+16, '#f5d442', 20, 3); questEvent('collect','Z'); }
     else if (c === 'C'){ setTile(tx, ty, 'c'); players.forEach(q => { q.cpx = tx*TS + 4; q.cpy = ty*TS - q.h - 2; }); sfx('check'); showToast('CONSOLE — CHECKPOINT'); }
     else if (c === '^'){ hurtPlayer(p, 1, tx*TS + 16); }
     else if (c === '~'){ if (!trait(p,'vicedean')) hurtPlayer(p, 1, tx*TS + 16); }
@@ -1088,6 +1184,7 @@ function tryForge(){
 }
 
 function updatePlay(){
+  maybeActIntro();
   if ((jp('KeyF') || gpJP(1,'jump') || gpJP(1,'ok')) && players.length === 1 && !net.role){ joinP2(); }
   const worldTick = slowT > 0 ? (frame % 3 === 0) : true;
   if (slowT > 0) slowT--;
@@ -1126,7 +1223,7 @@ function updatePlay(){
   // spiriti di Cornelius nelle zone buie
   if (lvl.def.dark && frame % 700 === 350 && enemies.filter(e => e.type === 'ghost').length < 3){
     const t = alive[Math.floor(Math.random()*alive.length)];
-    enemies.push({ type:'ghost', x: t.x + (Math.random() < 0.5 ? -420 : 420), y: t.y - 60, w:30, h:34, hp:1, anim:Math.random()*99, t:0 });
+    enemies.push(mkEnemy('ghost', t.x + (Math.random() < 0.5 ? -420 : 420), t.y - 60));
   }
   if (combo.t > 0){ combo.t--; if (combo.t <= 0) combo.n = 0; }
 
@@ -1308,6 +1405,7 @@ function hitMboss(n, byPlayer){
     burst(mboss.x + 33, mboss.y + 30, '#f5d442', 50, 5);
     addWallet(15); cristalli += 3; sfx('craft'); addShake(12);
     showToast('RE GHIANDA SCONFITTO! +15 monete, +3 cristalli');
+    questEvent('kill','mboss');
   }
 }
 function updateMboss(atkBoxes){
@@ -1335,7 +1433,7 @@ function updateMboss(atkBoxes){
     for (const q of alivePlayers())
       if (q.onGround && Math.abs(q.x - m.x) < 130 && Math.abs(q.y - m.y) < 60) hurtPlayer(q, 1, m.x + 33);
     if (enraged && Math.random() < 0.5){
-      const w2 = mkWalker(m.x + 20, m.y); w2.sprite = 'en_acorn'; enemies.push(w2);
+      enemies.push(mkEnemy('acorn', m.x + 20, m.y));
     }
   }
   for (const ab of atkBoxes) if (overlap(ab, m)) hitMboss(ab.dmg || 1, ab.owner);
@@ -1368,14 +1466,7 @@ function drawMboss(){
     ctx.fillStyle = '#e8a84a'; ctx.fillRect(x - 2, y - 16, 70 * m.hp / m.maxhp, 6);
   }
 }
-function drawBolt(x, y, s){
-  const img = IMGS.fx_bolt;
-  if (!img || !img.complete || !img.naturalWidth) return;
-  const col = Math.floor(frame / 4) % 3;
-  ctx.globalAlpha = 0.85;
-  ctx.drawImage(img, col*144, 0, 144, 192, x - 72*s, y - 96*s, 144*s, 192*s);
-  ctx.globalAlpha = 1;
-}
+function drawBolt(x, y, s){ drawVFX('bolt', x, y, s); }
 
 // ------------------------------------------------ CORNELIUS + BAMBINI
 function hitBoss(n){
@@ -1389,6 +1480,7 @@ function hitBoss(n){
     burst(boss.x + 48, boss.y + 48, '#f5d442', 60, 5);
     setSong(null);
     if (!SAVE.finished){ SAVE.finished = true; saveGame(); }
+    if (deaths === 0) award('streets_ahead');
     if (net.role === 'host') netSend({ t:'reward', c: coinsRun, fin: 1 });
     startCut(endingPages(), () => { state = 'win'; endTime = performance.now(); setSong('win'); });
     return;
@@ -1756,6 +1848,18 @@ function drawTiles(){
         ctx.fillRect(x + 8, y + 10, 7, 7); ctx.fillRect(x + 17, y + 10, 7, 7);
         ctx.fillRect(x + 8, y + 14, 16, 7); ctx.fillRect(x + 12, y + 21, 8, 5);
         break; }
+      case 'Z': {
+        const pu = 3 + Math.abs(Math.sin(frame * 0.08)) * 3;
+        ctx.fillStyle = '#c9a227';
+        ctx.beginPath(); ctx.arc(x + 16, y + 16, 12 + pu * 0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f5d442';
+        ctx.beginPath(); ctx.arc(x + 16, y + 16, 9 + pu * 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#5c1f1f';
+        ctx.font = 'bold 13px "Courier New", monospace'; ctx.textAlign = 'center';
+        ctx.fillText('H', x + 16, y + 21); ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(245,212,66,0.4)';
+        ctx.fillRect(x + 14, y - 6 + pu, 4, 6);
+        break; }
       case 'C': case 'c': {
         // console retro (checkpoint)
         ctx.fillStyle = '#3a3a48'; ctx.fillRect(x + 2, y + 6, 28, 26);
@@ -1885,6 +1989,8 @@ function drawHUD(){
   if (combo.n >= 2){
     text('COMBO x' + combo.n, W/2, 52, 18 + Math.min(10, combo.n), '#f5822a', 'center');
   }
+  const aq = activeQuest();
+  if (aq) text('❖ ' + aq.nome + (lvlIdx === aq.mondo ? '' : '  (Mondo ' + aq.mondo + ')'), W - 14, players[1] ? 66 : 36, 12, '#f5d442', 'right');
   if (nightmare) text('☠ INCUBO', W/2, H - 12, 13, '#e84a4a', 'center');
   const bnames = Object.keys(boons).filter(k => boons[k]);
   if (bnames.length) text('✦ ' + bnames.join(' · '), 14, H - 12, 11, 'rgba(138,232,232,0.7)');
@@ -2495,6 +2601,7 @@ function update(){
         }
         else if (SAVE.wallet >= c.cost){
           SAVE.wallet -= c.cost; SAVE.chars[c.id] = true; saveGame(); sfx('buy');
+          if (CHARS.every(ch => isUnlocked(ch))) award('sei_stagioni');
           showToast('SBLOCCATO: ' + c.name);
         } else { selMsg = 'Non hai abbastanza monete: gioca e raccogline!'; sfx('hurt'); }
       }
@@ -2571,6 +2678,8 @@ window._hawk = {
   super(){ if (players[0]) activateSuper(players[0]); },
   boon(id){ const b = BOONS.find(x => x.id === id); if (b){ b.act(players[0]); boons[id] = true; } },
   incubo(){ SAVE.finished = true; nightmare = !nightmare; },
+  quest(){ return { attiva: activeQuest() && activeQuest().id, fatte: SAVE.quests, ach: SAVE.ach, cnt: SAVE.cnt }; },
+  mbkill(){ if (mboss && !mboss.dead) hitMboss(mboss.hp, players[0]); },
   p2(){ joinP2(); },
   next(){ if (cut){ cut.i++; if (cut.i >= cut.pages.length){ const n = cut.next; cut = null; n(); } } else if (state === 'tv'){ tvT = 999; } else if (state === 'title'){ state = 'select'; } },
   fakeGuest(){ // smoke test del rendering ospite online
