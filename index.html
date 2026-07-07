@@ -67,6 +67,30 @@ const COSTUMES = {
 function charById(id){ return CHARS.find(c => c.id === id); }
 const SHORT = { chang:'CHANG', dean:'IL DEAN', fatneil:'FAT NEIL', duncan:'DUNCAN', vicedean:'LAYBOURNE' };
 function shortName(c){ return SHORT[c.id] || c.name.split(' ')[0]; }
+// tratti passivi — ogni personaggio ha il suo
+const TRAITS = {
+  jeff:    'Avvocato: +20% monete',
+  britta:  'Piromane: immune ai proiettili di fuoco',
+  abed:    'Meta: vede di più nel buio, le casse brillano',
+  troy:    'Atleta: scivolata più lunga e veloce',
+  annie:   'Precisina: 20% di critici (danno doppio)',
+  shirley: 'Materna: le cure valgono +1 cuore',
+  pierce:  'Taccagno: 25% di sconto da Hilda',
+  gilbert: 'Beta tester: Meraviglia +25%',
+  chang:   'Instabile: la Furia costa meno (cd -25%)',
+  dean:    'Trasformista: costumi... è già un costume',
+  leonard: 'Veterano: knockback dimezzato',
+  fatneil: 'DM: vede i punti vita dei nemici',
+  duncan:  'Terapeuta: cure +1 (ha la ricetta)',
+  vaughn:  'Zen: cade più piano',
+  vicki:   'Matita: attacco leggermente più lungo',
+  buddy:   'Entusiasta: Meraviglia +10%',
+  garrett: 'CRISI: quando è ferito corre di più',
+  guzman:  'Leggenda: inizia con 10 monete bonus',
+  rich:    'Perfetto: tutto +5%. Irritante.',
+  vicedean:'Condizionato: immune alla lava (aria fresca)',
+};
+function trait(p, id){ return p.cdef.id === id; }
 function isUnlocked(c){ return c.cost === 0 || SAVE.chars[c.id] || (c.id === 'gilbert' && SAVE.finished); }
 
 // ------------------------------------------------ ASSETS
@@ -82,6 +106,7 @@ function loadImg(key, path){
 }
 for (const c of CHARS) loadImg(c.id, 'assets/characters/' + c.id + '.png');
 for (const id in COSTUMES) for (const co of COSTUMES[id]) loadImg(id + '__' + co, 'assets/characters/' + id + '__' + co + '.png');
+for (const id of ['jeff','britta','abed','troy','annie','shirley','pierce','gilbert']) loadImg(id + '__beam', 'assets/characters/' + id + '__beam.png');
 loadImg('npc_hilda', 'assets/npc/hilda.png');
 loadImg('npc_baby', 'assets/npc/babyabed.png');
 loadImg('npc_monkey', 'assets/npc/anniesboobs.png');
@@ -97,6 +122,9 @@ const ANIM = {
   attack: { fr:[[1,10],[5,10]], spd:6 },
   dead:   { fr:[[6,4]], spd:1 },
   gaze:   { fr:[[6,2]], spd:1 },
+  slide:  { fr:[[8,4]], spd:1 },
+  kick:   { fr:[[9,4]], spd:1 },
+  crouch: { fr:[[10,6]], spd:1 },
   dance:  { fr:[[4,10],[12,8],[4,9],[8,6]], spd:12, loop:true, nodir:true },
 };
 function drawActor(sheetKey, anim, t, x, y, dir, s){
@@ -169,18 +197,27 @@ function pollGamepads(){
     if (!gp){ g.cur = {}; continue; }
     const b = n => !!(gp.buttons[n] && gp.buttons[n].pressed);
     const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+    // mappatura standard (Chrome: DualSense PS5, DualShock, Xbox)
+    // PS5: ✕=0 salto · ▢=2 attacco · ◯=1 abilità · △=3 super · R1/L1 alt · R2 super · Options=9
     g.cur = {
       left:  ax < -0.4 || b(14),
       right: ax >  0.4 || b(15),
       down:  ay >  0.5 || b(13),
       jump:  b(0),
-      atk:   b(2),
-      ab:    b(1),
-      sup:   b(3),
+      atk:   b(2) || b(5),
+      ab:    b(1) || b(4),
+      sup:   b(3) || b(7),
       ok:    b(9) || b(0),
     };
     if (gp.buttons.some(x => x && x.pressed)) initAudio();
   }
+}
+function rumble(slot, dur, mag){
+  try {
+    const gp = navigator.getGamepads && navigator.getGamepads()[slot];
+    if (gp && gp.vibrationActuator && gp.vibrationActuator.playEffect)
+      gp.vibrationActuator.playEffect('dual-rumble', { duration:dur, strongMagnitude:mag, weakMagnitude:mag*0.6 }).catch(()=>{});
+  } catch(e){}
 }
 function gpDown(i, k){ return !!GP[i].cur[k]; }
 function gpJP(i, k){ return !!GP[i].cur[k] && !GP[i].prev[k]; }
@@ -317,7 +354,30 @@ const LEVELS = [
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB          BB          BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 ]},
 {
-  name:'MONDO 2 · IL VILLAGGIO DEI CONTADINI', song:'village', sky:['#e8935a','#f5c98e'],
+  name:'MONDO 2 · LA FORESTA DI HAWKTHORNE', song:'cave', sky:['#1e3a2e','#3a6a4a'],
+  taunt:'Ho piantato questa foresta per nascondere il confine della mappa. Gli alberi sono più affidabili dei figli.',
+  rows:[
+"                                                                                                                        ",
+"                                                                                                                        ",
+"                       o o o                                                g                                          ",
+"                      ------                                              ---                                          ",
+"                                       o o                                             o o o                          ",
+"          o o                         -----            f                              -------                          ",
+"         -----                                                     --                                                  ",
+"                        f                     o o o                          f                     h                   ",
+"                                             ------        o                            f        ---                  ",
+"    o                                                     ----                                              g          ",
+"   ---          e                 --                                  o o                                  ---         ",
+"                         L                 e                         -----          e                                  ",
+"   P    T   T   ####   T   T    ###   T   #####    C    T   T      ####     T     ######    T   C    T   T     X      ",
+"       ##  ##  ##  ##     ##   ## ##     ##   ##  ###      ##     ##  ##        ##      ##     ###      ##    ###     ",
+"      ##    ####    ##   ##   ##   ##   ##     ####        ##    ##    ##      ##        ##   ## ##    ##    ## ##    ",
+"###########################^^#################################^^############################^^#########################",
+"###########################BB#################################BB############################BB#########################",
+"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+]},
+{
+  name:'MONDO 3 · IL VILLAGGIO DEI CONTADINI', song:'village', sky:['#e8935a','#f5c98e'], village:true,
   taunt:'Un villaggio di contadini pigri. Mi ricordano i tuoi amici, Pierce.',
   rows:[
 "                                                                                                                                                            ",
@@ -340,7 +400,29 @@ const LEVELS = [
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB    ~~    BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 ]},
 {
-  name:'MONDO 3 · LE CAVERNE DI HAWKTHORNE', song:'cave', sky:['#12101e','#1c1830'], dark:true,
+  name:'MONDO 4 · IL LAGO DI GIN', song:'title', sky:['#2a1a4a','#c86a5e'], gin:true,
+  taunt:'Il mio lago di gin. Distillato nel 1961, quando bere era un diritto e la felicità un difetto di fabbrica.',
+  rows:[
+"                                                                                                                        ",
+"                                                                                                                        ",
+"                                                                                                                        ",
+"                       o o                              g                               o o o                          ",
+"                      -----                            ---                             -------                         ",
+"                                    o o o                              o o                                             ",
+"           o o                     -------           f               ------                          h                 ",
+"          -----          f                                                        f                 ---                ",
+"                                                o o                                                                    ",
+"                 --            --              -----          --            --            --                g          ",
+"     P                                   f                                                                  ---        ",
+"    ###    D                     o                    o                 o                      o                 X     ",
+"   ## ##  ###      ---         -----      ---       -----     ---     -----      ---        -----      C       ###    ",
+"  ##   ######                                                                                         ###      ## #    ",
+"###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###~~~~~##  #####",
+"B##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#B~~~~~~#B  BBBBB",
+"BB~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~BBBBBBBB",
+]},
+{
+  name:'MONDO 5 · LE CAVERNE DI HAWKTHORNE', song:'cave', sky:['#12101e','#1c1830'], dark:true,
   taunt:'Attenti alla lava. L\'ho fatta installare io: costava meno dei dipendenti.',
   rows:[
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
@@ -393,8 +475,19 @@ function labPages(){ return [
   { who:'pierce', text:'Tipico di papà. Perfino da morto trova il modo di farmi sudare per i suoi soldi.' },
   { who:'abed', text:'Grafica a 8-bit, sette giocatori, mondo persistente. Troy: è il giorno più bello della nostra vita.' },
   { who:'troy', text:'È IL GIORNO PIÙ BELLO DELLA NOSTRA VITA!' },
+  { who:'shirley', text:'Che carino. Un morto che ci fa giocare per i suoi soldi. Pregherò per lui. Brevemente.' },
+  { who:'britta', text:'Vi rendete conto che stiamo monetizzando il lutto, vero? ...Ok, quale joystick è il mio?' },
+  { who:'annie', text:'Ho preparato degli appunti sul testamento. Sette pagine. Con le linguette colorate. Nessuno li leggerà, vero?' },
   { who:'jeff', text:'Ok, gruppo di studio. Entriamo, vinciamo, usciamo. E nessuno si affezioni a niente di digitale.' },
 ];}
+const OVER_LINES = [
+  '"Patetico. Come tuo padre." — Cornelius Hawthorne',
+  '"Nel mio testamento ho previsto anche questo fallimento." — Cornelius',
+  '"La morte non è la fine. È solo un caricamento più lungo." — Abed',
+  '"Ho visto community college più combattivi." — Cornelius',
+  '"E pensare che i bambini di Abed ce l\'avevano quasi fatta." — Hilda',
+  '"Condoglianze. Le salviette Hawthorne assorbono anche le lacrime." — Cornelius',
+];
 function gilbertPages(){ return [
   { who:'gilbert', text:'Basta. Vi ho battuti settecento volte in beta test. Come... come avete fatto?' },
   { who:'gilbert', text:'Mi chiamo Gilbert Lawson. Ero l\'assistente personale di Cornelius Hawthorne. E sono... suo figlio.' },
@@ -452,8 +545,9 @@ function addShake(n){ shake = Math.max(shake, n); }
 function soulGain(p, n){
   if (!p || p.hp <= 0) return;
   if (boons.caffe) n = Math.round(n * 1.5);
+  if (trait(p,'gilbert')) n = Math.round(n * 1.25);
+  if (trait(p,'buddy'))   n = Math.round(n * 1.1);
   p.soul = Math.min(100, p.soul + n);
-  if (p.soul >= 100) { /* pronto */ }
 }
 function comboKill(){
   combo.n++; combo.t = 180;
@@ -464,7 +558,9 @@ function comboMult(){ return Math.min(5, 1 + Math.floor(combo.n / 3)); }
 function killEnemy(e, byPlayer){
   e.hp = 0; sfx('stomp');
   burst(e.x + e.w/2, e.y + e.h/2, '#c9a227', 10);
-  addWallet(2 * comboMult());
+  let c = 2 * comboMult();
+  if (byPlayer && trait(byPlayer,'jeff')) c = Math.ceil(c * 1.2);   // parcella dell'avvocato
+  addWallet(c);
   soulGain(byPlayer || players[0], 12);
   comboKill(); addShake(3);
 }
@@ -493,7 +589,7 @@ const SUPER_NAME = { slow:'DISCORSO WINGER', rain:'BRITTAPOCALISSE', jail:'JAILB
   laser:'LASER LOTUS LIV.6', volley:'RAFFICA DEL BETA TESTER' };
 function activateSuper(p){
   const kind = SUPER_OF[p.cdef.id] || 'slow';
-  p.soul = 0; sfx('craft'); addShake(10);
+  p.soul = 0; sfx('craft'); addShake(10); rumble(p.slot, 400, 1);
   burst(p.x + p.w/2, p.y + p.h/2, '#f5d442', 30, 4);
   showToast('★ ' + SUPER_NAME[kind] + ' ★');
   switch(kind){
@@ -559,7 +655,8 @@ function mkPlayer(cdef, costume, x, y, slot){
     x, y, w:20, h:28, vx:0, vy:0, face:1, onGround:false,
     hp: cdef.hp, maxhp: cdef.hp, inv:0, jumps:0, atkT:0, atkCd:0, abCd:0,
     cpx:x, cpy:y, anim:0, downT:0,
-    soul:0, shield:0, jail:null, sprintT:0, focusT:0, laserT:0, net:false };
+    soul:0, shield:0, jail:null, sprintT:0, focusT:0, laserT:0, net:false,
+    slideT:0, pounding:false, warpT:42, idleT:0 };
 }
 function sheetOf(p){ return p.costume ? p.cdef.id + '__' + p.costume : p.cdef.id; }
 function alivePlayers(){ return players.filter(p => p.hp > 0); }
@@ -584,7 +681,7 @@ function loadLevel(i){
   const rows = def.rows.map(r => r.padEnd(wMax, ' ').split(''));
   lvl = { def, rows, w: wMax, h: rows.length, name: def.name, markers: [] };
   enemies = []; projs = []; parts = []; babies = []; boss = null; rival = null; monkey = null;
-  if (i !== 2) villageBurning = false;
+  if (!def.village) villageBurning = false;
   let sx = TS*2, sy = 0;
   for (let y = 0; y < lvl.h; y++) for (let x = 0; x < lvl.w; x++){
     const c = rows[y][x];
@@ -593,7 +690,7 @@ function loadLevel(i){
     else if (c === 'f'){ enemies.push(mkFlyer(x*TS, y*TS));  rows[y][x] = ' '; }
     else if (c === 'R'){ rival = mkRival(x*TS, y*TS); rows[y][x] = ' '; }
     else if (c === 'M'){ monkey = { x:x*TS, y:y*TS - 16, seen:false }; rows[y][x] = ' '; }
-    else if ('pbtaH'.includes(c)){ lvl.markers.push({ c, x: x*TS, y: y*TS - 16 }); rows[y][x] = ' '; }
+    else if ('pbtaHLD'.includes(c)){ lvl.markers.push({ c, x: x*TS, y: y*TS - 16 }); rows[y][x] = ' '; }
   }
   const old = players;
   players = old.map((p, k) => {
@@ -679,6 +776,22 @@ function buildGroups(){
         { who: ids.length > 1 ? ids[1] : ids[0], text:'E poi abbiamo seppellito le prove.' },
         { who: ids[0], text:'...Nel fuoco. Abbiamo seppellito le prove nel fuoco. Nessuno deve saperlo.' }]});
     }
+    else if (m.c === 'L'){
+      const ids = inParty('leonard') ? ['vicki'] : ['leonard'];
+      groups.push({ x:m.x, y:m.y, ids, anim:'idle', done:false, lines: ids[0] === 'leonard' ? [
+        { who:'leonard', text:'Ai miei tempi i videogiochi erano un buco su una scheda perforata. E ci piaceva soffrire.' },
+        { who:'jeff', text:'Zitto, Leonard. Nessuno sa nemmeno perché sei nella foresta.' },
+        { who:'leonard', text:'Sono in ogni foresta, Winger. E ti maledico: che i tuoi salti siano sempre corti di un pixel.' }] : [
+        { who:'vicki', text:'Leonard è andato a lamentarsi altrove. Ha lasciato solo giudizi non richiesti.' }]});
+    }
+    else if (m.c === 'D'){
+      const ids = inParty('duncan') ? ['chang'] : ['duncan'];
+      groups.push({ x:m.x, y:m.y, ids, anim:'idle', done:false, lines: ids[0] === 'duncan' ? [
+        { who:'duncan', text:'Ah, un lago di gin. Finalmente un elemento di gameplay con cui ho familiarità professionale.' },
+        { who:'duncan', text:'Da psicologo ti direi di non buttarti. Da britannico ti direi di portarmi un bicchiere. Da entrambi: fai attenzione alle piattaforme.' },
+        { who:'duncan', text:'Annegare nel gin resta il modo più dignitoso di morire. Ma tecnicamente è comunque un game over.' }] : [
+        { who:'chang', text:'Duncan è caduto nel lago. Volontariamente. TRE VOLTE. El Tigre approva.' }]});
+    }
     else if (m.c === 'H'){
       const lines = [{ who:'hilda', text:'Benvenuto, viaggiatore. Vendo provviste: premi GIÙ qui vicino per il mio banco.' }];
       if (inParty('abed')) lines.push({ who:'abed', text:'Hilda. Costruiremo una famiglia insieme. Ho già calcolato quanti figli servono per un esercito.' });
@@ -742,9 +855,11 @@ function hurtPlayer(p, n, fromX){
     return;
   }
   addShake(5);
+  rumble(p.slot, 220, 0.8);
   combo.n = 0;
   p.hp -= n; p.inv = 75;
-  p.vy = -7; p.vx = (p.x + p.w/2 < fromX) ? -5 : 5;
+  const kb = trait(p,'leonard') ? 2.5 : 5;
+  p.vy = -7; p.vx = (p.x + p.w/2 < fromX) ? -kb : kb;
   sfx('hurt');
   burst(p.x + p.w/2, p.y + p.h/2, '#e84a4a', 10);
   if (p.hp <= 0){
@@ -780,12 +895,20 @@ function updateOnePlayer(p, atkBoxes){
     return;
   }
   updateSupers(p);
-  const spdMul = (boons.stivali ? 1.15 : 1) * (p.sprintT > 0 ? 2.6 : 1);
+  if (p.warpT > 0) p.warpT--;
+  let spdMul = (boons.stivali ? 1.15 : 1) * (p.sprintT > 0 ? 2.6 : 1);
+  if (trait(p,'garrett') && p.hp < p.maxhp) spdMul *= 1.25;   // CRISI!
+  if (trait(p,'rich')) spdMul *= 1.05;
   const acc = p.onGround ? 0.9 : 0.55;
-  if (pDown(p,'left'))  { p.vx = Math.max(p.vx - acc*spdMul, -p.cdef.speed*spdMul); p.face = -1; }
+  if (p.slideT > 0){
+    p.slideT--;
+    p.vx = p.face * (trait(p,'troy') ? 9 : 7) * (p.slideT / (trait(p,'troy') ? 26 : 18));
+    if (frame % 2 === 0) parts.push({ x:p.x + p.w/2 - p.face*10, y:p.y + p.h - 2, vx:-p.face, vy:-0.5, t:12, color:'#c8b89a' });
+  } else if (pDown(p,'left'))  { p.vx = Math.max(p.vx - acc*spdMul, -p.cdef.speed*spdMul); p.face = -1; }
   else if (pDown(p,'right')){ p.vx = Math.min(p.vx + acc*spdMul, p.cdef.speed*spdMul); p.face = 1; }
   else p.vx *= p.onGround ? 0.72 : 0.92;
   if (Math.abs(p.vx) < 0.05) p.vx = 0;
+  p.idleT = (p.onGround && Math.abs(p.vx) < 0.3 && p.atkT <= 0) ? p.idleT + 1 : 0;
 
   const maxJumps = 1 + (p.cdef.ab === 'dj' ? 1 : 0) + (boons.piuma ? 1 : 0);
   if (p.onGround) p.jumps = 0;
@@ -794,24 +917,49 @@ function updateOnePlayer(p, atkBoxes){
     else if (p.jumps < maxJumps){ p.vy = -p.cdef.jump * 0.92; p.jumps++; sfx('jump'); burst(p.x+p.w/2, p.y+p.h, '#cccccc', 6, 1.5); }
   }
   if (!pDown(p,'jump') && p.vy < -4) p.vy = -4;
+  if (p.pounding) p.vy = 13;
+  if (trait(p,'vaughn') && p.vy > 4 && !pDown(p,'down')) p.vy = 4;   // Zen: cade piano
   p.preVy = p.vy;
+  const wasAir = !p.onGround;
   moveAndCollide(p);
   if (p.cdef.ab === 'glide' && pDown(p,'jump') && p.vy > 1.4 && !p.onGround) p.vy = 1.4;
+  // atterraggio: polvere + SCHIANTO (onda d'urto)
+  if (wasAir && p.onGround){
+    if (p.pounding){
+      p.pounding = false;
+      addShake(7); sfx('boss'); rumble(p.slot, 250, 0.9);
+      burst(p.x + p.w/2, p.y + p.h, '#c8b89a', 22, 3.5);
+      for (const e of enemies)
+        if (Math.abs(e.x + e.w/2 - p.x - p.w/2) < 90 && Math.abs(e.y - p.y) < 60){ e.hp--; if (e.hp <= 0) killEnemy(e, p); }
+      const btx = Math.floor((p.x + p.w/2) / TS), bty = Math.floor((p.y + p.h + 8) / TS);
+      for (let dx = -2; dx <= 2; dx++) if (tileAt(btx+dx, bty) === 'k') breakCrate(btx+dx, bty, p);
+      if (boss && !boss.dead && Math.abs(boss.x + 48 - p.x) < 110 && Math.abs(boss.y + 96 - p.y - p.h) < 60) hitBoss(1);
+    } else if (p.preVy > 7){
+      burst(p.x + p.w/2, p.y + p.h, 'rgba(200,190,170,0.8)', 6, 1.5);
+    }
+  }
 
   // super al 100% di Meraviglia
   if (pJP(p,'sup') && p.soul >= 100) activateSuper(p);
 
   if (p.atkCd > 0) p.atkCd--;
   if (p.atkT > 0) p.atkT--;
-  if (pJP(p,'atk') && p.atkCd <= 0){
-    const fast = p.cdef.ab === 'blade' || p.focusT > 0;
-    p.atkT = fast ? 12 : 10;
-    p.atkCd = p.focusT > 0 ? 8 : fast ? 16 : 24;
-    sfx('atk');
+  if (pJP(p,'atk') && p.atkCd <= 0 && p.slideT <= 0 && !p.pounding){
+    if (pDown(p,'down') && p.onGround){          // SCIVOLATA
+      p.slideT = trait(p,'troy') ? 26 : 18;
+      p.atkCd = 34; sfx('atk');
+    } else if (pDown(p,'down') && !p.onGround){  // SCHIANTO
+      p.pounding = true; p.atkCd = 30; sfx('fire');
+    } else {
+      const fast = p.cdef.ab === 'blade' || p.focusT > 0;
+      p.atkT = fast ? 12 : 10;
+      p.atkCd = p.focusT > 0 ? 8 : fast ? 16 : 24;
+      sfx('atk');
+    }
   }
   if (p.abCd > 0) p.abCd--;
   if (pJP(p,'ab') && p.abCd <= 0){
-    if (p.cdef.ab === 'fire'){ firePlayerShot(p, false); p.abCd = 40; }
+    if (p.cdef.ab === 'fire'){ firePlayerShot(p, false); p.abCd = trait(p,'chang') ? 30 : 40; }
     else if (lavagun && p.cdef.ab !== 'wave'){ firePlayerShot(p, true); p.abCd = 55; }
     else if (p.cdef.ab === 'wave'){
       p.abCd = 300; sfx('boss');
@@ -832,9 +980,10 @@ function updateOnePlayer(p, atkBoxes){
     const c = tileAt(tx, ty);
     if (c === 'o'){ setTile(tx, ty, ' '); addWallet(1); sfx('coin'); burst(tx*TS+16, ty*TS+16, '#f5d442', 5, 1.5); }
     else if (c === 'g'){ setTile(tx, ty, ' '); cristalli++; sfx('gem'); burst(tx*TS+16, ty*TS+16, '#5ae8e8', 10, 2); showToast('+1 CRISTALLO DI HAWKTHORNE (' + cristalli + ')'); }
-    else if (c === 'h'){ if (p.hp < p.maxhp){ setTile(tx, ty, ' '); p.hp++; sfx('heart'); burst(tx*TS+16, ty*TS+16, '#e85a7a', 8, 2); } }
+    else if (c === 'h'){ if (p.hp < p.maxhp){ setTile(tx, ty, ' '); p.hp = Math.min(p.maxhp, p.hp + (trait(p,'shirley') || trait(p,'duncan') ? 2 : 1)); sfx('heart'); burst(tx*TS+16, ty*TS+16, '#e85a7a', 8, 2); } }
     else if (c === 'C'){ setTile(tx, ty, 'c'); players.forEach(q => { q.cpx = tx*TS + 4; q.cpy = ty*TS - q.h - 2; }); sfx('check'); showToast('CONSOLE — CHECKPOINT'); }
-    else if (c === '^' || c === '~'){ hurtPlayer(p, 1, tx*TS + 16); }
+    else if (c === '^'){ hurtPlayer(p, 1, tx*TS + 16); }
+    else if (c === '~'){ if (!trait(p,'vicedean')) hurtPlayer(p, 1, tx*TS + 16); }
     else if (c === 'X'){
       const locked = (boss && !boss.dead) || (rival && !rival.defeated);
       if (!locked){
@@ -849,8 +998,13 @@ function updateOnePlayer(p, atkBoxes){
 
   if (p.atkT > 0){
     const big = p.cdef.ab === 'blade' || p.focusT > 0;
-    const aw = p.focusT > 0 ? 48 : big ? 40 : 30;
-    atkBoxes.push({ x: p.face === 1 ? p.x + p.w : p.x - aw, y: p.y + 2, w: aw, h: 26, owner: p });
+    let aw = p.focusT > 0 ? 48 : big ? 40 : 30;
+    if (trait(p,'vicki')) aw += 8;
+    const crit = (trait(p,'annie') || trait(p,'rich')) && Math.random() < 0.2;
+    atkBoxes.push({ x: p.face === 1 ? p.x + p.w : p.x - aw, y: p.y + 2, w: aw, h: 26, owner: p, dmg: crit ? 2 : 1, crit });
+  }
+  if (p.slideT > 0){
+    atkBoxes.push({ x: p.x - 6, y: p.y + 10, w: p.w + 12, h: p.h - 10, owner: p, dmg: 1 });
   }
 
   // menu contestuali (negozio / forgia)
@@ -988,7 +1142,11 @@ function updatePlay(){
         }
       }
     }
-    for (const ab of atkBoxes) if (e.hp > 0 && overlap(ab, e)){ e.hp--; if (e.hp <= 0) killEnemy(e, ab.owner); else { sfx('atk'); burst(e.x+e.w/2, e.y+e.h/2, '#e8e8e8', 5); } }
+    for (const ab of atkBoxes) if (e.hp > 0 && overlap(ab, e)){
+      e.hp -= (ab.dmg || 1);
+      if (ab.crit){ showToast('CRITICO!'); burst(e.x+e.w/2, e.y, '#f5d442', 8, 3); }
+      if (e.hp <= 0) killEnemy(e, ab.owner); else { sfx('atk'); burst(e.x+e.w/2, e.y+e.h/2, '#e8e8e8', 5); }
+    }
     for (const p of alive){
       if (e.hp > 0 && overlap(p, e)){
         if (p.sprintT > 0){ killEnemy(e, p); }
@@ -1019,7 +1177,10 @@ function updatePlay(){
     } else if (pr.from === 'ally'){
       if (boss && !boss.dead && overlap(pr, boss)){ hitBoss(1); pr.t = 0; }
     } else {
-      for (const p of alive) if (overlap(pr, p)){ hurtPlayer(p, 1, pr.x); pr.t = 0; }
+      for (const p of alive) if (overlap(pr, p)){
+        if (pr.fire && trait(p,'britta')){ pr.t = 0; burst(p.x+p.w/2, p.y+10, '#f5a442', 8, 2); showToast('Britta assorbe il fuoco. Ovviamente.'); }
+        else { hurtPlayer(p, 1, pr.x); pr.t = 0; }
+      }
     }
     if (pr.fire && frame % 3 === 0) parts.push({ x: pr.x + pr.w/2, y: pr.y + pr.h/2, vx: 0, vy: -0.5, t: 12, color: '#f5a442' });
   }
@@ -1112,6 +1273,8 @@ function hitBoss(n){
     startCut(endingPages(), () => { state = 'win'; endTime = performance.now(); setSong('win'); });
     return;
   }
+  if (!boss.t10 && boss.hp <= boss.maxhp * 0.66){ boss.t10 = true; showToast('CORNELIUS: "Ho licenziato gente migliore di voi. Il giorno di Natale. Per divertimento."'); sfx('organ'); }
+  if (!boss.t5 && boss.hp <= boss.maxhp * 0.33){ boss.t5 = true; showToast('CORNELIUS: "Smettete di colpirmi! Sono già MORTO. Questo è solo accanimento."'); sfx('organ'); }
   if (!babyEventDone && boss.hp <= 8){
     babyEventDone = true;
     startCut(babyPages(), () => {
@@ -1294,7 +1457,7 @@ function drawBackground(){
       const bx = i * 300 - (cam.x * 0.25) % 300;
       ctx.beginPath(); ctx.moveTo(bx, H); ctx.lineTo(bx + 150, H - 180); ctx.lineTo(bx + 300, H); ctx.fill();
     }
-    ctx.fillStyle = villageBurning && lvlIdx === 2 ? 'rgba(80,60,60,0.8)' : 'rgba(255,255,255,0.75)';
+    ctx.fillStyle = villageBurning && lvl.def.village ? 'rgba(80,60,60,0.8)' : 'rgba(255,255,255,0.75)';
     for (let i = 0; i < 6; i++){
       const nx = ((i * 260 + 80 - cam.x * 0.12) % (W + 200) + W + 200) % (W + 200) - 100;
       const ny = 40 + (i * 53) % 120;
@@ -1413,10 +1576,11 @@ function drawTiles(){
         ctx.moveTo(x + 16, y + TS); ctx.lineTo(x + 24, y + 6); ctx.lineTo(x + 32, y + TS); ctx.fill();
         break;
       case '~': {
-        ctx.fillStyle = '#d83a1e'; ctx.fillRect(x, y + 6, TS, TS - 6);
-        ctx.fillStyle = '#f5822a';
+        const gin = lvl.def.gin;
+        ctx.fillStyle = gin ? '#8a7a3a' : '#d83a1e'; ctx.fillRect(x, y + 6, TS, TS - 6);
+        ctx.fillStyle = gin ? '#c9b86a' : '#f5822a';
         ctx.fillRect(x, y + 4 + Math.sin(frame * 0.12 + tx) * 1.5, TS, 6);
-        ctx.fillStyle = '#f5d442'; ctx.fillRect(x + (frame + tx*7) % 24, y + 6, 5, 3);
+        ctx.fillStyle = gin ? '#f0ead0' : '#f5d442'; ctx.fillRect(x + (frame + tx*7) % 24, y + 6, 5, 3);
         break; }
       case 'o': {
         const wob = Math.abs(Math.sin(frame * 0.1 + tx));
@@ -1431,6 +1595,10 @@ function drawTiles(){
         ctx.fillStyle = '#b8f8f8'; ctx.fillRect(x + 12, y + 10, 5, 5);
         break; }
       case 'k': {
+        if (players.some(p => trait(p,'abed'))){
+          ctx.fillStyle = 'rgba(245,212,66,' + (0.25 + Math.sin(frame*0.1)*0.15) + ')';
+          ctx.fillRect(x, y + 1, 32, 34);
+        }
         ctx.fillStyle = '#a8763e'; ctx.fillRect(x + 3, y + 4, 26, 28);
         ctx.fillStyle = '#7d5629'; ctx.fillRect(x + 3, y + 4, 26, 3); ctx.fillRect(x + 3, y + 29, 26, 3);
         ctx.fillRect(x + 3, y + 4, 3, 28); ctx.fillRect(x + 26, y + 4, 3, 28);
@@ -1508,13 +1676,14 @@ function drawDarkness(){
   ctx.fillStyle = 'rgba(6,6,14,0.92)';
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'destination-out';
+  const meta = players.some(p => trait(p,'abed')) ? 1.5 : 1;   // Abed vede i pattern
   for (const p of alive){
     const px2 = p.x + p.w/2 - cam.x, py = p.y + p.h/2 - cam.y;
-    const g = ctx.createRadialGradient(px2, py, 40, px2, py, 240);
+    const g = ctx.createRadialGradient(px2, py, 40 * meta, px2, py, 240 * meta);
     g.addColorStop(0, 'rgba(0,0,0,1)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(px2, py, 240, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px2, py, 240 * meta, 0, Math.PI*2); ctx.fill();
   }
   ctx.restore();
 }
@@ -1609,20 +1778,23 @@ function drawMenu(){
   text('Monete: ' + SAVE.wallet, W/2, by + 56, 13, '#9a9ac0', 'center');
   m.items.forEach((it, i) => {
     const sel = i === m.sel;
-    text((sel ? '▶ ' : '  ') + it.name + '  — ' + it.cost + ' monete', bx + 30, by + 88 + i*34, 14, sel ? '#5ae87a' : '#fff');
+    text((sel ? '▶ ' : '  ') + it.name + '  — ' + menuCost(it) + ' monete', bx + 30, by + 88 + i*34, 14, sel ? '#5ae87a' : '#fff');
   });
+  if (trait(m.p,'pierce')) text('Sconto famiglia Hawthorne: -25%', W/2, by + 74, 11, '#f5d442', 'center');
   text('INVIO compra · X chiudi', W/2, by + bh - 14, 12, 'rgba(255,255,255,0.5)', 'center');
 }
+function menuCost(it){ return Math.ceil(it.cost * (menu && trait(menu.p,'pierce') ? 0.75 : 1)); }
 function updateMenu(){
   const m = menu;
-  if (jp('ArrowUp') || jp('KeyW')) m.sel = (m.sel + m.items.length - 1) % m.items.length;
-  if (jp('ArrowDown') || jp('KeyS')) m.sel = (m.sel + 1) % m.items.length;
-  if (jp('Enter')){
+  if (jp('ArrowUp') || jp('KeyW') || gpJP(0,'jump')) m.sel = (m.sel + m.items.length - 1) % m.items.length;
+  if (jp('ArrowDown') || jp('KeyS') || gpJP(0,'down')) m.sel = (m.sel + 1) % m.items.length;
+  if (jp('Enter') || gpJP(0,'ok')){
     const it = m.items[m.sel];
-    if (SAVE.wallet >= it.cost){ SAVE.wallet -= it.cost; saveGame(); it.act(m.p); sfx('buy'); showToast(it.name); menu = null; }
+    const cost = menuCost(it);
+    if (SAVE.wallet >= cost){ SAVE.wallet -= cost; saveGame(); it.act(m.p); sfx('buy'); showToast(it.name); menu = null; }
     else sfx('hurt');
   }
-  if (jp('KeyX') || jp('Escape')) menu = null;
+  if (jp('KeyX') || jp('Escape') || gpJP(0,'atk')) menu = null;
 }
 
 // ------------------------------------------------ SCENE
@@ -1766,7 +1938,7 @@ function drawSelect(){
   if (unlocked && costumes) hint += ' · [C] costume';
   if (SAVE.finished) hint += ' · [N] Incubo: ' + (nightmare ? 'SÌ ☠' : 'no');
   text(hint, W/2, H - 38, 12, unlocked || SAVE.wallet >= c.cost ? '#5ae87a' : '#e84a4a', 'center');
-  text('SUPER di ' + shortName(c) + ': ' + SUPER_NAME[SUPER_OF[c.id] || 'slow'] + ' (carica la Meraviglia colpendo i nemici, poi V/H)', W/2, H - 24, 11, '#8a6ae8', 'center');
+  text('SUPER: ' + SUPER_NAME[SUPER_OF[c.id] || 'slow'] + ' (V/H a Meraviglia piena) · TRATTO: ' + (TRAITS[c.id] || '—'), W/2, H - 24, 11, '#8a6ae8', 'center');
   if (selCostume) text('COSTUME: ' + selCostume.toUpperCase(), W/2, H - 8, 13, '#5ae8e8', 'center');
   if (selMsg) text(selMsg, W/2, H - 8, 13, '#e84a4a', 'center');
 }
@@ -1777,7 +1949,7 @@ function drawOver(){
     drawActor(sheetOf(players[i]), 'dead', 0, W/2 - 60 + i*70, 300, 1, 1.6);
   text('GAME OVER', W/2, 200, 64, '#e84a4a', 'center');
   text('Sei stato disereditato.', W/2, 250, 20, '#fff', 'center');
-  text('"Patetico. Come tuo padre." — Cornelius Hawthorne', W/2, 420, 15, '#9a8ac8', 'center');
+  text(OVER_LINES[deaths % OVER_LINES.length], W/2, 420, 15, '#9a8ac8', 'center');
   if (Math.floor(frame / 30) % 2 === 0) text('INVIO PER RIPROVARE IL LIVELLO', W/2, 460, 18, '#5ae87a', 'center');
 }
 function drawWin(){
@@ -1807,12 +1979,27 @@ function drawPlayer(p){
     drawActor(sheetOf(p), 'dead', 0, p.x + p.w/2 - 24 - cam.x, p.y + p.h - 46 - cam.y, p.face, 1);
     return;
   }
+  // teletrasporto in stile puntata (beam colonna di luce)
+  if (p.warpT > 0){
+    const bimg = IMGS[p.cdef.id + '__beam'];
+    if (bimg && bimg.complete && bimg.naturalWidth){
+      const fi = Math.min(3, Math.floor((42 - p.warpT) / 6));
+      const bh = Math.min(300, p.y + p.h - cam.y + 40);
+      ctx.globalAlpha = Math.min(1, p.warpT / 14);
+      ctx.drawImage(bimg, fi*36, 0, 36, 300, p.x + p.w/2 - 18 - cam.x, p.y + p.h - 300 - cam.y, 36, 300);
+      ctx.globalAlpha = 1;
+    }
+    if (p.warpT > 22) return;   // il personaggio si materializza a metà beam
+  }
   if (p.inv > 0 && Math.floor(frame / 4) % 2 === 1) return;
   let anim = 'idle', t = p.anim;
-  if (p.atkT > 0){ anim = 'attack'; t = 12 - p.atkT; }
+  if (p.slideT > 0){ anim = 'slide'; }
+  else if (p.pounding){ anim = 'kick'; }
+  else if (p.atkT > 0){ anim = 'attack'; t = 12 - p.atkT; }
   else if (p.inv > 55){ anim = 'hurt'; }
   else if (!p.onGround){ anim = 'jump'; }
   else if (Math.abs(p.vx) > 0.3){ anim = 'walk'; }
+  else if (p.idleT > 360){ anim = 'gaze'; }   // dopo 6s guarda in camera, alla Abed
   drawActor(sheetOf(p), anim, t, p.x + p.w/2 - 24 - cam.x, p.y + p.h - 46 - cam.y, p.face, 1);
   if (players.length > 1){
     text('P' + (p.slot+1), p.x + p.w/2 - cam.x, p.y - 24 - cam.y, 11, p.slot ? '#8ae8e8' : '#f5d442', 'center');
@@ -1824,7 +2011,15 @@ function drawPlay(){
   drawTiles();
   drawGroups();
   if (monkey) drawMonkey(monkey.x - cam.x, monkey.y - cam.y - 16, frame);
-  for (const e of enemies) e.type === 'walker' ? drawWalker(e) : e.type === 'ghost' ? drawGhost(e) : drawFlyer(e);
+  const hasNeil = players.some(p => trait(p,'fatneil'));
+  for (const e of enemies){
+    e.type === 'walker' ? drawWalker(e) : e.type === 'ghost' ? drawGhost(e) : drawFlyer(e);
+    if (hasNeil && e.hp > 0){    // il DM vede i punti vita
+      ctx.fillStyle = '#26262e'; ctx.fillRect(e.x - cam.x, e.y - 10 - cam.y, 26, 4);
+      ctx.fillStyle = '#5ae87a'; ctx.fillRect(e.x - cam.x, e.y - 10 - cam.y, 26 * Math.min(1, e.hp / 3), 4);
+    }
+    if (e.elite){ ctx.fillStyle = 'rgba(232,74,74,0.8)'; ctx.fillRect(e.x - cam.x + 8, e.y - 6 - cam.y, 10, 3); }
+  }
   if (rival && !rival.defeated) drawRival();
   if (boss && !boss.dead) drawBoss();
   for (const bb of babies) drawBabySprite(bb.x - cam.x, bb.y - cam.y, bb.anim, bb.vx > 0 ? 1 : -1);
@@ -1985,7 +2180,12 @@ function drawGuest(){
     e[0] === 'walker' ? drawWalker(fake) : e[0] === 'ghost' ? drawGhost(fake) : drawFlyer(fake);
   }
   if (s.ri) drawActor('gilbert', s.ri[4], s.ri[5], s.ri[0] + 11 - 24 - cam.x, s.ri[1] + 30 - 46 - cam.y, s.ri[2], 1);
-  if (s.bo){ boss = { x:s.bo[0], y:s.bo[1], hp:s.bo[2], maxhp:s.bo[3], mode:s.bo[4], hurtT:s.bo[5], dead:false, w:96, h:96 }; drawBoss(); }
+  if (s.bo){
+    const bk = boss;
+    boss = { x:s.bo[0], y:s.bo[1], hp:s.bo[2], maxhp:s.bo[3], mode:s.bo[4], hurtT:s.bo[5], dead:false, w:96, h:96 };
+    drawBoss();
+    boss = bk;
+  }
   for (const b of s.bb) drawBabySprite(b[0] - cam.x, b[1] - cam.y, b[2], b[3]);
   if (s.hud.ally && s.bo) drawActor('gilbert', 'idle', 0, 40 - cam.x, 14*TS - 14 - cam.y, 1, 1);
   for (const pr of s.pr){
@@ -2053,6 +2253,7 @@ function startRun(){
   startTime = performance.now();
   const cdef = CHARS[selIdx];
   players = [mkPlayer(cdef, selCostume, 0, 0, 0)];
+  if (cdef.id === 'guzman'){ SAVE.wallet += 10; saveGame(); showToast('Bonus Leggenda: +10 monete'); }
   sfx('organ');
   startCut([
     { who:'cornelius', text:'"GIOCATORE 1: ' + cdef.name + '. Benvenuto nella mia anticamera. La freccia verde ti porta nel mio mondo. Che tu ne sia... indegno."' },
@@ -2190,6 +2391,16 @@ window._hawk = {
   incubo(){ SAVE.finished = true; nightmare = !nightmare; },
   p2(){ joinP2(); },
   next(){ if (cut){ cut.i++; if (cut.i >= cut.pages.length){ const n = cut.next; cut = null; n(); } } else if (state === 'tv'){ tvT = 999; } else if (state === 'title'){ state = 'select'; } },
+  fakeGuest(){ // smoke test del rendering ospite online
+    net.role = 'host'; const s = null;
+    const saved = state;
+    net.tileSent = 0;
+    const snap = (function(){ const old = netSend; let out = null; netSend = o => { out = o.s; }; hostSnapshot(); netSend = old; return out; })();
+    net.role = 'guest'; net.snap = snap; state = 'guestplay';
+    draw();
+    state = saved; net.role = null; net.snap = null;
+    return snap ? Object.keys(snap).join(',') : 'NO SNAP';
+  },
   step(n){ for (let i = 0; i < (n||1); i++){ update(); for (const k in justPressed) delete justPressed[k]; frame++; } draw(); },
   reset(){ localStorage.removeItem('hawk_save'); location.reload(); }
 };
