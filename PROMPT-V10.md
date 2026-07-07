@@ -13,7 +13,7 @@
 - Netcode robusto declassato a nice-to-have (Sessione 6).
 - Mondi: da 2 previsti a 5 nuovi, generabili come righe-dato.
 
-## CONTESTO (stato v10.1 — Sessione 1 completata)
+## CONTESTO (stato v10.2 — Sessioni 1-2 completate)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -29,7 +29,10 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 - V10.1: registri `ENEMIES` (mkEnemy, spawn per-mondo nei def LEVELS),
   `VFX` (drawVFX), `ACHIEVEMENTS` (award/bump, SAVE.cnt), `QUESTS` +
   quest-engine (collect tile 'Z' / kill, fuori ordine, SAVE.quests).
-  Atto I completo. Strobo animazione fixato (isteresi airT) e verificato.
+  Atto I e II completi. Registro MBOSSES (hopper/swooper/leaper: Re Ghianda,
+  Betafish, Regina pipistrelli), nuoto+ubriachezza nel gin, ACTS con intro/end
+  e pendingCut, NPC agganciati al terreno (groundAt), tutorial comandi
+  adattivo tastiera/PS5, Gilbert NPC hub + sbloccato gratis a fine Atto II.
 - Debug: `_hawk.goto(n) .step(n) .tp(x) .soul() .super() .kill() .dmg(n)
   .beatRival() .p2() .give(n) .gems(n) .boon(id) .forge() .incubo() .next()
   .fakeGuest() .reset() .info() .quest() .mbkill()`.
@@ -102,15 +105,9 @@ Priorità alle fonti automatizzabili via curl:
 - **Kenney** (kenney.nl, tutto CC0): zip diretti via curl -L. Buono per
   particelle, UI, tile generici.
 
-### Fonte 3 (free, NON scriptabile): itch.io — fallback con utente nel loop
-Download dietro bottone: chiedi all'utente di scaricare lo zip e dartelo,
-oppure salta. Pack consigliati (verificati free):
-- **Foozle "Pixel Magic Effects"** (foozlecc.itch.io/pixel-magic-sprite-effects):
-  10 effetti animati (2 fuoco, 2 acqua, 2 terra, 2 vento, portale, esplosione).
-  Licenza dichiarata: uso/modifica liberi anche commerciale, no attribuzione.
-  PRIMA SCELTA per i super elementali.
-- **pimen** (pimen.itch.io): spell effects vari, molti free.
-- **BDragon1727**, **ansimuz free packs**, **CodeManu Free VFX**: alternative.
+### Fonte 3 (free, NON scriptabile): itch.io — l'utente scarica lo zip, o salta
+Pack free consigliati per i super elementali: **Foozle "Pixel Magic Effects"**
+(foozlecc.itch.io, no-attribution), **pimen**, BDragon1727, ansimuz, CodeManu.
 
 ### Regole integrazione asset esterni
 - Verifica visiva OBBLIGATORIA (rendering di prova) prima dell'inline.
@@ -192,15 +189,31 @@ Ogni sessione: leggi questo file → esegui → criteri accettazione → rituale
 di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
 - **S1 — Fondamenta**: ✅ COMPLETATA (v10.1). Registri, quest-engine,
   Atto I, achievement, strobo verificato pixel-stabile frame-per-frame.
-- **S2 — Atto II**: nuoto+ubriachezza lago, betafish, campioni di Gilbert,
-  Gilbert alleato post-sconfitta. Mini-boss caverne (icebat regina).
+- **S2 — Atto II**: ✅ COMPLETATA (v10.2). Nuoto, betafish, icebat regina,
+  quest campioni, Gilbert alleato/giocabile/NPC hub, tutorial comandi.
 - **S3 — Greendale**: mondo, Dean+quest, Chang boss, Leonard, Atto III
   completo. Mini-boss villaggio.
 - **S4 — Paintball + Atto IV**: livello segreto, pipeline Darkest Timeline
   remix, personaggi malvagi, Dreamatorium + Abed-Oscuro.
-- **S5 — Sistemi e polish**: combo super, livelli super, boss rush, incubo,
-  achievement, speedrun, parallax/meteo/transizioni/stinger, VFX esterni,
-  side-quest, slot save multipli + export/import base64.
+- **S5 — Sistemi, polish e HOGWARTS DI GREENDALE**: combo super, livelli
+  super, boss rush, incubo, pagina achievement, speedrun, parallax/meteo/
+  transizioni/stinger, VFX esterni, side-quest, slot save + export/import.
+  **TEMA HARRY POTTER (richiesto dall'utente, tono Ricky Gervais — comico,
+  assurdo, un filo crudele ma mai col cast)**: mondo segreto "SCUOLA DI MAGIA
+  E STREGONERIA DI GREENDALE" (ingresso: armadietto 9¾ a Greendale che ti
+  fa sbattere il muso al primo tentativo). Il Cappello Parlante è il DEAN
+  con un cappello che smista insultando ("Grifondoro? Tu? Sii serio. Casa
+  Tassofrasso-Wipes, sezione B."). Le 4 case: Grifondork, Serpeverde-Chang,
+  Corvo-Nadir e Tassofrasso-Wipes (sponsorizzata). Pierce = insegnante di
+  "Difesa Contro le Arti Noiose" (già in costume wizard, livello 6 Laser
+  Lotus = canonico). Boss: **LORD CHANGEMORT** (Chang calvo con serpente
+  di feltro, fulmini propri, parla di sé in terza persona). Il Boccino
+  d'Oro è ANNIE'S BOOBS che ha rubato la pallina e giudica tutti. Bacchette
+  = boons magici temporanei; "quidditch" = minigioco raccogli-monete a
+  gravità ridotta su scope che sono chiaramente scope del custode. Quest
+  con dialoghi alla Gervais: il narratore Abed commenta quanto sia legalmente
+  distinguibile da qualsiasi franchise noto ("per motivi che i nostri
+  avvocati definiscono 'importantissimi'").
 - **S6 — Nice-to-have** (solo se tutto sopra è solido): touch iPhone/iPad
   (overlay croce+3 bottoni, pointer events, convivenza con macOS = si attiva
   solo su touch device) + PWA offline; netcode robusto (heartbeat, timeout,
@@ -217,6 +230,11 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
 6. Il rAF è SOSPESO nel browser headless: MAI Promise/rAF negli eval di test
    (timeout); usa `_hawk.step`. I diff pixel: soglia >60, il micro-rumore AA
    dei tratti (delta<60) è invisibile e non è un bug.
+7. ATTENZIONE agli slice python `s[s.index(A):s.index(B)]` per sostituire
+   blocchi: possono inghiottire blocchi inseriti in mezzo (successo con
+   MBOSSES). Dopo ogni batch: `node -e "new Function(codice)"` per la sintassi.
+8. `_hawk.tp(x, y?)` accetta la Y; le quest/flag persistono in localStorage:
+   i test possono riprendere dopo un reload senza rifare la trafila.
 
 ## §FINE SESSIONE — rituale auto-rigenerativo (obbligatorio)
 Al termine di OGNI sessione, in quest'ordine:
