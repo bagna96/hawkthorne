@@ -13,7 +13,7 @@
 - Netcode robusto declassato a nice-to-have (Sessione 6).
 - Mondi: da 2 previsti a 5 nuovi, generabili come righe-dato.
 
-## CONTESTO (stato v8.1)
+## CONTESTO (stato v10.1 — Sessione 1 completata)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -26,9 +26,13 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   7 mondi (hub, radura, foresta+Re Ghianda, villaggio, lago di gin,
   caverne+Gilbert, trono+Cornelius), co-op locale 2P, co-op online WebRTC,
   gamepad PS5+rumble, musica procedurale WebAudio, save localStorage `hawk_save`.
+- V10.1: registri `ENEMIES` (mkEnemy, spawn per-mondo nei def LEVELS),
+  `VFX` (drawVFX), `ACHIEVEMENTS` (award/bump, SAVE.cnt), `QUESTS` +
+  quest-engine (collect tile 'Z' / kill, fuori ordine, SAVE.quests).
+  Atto I completo. Strobo animazione fixato (isteresi airT) e verificato.
 - Debug: `_hawk.goto(n) .step(n) .tp(x) .soul() .super() .kill() .dmg(n)
   .beatRival() .p2() .give(n) .gems(n) .boon(id) .forge() .incubo() .next()
-  .fakeGuest() .reset() .info()`.
+  .fakeGuest() .reset() .info() .quest() .mbkill()`.
 
 ## VINCOLI NON NEGOZIABILI
 1. **Single-file, zero dipendenze runtime** (no CDN/font/fetch). Deve girare
@@ -186,11 +190,8 @@ jumpingacorn mid-boss (radura).
 ## §SESSIONI — campagna guidata (una per volta, in ordine)
 Ogni sessione: leggi questo file → esegui → criteri accettazione → rituale
 di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
-- **S1 — Fondamenta**: verifica fix strobo con utente su Pages (se persiste:
-  registra p.anim/p.onGround 120 frame via _hawk, correggi alla fonte).
-  Rifattorizza ai registri §ARCHITETTURA (WORLDS/ENEMIES/QUESTS/VFX/SUPERS/
-  ACHIEVEMENTS) SENZA cambiare comportamento: il gioco deve restare identico.
-  Poi quest-engine generico + Atto I sui mondi esistenti.
+- **S1 — Fondamenta**: ✅ COMPLETATA (v10.1). Registri, quest-engine,
+  Atto I, achievement, strobo verificato pixel-stabile frame-per-frame.
 - **S2 — Atto II**: nuoto+ubriachezza lago, betafish, campioni di Gilbert,
   Gilbert alleato post-sconfitta. Mini-boss caverne (icebat regina).
 - **S3 — Greendale**: mondo, Dean+quest, Chang boss, Leonard, Atto III
@@ -213,6 +214,9 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
 3. Zero errori console; funziona da file:// E su Pages, prova entrambi.
 4. GitHub raw: `sleep 1` tra file, verifica dimensione >5KB.
 5. Consegna solo roba TESTATA. Spettacolare sì, rotto no.
+6. Il rAF è SOSPESO nel browser headless: MAI Promise/rAF negli eval di test
+   (timeout); usa `_hawk.step`. I diff pixel: soglia >60, il micro-rumore AA
+   dei tratti (delta<60) è invisibile e non è un bug.
 
 ## §FINE SESSIONE — rituale auto-rigenerativo (obbligatorio)
 Al termine di OGNI sessione, in quest'ordine:
