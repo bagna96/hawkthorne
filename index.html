@@ -691,7 +691,7 @@ function mkPlayer(cdef, costume, x, y, slot){
     hp: cdef.hp, maxhp: cdef.hp, inv:0, jumps:0, atkT:0, atkCd:0, abCd:0,
     cpx:x, cpy:y, anim:0, downT:0,
     soul:0, shield:0, jail:null, sprintT:0, focusT:0, laserT:0, net:false,
-    slideT:0, pounding:false, warpT:42, idleT:0 };
+    slideT:0, pounding:false, warpT:42, idleT:0, airT:0 };
 }
 function sheetOf(p){ return p.costume ? p.cdef.id + '__' + p.costume : p.cdef.id; }
 function alivePlayers(){ return players.filter(p => p.hp > 0); }
@@ -959,6 +959,7 @@ function updateOnePlayer(p, atkBoxes){
   p.preVy = p.vy;
   const wasAir = !p.onGround;
   moveAndCollide(p);
+  p.airT = p.onGround ? 0 : p.airT + 1;   // isteresi: niente strobo idle/salto
   if (p.cdef.ab === 'glide' && pDown(p,'jump') && p.vy > 1.4 && !p.onGround) p.vy = 1.4;
   // atterraggio: polvere + SCHIANTO (onda d'urto)
   if (wasAir && p.onGround){
@@ -2140,16 +2141,18 @@ function drawPlayer(p){
     }
     if (p.warpT > 22) return;   // il personaggio si materializza a metà beam
   }
-  if (p.inv > 0 && Math.floor(frame / 4) % 2 === 1) return;
+  // invulnerabile: dissolvenza morbida, MAI scomparsa (niente strobo)
+  if (p.inv > 0) ctx.globalAlpha = 0.45 + 0.2 * Math.sin(frame * 0.4);
   let anim = 'idle', t = p.anim;
   if (p.slideT > 0){ anim = 'slide'; }
   else if (p.pounding){ anim = 'kick'; }
   else if (p.atkT > 0){ anim = 'attack'; t = 12 - p.atkT; }
   else if (p.inv > 55){ anim = 'hurt'; }
-  else if (!p.onGround){ anim = 'jump'; }
+  else if (!p.onGround && p.airT > 6){ anim = 'jump'; }   // posa di salto solo se davvero in aria
   else if (Math.abs(p.vx) > 0.3){ anim = 'walk'; }
   else if (p.idleT > 360){ anim = 'gaze'; }   // dopo 6s guarda in camera, alla Abed
   drawActor(sheetOf(p), anim, t, p.x + p.w/2 - 24 - cam.x, p.y + p.h - 46 - cam.y, p.face, 1);
+  ctx.globalAlpha = 1;
   if (players.length > 1){
     text('P' + (p.slot+1), p.x + p.w/2 - cam.x, p.y - 24 - cam.y, 11, p.slot ? '#8ae8e8' : '#f5d442', 'center');
   }
