@@ -33,21 +33,17 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   sz), `ambientFX()` meteo per bioma, parallasse 3 piani tinta (`shade()`),
   stalattiti+lucciole nel dark. Menù OPZIONI (SAVE.opts) e TRUCCHI
   (god/infSoul/monete/sblocchi — `cheatDirty` spegne award e record).
-- V10.6 (S4, ROGUELITE LEGGENDARIO): registro `WEAPONS` (6 armi, ognuna
-  cambia lo stile: penna crit-alle-spalle, mazza smash+lancio, dodgeball
-  che rimbalza, paintball, keytar onda perforante, lancia-lava; 2 slot,
-  swap TAB/L1, drop da casse/boss/negozio/porta, `wdrops[]` a terra,
-  suono `wsfx` + rumble per arma); `SYNERGIES` (8 coppie nominate, toast,
-  `checkSynergies`, offerte pesate ×3 in openPerks); economia: carta POM
-  (livelli `bl(id)` a rendimenti calanti su stivali/caffe/dado/matite/
-  vampiro/furia/spirito) alternata al BANCO DI HILDA ogni 2 profondità,
-  cassa maledetta tile 'x' (perk gratis + `curse`=20: 1 colpo=morte),
-  porta 'W' con anteprima (monete/arma) accanto alla 'X' (carte); BOSS
-  DELLE PROFONDITÀ ogni 5 (arena, `mboss.boss2`: telegraph 32f con '!',
-  2 fasi, interfase invulnerabile con ondata, remix dal 10°, cuore pietà,
-  arma garantita), Linea Oscura spostata a %7; musica a LAYER
-  (`musicLayers`: bassi+batteria+arpeggio+hi-hat crescono con profondità/
-  combo/boss), `stinger(perk|syn|bossIntro|clear)`; pausa da Options,
+- V10.6 (S4, ROGUELITE LEGGENDARIO): `WEAPONS` (6 armi, ognuna cambia lo
+  stile: penna crit-alle-spalle, mazza smash+lancio, dodgeball rimbalzante,
+  paintball, keytar onda perforante, lancia-lava; 2 slot swap TAB/L1, drop
+  da casse/boss/negozio/porta in `wdrops[]`, `wsfx`+rumble per arma);
+  `SYNERGIES` (8 coppie nominate, `checkSynergies`, offerte pesate ×3);
+  carta POM (livelli `bl(id)`, rendimenti calanti) alternata al BANCO DI
+  HILDA ogni 2 profondità; cassa maledetta 'x' (perk gratis, `curse`=20:
+  1 colpo=morte); porta 'W' con anteprima accanto alla 'X'; BOSS ogni 5
+  (arena, `mboss.boss2`: telegraph 32f '!', 2 fasi, interfase invulnerabile
+  con ondata, remix dal 10°, cuore pietà, arma garantita; Linea Oscura →
+  %7); musica a LAYER (`musicLayers`) + `stinger(...)`; pausa da Options,
   Incubo/costumi da pad.
 - Debug: `_hawk.goto(n) .step(n) .tp(x) .soul() .super() .kill() .dmg(n)
   .beatRival() .p2() .give(n) .gems(n) .boon(id) .forge() .incubo() .next()
@@ -71,8 +67,7 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
    Hades) — la profondità punisce, l'inizio accoglie.
 
 ## §TOKEN — anti-spreco per Claude Code (obbligatorio)
-- MAI rileggere `index.html` intero: usa `grep -n` per localizzare, poi
-  `read_file` con offset/length mirati. Il file è ~2600 righe e crescerà.
+- MAI rileggere `index.html` intero (~4000 righe): `grep -n` + read mirati.
 - Edit chirurgici (`edit_block`/str_replace), mai riscritture di blocchi sani.
 - Batch: pianifica 3-5 modifiche correlate, applicale in sequenza, UN solo
   ciclo di test alla fine (non test dopo ogni riga).
