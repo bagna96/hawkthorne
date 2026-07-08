@@ -502,6 +502,354 @@ function mkMboss(k, x, y){
     t:0, hurtT:0, dead:false, onGround:false, anim:0, intro:false, y0: ry };
 }
 
+// ------------------------------------------------ SCHELETRO GENERATIVO (V10 S3)
+// "Spina autoriale, carne procedurale": chunk fatti a mano + assemblatore seeded.
+// BIOMES: una riga = un bioma. CHUNKS: {b: bioma o 'any', d: difficoltà 1-3,
+// i/o: riga del suolo a ingresso/uscita (0-11), rows: 12 righe di mappa}.
+const BIOMES = {
+  radura:   { nome:'RADURA',    sky:['#4da6e8','#8ed0f5'], song:'meadow',  spawn:{ e:'acorn', f:'bat' }, mb:'Q' },
+  foresta:  { nome:'FORESTA',   sky:['#1e3a2e','#3a6a4a'], song:'cave',    spawn:{ e:'acorn', f:'bat' }, mb:'Q' },
+  villaggio:{ nome:'VILLAGGIO', sky:['#e8935a','#f5c98e'], song:'village', spawn:{ e:'hippy', f:'bat' }, mb:'V' },
+  caverne:  { nome:'CAVERNE',   sky:['#12101e','#1c1830'], song:'cave',    spawn:{ e:'hippy', f:'bat' }, dark:true, mb:'Y' },
+};
+const CHUNKS = [
+{ b:'any', d:1, i:10, o:10, rows:[ // pianura
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"  o o   T   ",
+"############",
+"BBBBBBBBBBBB"]},
+{ b:'any', d:1, i:10, o:10, rows:[ // fossa col ponte
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"      o o     ",
+"     -----    ",
+"              ",
+"#####   ######",
+"BBBBB   BBBBBB"]},
+{ b:'any', d:1, i:10, o:7, rows:[ // scalinata su
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"       o    ",
+"         ###",
+"      ###BBB",
+"   ###BBBBBB",
+"###BBBBBBBBB",
+"BBBBBBBBBBBB"]},
+{ b:'any', d:1, i:7, o:10, rows:[ // scalinata giù
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"            ",
+"    o       ",
+"###         ",
+"BBB###      ",
+"BBBBBB###   ",
+"BBBBBBBBB###",
+"BBBBBBBBBBBB"]},
+{ b:'any', d:2, i:7, o:7, rows:[ // isole a mezz'aria
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"     o o      ",
+"###        ###",
+"BBB  ---   BBB",
+"BBB        BBB",
+"BBB ####   BBB",
+"BBB BBBB   BBB"]},
+{ b:'any', d:2, i:7, o:4, rows:[ // salita in quota
+"            ",
+"            ",
+"            ",
+"        o o ",
+"        ####",
+"     -  BBBB",
+"   -    BBBB",
+"###     BBBB",
+"BBB     BBBB",
+"BBB     BBBB",
+"BBB     BBBB",
+"BBB     BBBB"]},
+{ b:'any', d:2, i:4, o:10, rows:[ // discesa panoramica
+"            ",
+"            ",
+"            ",
+"            ",
+"####        ",
+"BBBB o      ",
+"BBBB  o     ",
+"BBBB   o    ",
+"BBBB        ",
+"BBBB        ",
+"BBBB########",
+"BBBBBBBBBBBB"]},
+{ b:'any', d:2, i:10, o:10, rows:[ // corsa sugli spuntoni
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"   o    o     ",
+"  ---  ---    ",
+"              ",
+"###^^###^^####",
+"BBBBBBBBBBBBBB"]},
+{ b:'any', d:3, i:10, o:10, rows:[ // torre del cristallo
+"              ",
+"              ",
+"              ",
+"      g       ",
+"     ---      ",
+"              ",
+"   -     -    ",
+"              ",
+" --        -- ",
+"              ",
+"##############",
+"BBBBBBBBBBBBBB"]},
+{ b:'radura', d:1, i:10, o:10, rows:[ // collina (ritaglio del Mondo 1)
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"     o o        ",
+"    #####       ",
+"   ##BBB##  T   ",
+"####BBBBB#######",
+"BBBBBBBBBBBBBBBB"]},
+{ b:'radura', d:2, i:10, o:10, rows:[ // ponte sul burrone
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"    o o o     ",
+"   -------    ",
+"              ",
+"              ",
+"####      ####",
+"BBBB      BBBB"]},
+{ b:'foresta', d:1, i:10, o:10, rows:[ // boschetto
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"     o o o    ",
+"    ------    ",
+"              ",
+"  T   T    T  ",
+"##############",
+"BBBBBBBBBBBBBB"]},
+{ b:'foresta', d:2, i:10, o:10, rows:[ // chiome alte
+"                ",
+"                ",
+"                ",
+"                ",
+"        o o   g ",
+"       ------ - ",
+"                ",
+"   ---          ",
+"                ",
+"  T      T    T ",
+"################",
+"BBBBBBBBBBBBBBBB"]},
+{ b:'villaggio', d:1, i:10, o:10, rows:[ // la strada delle capanne (dal Mondo 3)
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"     o o o      ",
+"  u         u   ",
+"################",
+"BBBBBBBBBBBBBBBB"]},
+{ b:'villaggio', d:2, i:10, o:10, rows:[ // rovine bruciate
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"     g        ",
+"    ---       ",
+"              ",
+"        ---   ",
+"  w           ",
+"#####^^#######",
+"BBBBBBBBBBBBBB"]},
+{ b:'caverne', d:1, i:10, o:10, rows:[ // colonne basse
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"              ",
+"   B      B   ",
+"   B  o   B   ",
+"##############",
+"BBBBBBBBBBBBBB"]},
+{ b:'caverne', d:2, i:10, o:10, rows:[ // il fiume di lava (ritaglio del Mondo 5)
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"     o o        ",
+"    -----       ",
+"           ---  ",
+"                ",
+"#####~~~########",
+"BBBBB~~~BBBBBBBB"]},
+{ b:'caverne', d:3, i:10, o:10, rows:[ // stalattiti
+"BBBBBBBBBBBBBB",
+"BB  BBB    BB ",
+"B    B      B ",
+"              ",
+"              ",
+"       g      ",
+"      ---     ",
+"              ",
+"   ---    --- ",
+"              ",
+"#####^^^######",
+"BBBBBBBBBBBBBB"]},
+];
+const CAP_START = { i:10, o:10, rows:[
+"          ",
+"          ",
+"          ",
+"          ",
+"          ",
+"          ",
+"          ",
+"          ",
+"          ",
+" P    C   ",
+"##########",
+"BBBBBBBBBB"]};
+function mkCapEnd(mb){
+  return { i:10, o:10, rows:[
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"         g      ",
+"        ---     ",
+"              X ",
+"     " + (mb || ' ') + "        ##",
+"################",
+"BBBBBBBBBBBBBBBB"]};
+}
+function mulberry(a){ return function(){ a|=0; a=(a+0x6D2B79F5)|0; let t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+function genLevel(seed, depth){
+  const bioId = ['radura','foresta','villaggio','caverne'][(depth - 1) % 4];
+  const bio = BIOMES[bioId];
+  const remix = depth % 5 === 0;   // ogni 5 profondità: Linea Oscura (modulo ≠ 4, così ruota sui biomi)
+  const dif = Math.min(3, 1 + Math.floor((depth - 1) / 3));
+  const rng = mulberry((seed|0) * 7919 + depth * 104729);
+  const pool = CHUNKS.filter(c => (c.b === 'any' || c.b === bioId) && c.d <= dif);
+  const parts = [CAP_START];
+  let out = CAP_START.o;
+  const n = 5 + Math.min(4, dif + 1);
+  for (let k = 0; k < n; k++){
+    // vincolo di percorso: si sale al massimo di 2 righe tra un chunk e l'altro
+    const cands = pool.filter(c => out - c.i <= 2 && c !== parts[parts.length - 1]);
+    const c = cands[Math.floor(rng() * cands.length)] || pool[0];
+    parts.push(c); out = c.o;
+  }
+  parts.push(mkCapEnd(depth % 3 === 0 ? bio.mb : null));  // slot mini-boss ogni 3
+  const rows = [];
+  for (let r = 0; r < 12; r++)
+    rows.push(parts.map(p => (p.rows[r] || '').padEnd(p.rows[11].length, ' ')).join(''));
+  const g = rows.map(s => s.split(''));
+  const wTot = g[0].length;
+  // iniezione seeded: nemici, casse, cuori, cristalli sui punti d'appoggio
+  const spots = [];
+  for (let x = 11; x < wTot - 17; x++)
+    for (let y = 2; y < 12; y++){
+      const t = g[y][x];
+      if (t === ' ') continue;
+      if ((isSolid(t) || t === '-') && g[y-1][x] === ' ' && g[y-2][x] === ' ') spots.push({ x, y: y - 1 });
+      break;
+    }
+  for (let k = spots.length - 1; k > 0; k--){ const j = Math.floor(rng() * (k + 1)); const tmp = spots[k]; spots[k] = spots[j]; spots[j] = tmp; }
+  const eDen = Math.min(0.16, 0.06 + dif * 0.025 + depth * 0.004);
+  let gems = 2, hearts = 1;
+  for (const s of spots){
+    const r = rng();
+    if (gems > 0 && r < 0.05){ g[s.y][s.x] = 'g'; gems--; }
+    else if (hearts > 0 && r < 0.08){ g[s.y][s.x] = 'h'; hearts--; }
+    else if (r < 0.08 + eDen) g[s.y][s.x] = 'e';
+    else if (r < 0.12 + eDen) g[s.y][s.x] = 'k';
+    else if (r < 0.20 + eDen) g[s.y][s.x] = 'o';
+  }
+  for (let x = 14; x < wTot - 18; x += 9)
+    if (rng() < 0.12 + dif * 0.08 && g[4][x] === ' ') g[4][x] = 'f';
+  const air = ' '.repeat(wTot);
+  return {
+    name: 'PROFONDITÀ ' + depth + ' · ' + bio.nome + (remix ? ' — LINEA OSCURA' : ''),
+    song: bio.song, sky: bio.sky, spawn: bio.spawn, dark: remix ? false : bio.dark, gen: true, remix,
+    rows: [air, air, air, air, air, air, ...g.map(a => a.join(''))],
+  };
+}
+// pipeline REMIX: re-istanzia QUALSIASI def (autoriale o generato) in Linea Oscura
+function remixDef(def){
+  // dark:false — l'inversione è già il buio; il velo di tenebra la coprirebbe
+  return Object.assign({}, def, { gen: true, remix: true, dark: false, name: def.name + ' — LINEA OSCURA' });
+}
+// Partita Infinita / Sfida del Giorno (seed condivisibile via #seed nell'URL)
+let endless = null; // { seed, depth, daily }
+function dailySeed(){
+  const m = (location.hash || '').match(/seed=(\d+)/);
+  if (m) return (+m[1] % 2147483647) || 1;
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+function endlessNext(){
+  endless.depth++;
+  const def = genLevel(endless.seed, endless.depth);
+  loadLevel(def); state = 'play'; showToast(def.name);
+}
+function endlessRecord(){
+  if (endless && endless.depth > (SAVE.endlessBest || 0)){ SAVE.endlessBest = endless.depth; saveGame(); }
+}
+
 const LEVELS = [
 {
   name:'SALA D\'ATTESA HAWTHORNE', song:'title', sky:['#3a3a44','#4a4a55'], hub:true,
@@ -707,7 +1055,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v10.3';
+const GAME_VERSION = 'v10.4';
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -875,9 +1223,9 @@ function joinP2(){
 
 // ------------------------------------------------ CARICAMENTO LIVELLO
 function loadLevel(i){
-  lvlIdx = i;
+  const def = (typeof i === 'object') ? i : LEVELS[i];
+  lvlIdx = (typeof i === 'object') ? -1 : i;   // -1: livello generato, fuori campagna
   net.tileLog = []; net.tileSent = 0;
-  const def = LEVELS[i];
   const wMax = Math.max(...def.rows.map(r => r.length));
   const rows = def.rows.map(r => r.padEnd(wMax, ' ').split(''));
   lvl = { def, rows, w: wMax, h: rows.length, name: def.name, markers: [] };
@@ -905,12 +1253,17 @@ function loadLevel(i){
   if (def.boss){ boss = mkBoss(); babyEventDone = false; }
   // scaling nemici: élite dal mondo 3, Incubo ovunque
   for (const e of enemies){
-    if (i >= 3 && e.type === 'walker' && Math.random() < 0.5){ e.hp = 2; e.elite = true; }
+    if (lvlIdx >= 3 && e.type === 'walker' && Math.random() < 0.5){ e.hp = 2; e.elite = true; }
     if (nightmare) e.hp++;
   }
-  // casse procedurali (deterministiche per livello)
-  if (!def.hub && !def.boss){
-    let seed = i * 1013;
+  // Linea Oscura: nemici potenziati a costo asset zero
+  if (def.remix){
+    for (const e of enemies){ e.hp++; if (e.type === 'walker') e.elite = true; }
+    if (mboss){ mboss.hp = mboss.maxhp = Math.round(mboss.hp * 1.5); }
+  }
+  // casse procedurali (deterministiche per livello; i gen le iniettano da soli)
+  if (!def.hub && !def.boss && !def.gen){
+    let seed = lvlIdx * 1013;
     const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     for (let x = 4; x < lvl.w - 4; x += 3){
       if (rnd() > 0.14) continue;
@@ -1083,7 +1436,7 @@ function hurtPlayer(p, n, fromX){
   if (p.hp <= 0){
     deaths++;
     p.downT = 240;
-    if (alivePlayers().length === 0){ state = 'over'; setSong(null); sfx('organ'); }
+    if (alivePlayers().length === 0){ endlessRecord(); state = 'over'; setSong(null); sfx('organ'); }
   }
 }
 function fallRespawn(p){
@@ -1091,7 +1444,7 @@ function fallRespawn(p){
   p.hp -= 1;
   if (p.hp <= 0){
     p.downT = 240;
-    if (alivePlayers().length === 0){ state = 'over'; setSong(null); sfx('organ'); return; }
+    if (alivePlayers().length === 0){ endlessRecord(); state = 'over'; setSong(null); sfx('organ'); return; }
   }
   p.x = p.cpx; p.y = p.cpy; p.vx = 0; p.vy = 0; p.inv = 90;
   sfx('hurt');
@@ -1224,7 +1577,8 @@ function updateOnePlayer(p, atkBoxes){
       const locked = (boss && !boss.dead) || (rival && !rival.defeated) || (mboss && !mboss.dead);
       if (!locked){
         sfx('door');
-        if (lvlIdx < LEVELS.length - 1) nextLevel();
+        if (endless) endlessNext();
+        else if (lvlIdx >= 0 && lvlIdx < LEVELS.length - 1) nextLevel();
       }
     }
   }
@@ -2131,8 +2485,9 @@ function drawHUD(){
     text('COMBO x' + combo.n, W/2, 52, 18 + Math.min(10, combo.n), '#f5822a', 'center');
   }
   const aq = activeQuest();
-  if (aq) text('❖ ' + aq.nome + (lvlIdx === aq.mondo ? '' : '  (Mondo ' + aq.mondo + ')'), W - 14, players[1] ? 66 : 36, 12, '#f5d442', 'right');
+  if (aq && !endless) text('❖ ' + aq.nome + (lvlIdx === aq.mondo ? '' : '  (Mondo ' + aq.mondo + ')'), W - 14, players[1] ? 66 : 36, 12, '#f5d442', 'right');
   if (nightmare) text('☠ INCUBO', W/2, H - 12, 13, '#e84a4a', 'center');
+  if (endless) text('∞ PROFONDITÀ ' + endless.depth + ' · seme ' + endless.seed + (endless.daily ? ' · SFIDA DEL GIORNO' : ''), W/2, H - (nightmare ? 28 : 12), 13, '#8a6ae8', 'center');
   const bnames = Object.keys(boons).filter(k => boons[k]);
   if (bnames.length) text('✦ ' + bnames.join(' · '), 14, H - 12, 11, 'rgba(138,232,232,0.7)');
   // monete + cristalli
@@ -2339,10 +2694,18 @@ function drawTitle(){
 }
 function titleItems(){
   const it = [
-    { label:'GIOCA', act(){ state = 'select'; sfx('coin'); } },
-    { label:'CO-OP ONLINE (P2P)', act(){ state = 'online'; sfx('text'); } },
-    { label:'COMANDI', act(){ startCut(tutorialPages(), () => { state = 'title'; }); } },
+    { label:'GIOCA', act(){ endless = null; state = 'select'; sfx('coin'); } },
+    { label:'CO-OP ONLINE (P2P)', act(){ endless = null; state = 'online'; sfx('text'); } },
   ];
+  if (!net.role){ // i mondi generati vivono solo in locale (il netcode manda indici di LEVELS)
+    it.push({ label:'PARTITA INFINITA ∞' + (SAVE.endlessBest ? '  · record: ' + SAVE.endlessBest : ''),
+      act(){ endless = { seed: 1 + Math.floor(Math.random() * 99999999), depth: 0, daily: false }; state = 'select'; sfx('coin'); } });
+    it.push({ label:'SFIDA DEL GIORNO · seme ' + dailySeed(),
+      act(){ endless = { seed: dailySeed(), depth: 0, daily: true };
+        try { history.replaceState(null, '', '#seed=' + endless.seed); } catch(e){}
+        state = 'select'; sfx('coin'); } });
+  }
+  it.push({ label:'COMANDI', act(){ startCut(tutorialPages(), () => { state = 'title'; }); } });
   if (SAVE.finished) it.push({ label:'MODALITÀ INCUBO: ' + (nightmare ? 'SÌ ☠' : 'no'), act(){ nightmare = !nightmare; sfx(nightmare ? 'organ' : 'text'); } });
   return it;
 }
@@ -2395,8 +2758,12 @@ function drawOver(){
     drawActor(sheetOf(players[i]), 'dead', 0, W/2 - 60 + i*70, 300, 1, 1.6);
   text('GAME OVER', W/2, 200, 64, '#e84a4a', 'center');
   text('Sei stato disereditato.', W/2, 250, 20, '#fff', 'center');
+  if (endless){
+    text('PROFONDITÀ RAGGIUNTA: ' + endless.depth + ' · RECORD: ' + (SAVE.endlessBest || endless.depth), W/2, 285, 16, '#8a6ae8', 'center');
+    text('seme ' + endless.seed + (endless.daily ? ' (sfida del giorno)' : ''), W/2, 308, 13, '#9a8ac8', 'center');
+  }
   text(OVER_LINES[deaths % OVER_LINES.length], W/2, 420, 15, '#9a8ac8', 'center');
-  if (Math.floor(frame / 30) % 2 === 0) text('INVIO PER RIPROVARE IL LIVELLO', W/2, 460, 18, '#5ae87a', 'center');
+  if (Math.floor(frame / 30) % 2 === 0) text(endless ? 'INVIO PER TORNARE AL TITOLO' : 'INVIO PER RIPROVARE IL LIVELLO', W/2, 460, 18, '#5ae87a', 'center');
 }
 function drawWin(){
   const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -2458,6 +2825,11 @@ function drawPlay(){
   if (shake > 0){ cam.x += (Math.random()-0.5) * shake; cam.y += (Math.random()-0.5) * shake * 0.6; shake *= 0.88; if (shake < 0.5) shake = 0; }
   drawBackground();
   drawTiles();
+  if (lvl.def.remix){ // Linea Temporale Oscura: mondo a palette invertita, cast intatto
+    ctx.globalCompositeOperation = 'difference';
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+  }
   drawGroups();
   if (monkey) drawMonkey(monkey.x - cam.x, monkey.y - cam.y - 16, frame);
   const hasNeil = players.some(p => trait(p,'fatneil'));
@@ -2736,6 +3108,17 @@ function startRun(){
   const cdef = CHARS[selIdx];
   players = [mkPlayer(cdef, selCostume, 0, 0, 0)];
   if (cdef.id === 'guzman'){ SAVE.wallet += 10; saveGame(); showToast('Bonus Leggenda: +10 monete'); }
+  if (endless){
+    endless.depth = 0;
+    sfx('organ');
+    startCut([
+      { who:'abed', text: endless.daily
+        ? 'Sfida del giorno, seme ' + endless.seed + '. Stesso mondo per tutti: se muori, è statisticamente colpa tua.'
+        : 'Partita infinita. Il gioco ora genera se stesso. Francamente, l\'ho sempre sospettato.' },
+      { who:'cornelius', text:'"Ho automatizzato la produzione di mondi: quelli fatti a mano avevano pretese sindacali. Scava, verme. Vediamo quanto duri."' },
+    ], () => { endlessNext(); }, 'lab');
+    return;
+  }
   sfx('organ');
   startCut([
     { who:'cornelius', text:'"GIOCATORE 1: ' + cdef.name + '. Benvenuto nella mia anticamera. La freccia verde ti porta nel mio mondo. Che tu ne sia... indegno."' },
@@ -2814,6 +3197,7 @@ function update(){
       break;
     case 'over':
       if (jp('Enter')){
+        if (endless){ endless = null; state = 'title'; setSong('title'); titleT = 0; break; } // la run infinita muore con te
         players.forEach(p => { p.hp = p.maxhp; p.downT = 0; });
         loadLevel(lvlIdx); state = 'play';
       }
@@ -2879,6 +3263,8 @@ window._hawk = {
   incubo(){ SAVE.finished = true; nightmare = !nightmare; },
   quest(){ return { attiva: activeQuest() && activeQuest().id, fatte: SAVE.quests, ach: SAVE.ach, cnt: SAVE.cnt }; },
   mbkill(){ if (mboss && !mboss.dead) hitMboss(mboss.hp, players[0]); },
+  gen(seed, depth){ if (!players.length) players = [mkPlayer(CHARS[0], null, 0, 0, 0)]; endless = { seed: seed || 1234, depth: (depth || 1) - 1, daily: false }; endlessNext(); },
+  remix(n){ if (!players.length) players = [mkPlayer(CHARS[0], null, 0, 0, 0)]; endless = null; loadLevel(remixDef(LEVELS[n == null ? 1 : n])); state = 'play'; },
   p2(){ joinP2(); },
   next(){ if (cut){ cut.i++; if (cut.i >= cut.pages.length){ const n = cut.next; cut = null; n(); } } else if (state === 'tv'){ tvT = 999; } else if (state === 'title'){ state = 'select'; } },
   fakeGuest(){ // smoke test del rendering ospite online
