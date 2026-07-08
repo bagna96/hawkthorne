@@ -4,7 +4,7 @@
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
 > `game-feel-expectations` (gusti dell'utente: juice + roguelite, PS5).
 
-## CONTESTO (stato v10.5 — Sessioni 1-3 + S3.5 feedback-pass completate)
+## CONTESTO (stato v10.6 — Sessioni 1-4 completate)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -33,41 +33,26 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   sz), `ambientFX()` meteo per bioma, parallasse 3 piani tinta (`shade()`),
   stalattiti+lucciole nel dark. Menù OPZIONI (SAVE.opts) e TRUCCHI
   (god/infSoul/monete/sblocchi — `cheatDirty` spegne award e record).
+- V10.6 (S4, ROGUELITE LEGGENDARIO): registro `WEAPONS` (6 armi, ognuna
+  cambia lo stile: penna crit-alle-spalle, mazza smash+lancio, dodgeball
+  che rimbalza, paintball, keytar onda perforante, lancia-lava; 2 slot,
+  swap TAB/L1, drop da casse/boss/negozio/porta, `wdrops[]` a terra,
+  suono `wsfx` + rumble per arma); `SYNERGIES` (8 coppie nominate, toast,
+  `checkSynergies`, offerte pesate ×3 in openPerks); economia: carta POM
+  (livelli `bl(id)` a rendimenti calanti su stivali/caffe/dado/matite/
+  vampiro/furia/spirito) alternata al BANCO DI HILDA ogni 2 profondità,
+  cassa maledetta tile 'x' (perk gratis + `curse`=20: 1 colpo=morte),
+  porta 'W' con anteprima (monete/arma) accanto alla 'X' (carte); BOSS
+  DELLE PROFONDITÀ ogni 5 (arena, `mboss.boss2`: telegraph 32f con '!',
+  2 fasi, interfase invulnerabile con ondata, remix dal 10°, cuore pietà,
+  arma garantita), Linea Oscura spostata a %7; musica a LAYER
+  (`musicLayers`: bassi+batteria+arpeggio+hi-hat crescono con profondità/
+  combo/boss), `stinger(perk|syn|bossIntro|clear)`; pausa da Options,
+  Incubo/costumi da pad.
 - Debug: `_hawk.goto(n) .step(n) .tp(x) .soul() .super() .kill() .dmg(n)
   .beatRival() .p2() .give(n) .gems(n) .boon(id) .forge() .incubo() .next()
-  .fakeGuest() .reset() .info() .quest() .mbkill() .gen(seed,prof) .remix(n)`.
-
-## §RICERCA (S3.6, luglio 2026) — principi per la S4, distillati online
-- **ARMI (Dead Cells, "50 weapons")**: ogni arma deve CAMBIARE lo stile di
-  gioco, non le statistiche ("a drastic change from what the player had
-  before"); se due armi si somigliano, una va rifatta. Feel = suono
-  DISTINTO + knockback/recoil proprio + hitstop custom + effetto visibile.
-- **SINERGIE (Gungeon)**: coppie NOMINATE (arma+perk, perk+perk) con toast
-  di scoperta; offerte pesate verso ciò che completa una sinergia col
-  posseduto (Gungeon usa un "synergy factor" ×6 che cala con l'esperienza).
-  Le sinergie rendono buoni anche i drop deboli → meno frustrazione.
-- **ECONOMIA (Hades)**: upgrade dei perk posseduti con rendimenti
-  DECRESCENTI (pom of power); rarità (comune/rara/epica) che scala i
-  numeri; scelta della porta con ANTEPRIMA della ricompensa (simboli).
-- **RISCHIO (Dead Cells/Gungeon)**: casse maledette = ricompensa forte
-  subito + maledizione temporanea (es. "1 colpo = morte per 20 uccisioni");
-  il rischio è sempre una SCELTA del giocatore, mai imposto.
-- **BOSS 2D**: telegraphing SEMPRE (wind-up visivo+sonoro ≥30 frame prima
-  di ogni mossa); 2-3 fasi con pattern nuovi; interfase (boss invulnerabile
-  + ondata/piattaforme) per cambiare ritmo; curva di tensione che sale e
-  scende. Nel platformer il boss testa abilità GIÀ apprese con timing più
-  severo, non meccaniche nuove.
-- **GENERAZIONE (Spelunky)**: percorso-soluzione garantito prima, stanze
-  template attorno (già nostro approccio). Da aggiungere: stanze FUORI
-  percorso col bottino (rischio), stanza-negozio, stanze segrete.
-  Riferimento interattivo in JS: tinysubversions.com/spelunkyGen
-- **AUDIO (dynamic layering)**: la musica aggiunge/toglie STRATI in base
-  allo stato (profondità, combo, boss vicino); bassline propulsiva come
-  seconda melodia; stinger per perk/sinergia/boss/clear; nel WebAudio
-  routing con pan+compressore e voci come layer separati attivabili.
-Fonti: gamedeveloper.com (Dead Cells 50 weapons; Boss Battle Design), wiki
-Gungeon (Synergies) e Hades (Duo/Pom), gameasart.com (Spelunky gen),
-babyaud.io (chiptune), splice.com (weapon sound), gamedesignskills.com.
+  .fakeGuest() .reset() .info() .quest() .mbkill() .gen(seed,prof) .remix(n)
+  .arma(id) .pom(id) .maledici() .syn() .god() .perk(id)`.
 
 ## VINCOLI NON NEGOZIABILI
 1. **Single-file, zero dipendenze runtime** (no CDN/font/fetch). Deve girare
@@ -198,34 +183,11 @@ mid-boss (radura) — mettili anche nel pool degli slot generativi.
 ## §SESSIONI — campagna guidata (una per volta, in ordine)
 Ogni sessione: leggi questo file → esegui → criteri accettazione → rituale
 di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
-- **S1-S3**: ✅ COMPLETATE (v10.1-v10.5, dettagli in CONTESTO): registri +
-  quest-engine + Atti I-II; scheletro generativo, Linea Oscura, endless +
-  perk. Pool CHUNKS e registro PERKS espandibili in ogni sessione futura.
-- **S4 — ROGUELITE LEGGENDARIO** (priorità utente: endless profondo, armi
-  vere, audio; applica TUTTA la §RICERCA):
-  a) registro `WEAPONS[]` — 6-8 armi a tema Community, una riga l'una:
-     {id, nome, tipo:(arco|proiettile|rimbalzo|raggio|smash), vel, danno,
-     kb, hitstop, suonoSeed, icona}. Idee: Penna di Annie (rapidissima,
-     crit alle spalle), Mazza del Bidello (lenta, lancia i nemici in aria),
-     Dodgeball (rimbalza sui muri), Pistola Paintball (precisa, schizzi),
-     Keytar di Troy (onda sonora ad arco), Lancia-lava (migra qui).
-     2 slot, swap con L1/TAB. Drop: casse (raro), negozio, boss garantito.
-  b) registro `SYNERGIES[]`: {coppia:[id,id], nome, effetto} — toast
-     "★ SINERGIA: <nome> ★" alla scoperta; `openPerks` pesa ×3 le carte
-     che completano una sinergia con l'equipaggiamento attuale.
-  c) economia in-run: ogni 2 profondità la scelta include una carta POM
-     (potenzia un perk posseduto, rendimenti decrescenti) o il NEGOZIO di
-     Hilda; CASSE MALEDETTE viola (perk subito + "1 colpo = morte" per 20
-     uccisioni); nel cap end 2 porte con anteprima-icona della ricompensa
-     della prossima profondità (perk / monete / arma, stile Hades).
-  d) BOSS DELLE PROFONDITÀ ogni 5, in arena-chunk dedicata: riusa MBOSSES
-     con 2 fasi + telegraphing (lampeggio+suono 30f prima di ogni mossa) +
-     interfase con ondata; dalla 10ª versioni remix. Pietà accessibile:
-     se entri con 1 cuore, un cuore garantito nell'arena.
-  e) AUDIO: musica a LAYER per bioma (base→batteria→arpeggio, si sommano
-     con profondità/combo); stinger perk/sinergia/boss/clear; suono e
-     rumble DISTINTI per arma; glifi PS5 in ogni menù nuovo.
-  f) pad al 100%: costumi e Incubo selezionabili anche da controller.
+- **S1-S4**: ✅ COMPLETATE (v10.1-v10.6, dettagli in CONTESTO): registri +
+  quest-engine + Atti I-II; scheletro generativo + endless; perk + juice;
+  armi + sinergie + economia + boss delle profondità + audio a layer.
+  Pool CHUNKS, PERKS, WEAPONS e SYNERGIES: espandibili in ogni sessione
+  (nuove armi/sinergie = righe nei registri, boss nuovi = chiavi MBOSSES).
 - **S5 — Greendale + Atto III e IV** (autoriale; i chunk alimentano S3):
   campus, Dean+quest, Chang boss EL TIGRE, Leonard, Atto III completo,
   mini-boss villaggio; poi Paintball segreto + Atto IV: personaggi malvagi,
@@ -269,9 +231,12 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
    mezzo. Dopo ogni batch: `node -e "new Function(codice)"` sulla sintassi.
 8. `_hawk.tp(x, y?)` accetta la Y; quest/flag persistono in localStorage:
    i test riprendono dopo un reload senza rifare la trafila.
-9. Eventi periodici su cicli paralleli: moduli coprimi (remix %5 vs biomi
-   %4), o coincidono sempre. Overlay full-screen si annullano a coppie
-   (`difference` + buio dark): spegnine uno. Nei test di danno azzera `p.inv`.
+9. Eventi periodici su cicli paralleli: moduli coprimi (remix %7, boss %5,
+   biomi %4). Overlay full-screen si annullano a coppie (`difference` +
+   buio dark): spegnine uno. Nei test di danno azzera `p.inv`.
+10. Nei test headless azzera `hitstop` prima di simulare input (li mangia);
+   il gamepad NON si simula via eval: pollGamepads sovrascrive GP a ogni
+   update — le vie da pad si collaudano a mano.
 
 ## §FINE SESSIONE — rituale auto-rigenerativo (obbligatorio)
 Al termine di OGNI sessione, in quest'ordine:
@@ -283,9 +248,8 @@ Al termine di OGNI sessione, in quest'ordine:
    sovrascrivi): spunta la sessione completata in §SESSIONI, integra lezioni
    apprese in §REGOLE o §TOKEN (max 3 righe nuove, elimina regole diventate
    ovvie), aggiorna CONTESTO con lo stato reale. Il prompt deve MIGLIORARE
-   ad ogni ciclo, non gonfiarsi: budget massimo 300 righe totali (alzato
-   da 260 in S3.6 per integrare la §RICERCA — quando S4 la consuma,
-   riassorbila e torna a 260).
+   ad ogni ciclo, non gonfiarsi: budget massimo 260 righe totali
+   (la §RICERCA S3.6 è stata consumata dalla S4 e riassorbita).
 6. Riporta all'utente: cosa è stato fatto, cosa testare a mano su Safari,
    qual è la prossima sessione.
 
