@@ -65,10 +65,9 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   allo stato (profondità, combo, boss vicino); bassline propulsiva come
   seconda melodia; stinger per perk/sinergia/boss/clear; nel WebAudio
   routing con pan+compressore e voci come layer separati attivabili.
-Fonti chiave: gamedeveloper.com (Dead Cells weapons; Boss Battle Design and
-Structure), wiki Gungeon (Synergies) e Hades (Duo Boons/Pom), gameasart.com
-(Spelunky gen explained), babyaud.io (guida chiptune), splice.com (weapon
-sound design), gamedesignskills.com (boss design).
+Fonti: gamedeveloper.com (Dead Cells 50 weapons; Boss Battle Design), wiki
+Gungeon (Synergies) e Hades (Duo/Pom), gameasart.com (Spelunky gen),
+babyaud.io (chiptune), splice.com (weapon sound), gamedesignskills.com.
 
 ## VINCOLI NON NEGOZIABILI
 1. **Single-file, zero dipendenze runtime** (no CDN/font/fetch). Deve girare
