@@ -255,7 +255,6 @@ Al termine di OGNI sessione, in quest'ordine:
 - commit + push; memoria aggiornata se serve.
 
 ## §SPIRITO
-Questo non è un porting: è una lettera d'amore a Community con ambizioni da
-gioco vero. Magie spettacolari, humor nero, meta-narrazione, sorprese.
-Quando hai un'idea fuori dagli schemi che rispetta i vincoli: falla.
-Cool. Cool cool cool.
+Non un porting: una lettera d'amore a Community con ambizioni da gioco vero.
+Magie spettacolari, humor nero, meta-narrazione, sorprese. Quando hai
+un'idea fuori dagli schemi che rispetta i vincoli: falla. Cool cool cool.
