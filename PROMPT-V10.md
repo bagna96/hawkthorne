@@ -19,20 +19,24 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   `MBOSSES` (hopper/swooper/leaper)/`ACTS` (intro/end, pendingCut). Atto I e
   II completi, nuoto+ubriachezza nel gin, NPC a terra (groundAt), tutorial
   adattivo tastiera/PS5, Gilbert alleato/giocabile a fine Atto II.
-- V10.4 (S3, SCHELETRO GENERATIVO): registri `BIOMES` (4 biomi: sky/song/
-  spawn/mini-boss) e `CHUNKS[]` (17 spezzoni handmade da 12 righe, tag
-  {b:bioma|any, d:1-3, i/o: riga suolo ingresso/uscita}); `genLevel(seed,prof)`
-  assembla con mulberry32: vincolo salita ≤2 righe tra chunk, cap start (P+C)
-  e cap end (porta X + slot mini-boss ogni 3 profondità), iniezione seeded di
-  nemici/casse/cuori/cristalli sui punti d'appoggio. `remixDef(def)` = Linea
-  Oscura per QUALSIASI def: flag remix → overlay `difference` bianco dopo
-  drawTiles (mondo invertito, sprite intatti), nemici +1hp/élite, mboss ×1.5,
-  dark spento. In endless remix ogni 5 profondità (modulo ≠ 4 = ruota sui
-  biomi). Menù titolo: PARTITA INFINITA ∞ (record in SAVE.endlessBest) e
-  SFIDA DEL GIORNO (seme AAAAMMGG o `#seed=N` nell'URL, condivisibile via
-  history.replaceState). Morte in endless = fine run → titolo. Solo locale
-  (il netcode manda indici di LEVELS). `loadLevel` accetta def-oggetto
-  (lvlIdx=-1: niente quest/atti/tutorial).
+- V10.4 (S3, SCHELETRO GENERATIVO): `BIOMES` (4 biomi) + `CHUNKS[]` (17
+  spezzoni handmade 12 righe, tag {b, d:1-3, i/o quota suolo});
+  `genLevel(seed,prof)` con mulberry32 (salita ≤2 tra chunk, cap start/end,
+  mini-boss ogni 3, iniezione seeded). `remixDef(def)` = Linea Oscura per
+  qualsiasi def (overlay `difference` dopo drawTiles, nemici élite, dark off;
+  in endless ogni 5 profondità). PARTITA INFINITA (record SAVE.endlessBest) e
+  SFIDA DEL GIORNO (`#seed=N` nell'URL). Endless solo locale; `loadLevel`
+  accetta def-oggetto (lvlIdx=-1: niente quest/atti).
+- V10.5 (feedback utente "gioco piatto"): registro `PERKS` (14 potenziamenti,
+  una riga l'uno) + schermata scelta 1-di-3 a carte dopo OGNI profondità
+  endless (openPerks/updatePerk/drawPerk, seeded); effetti: statua orbitante,
+  vampirismo, resurrezione, furia combo, portata, ecc. JUICE: `hitstop`,
+  squash&stretch (p.squashT), coyote+jump buffer (p.coyote/p.jbuf), polvere
+  corsa/atterraggio, popup `parts{txt}`, anelli `parts{ring}`, `ambientFX()`
+  meteo per bioma (foglie/braci/gocce/bolle/glitch, `parts{ng,sway,sz}`),
+  parallasse 3 piani tinta dal cielo via `shade()`, stalattiti+lucciole nei
+  mondi dark. Menù OPZIONI (SAVE.opts: audio/CRT/shake/fullscreen/reset) e
+  TRUCCHI (god/infSoul/monete/sblocchi — `cheatDirty` spegne award e record).
 - Debug: `_hawk.goto(n) .step(n) .tp(x) .soul() .super() .kill() .dmg(n)
   .beatRival() .p2() .give(n) .gems(n) .boon(id) .forge() .incubo() .next()
   .fakeGuest() .reset() .info() .quest() .mbkill() .gen(seed,prof) .remix(n)`.
@@ -88,9 +92,11 @@ costo token quasi nullo. Questo è il cuore della V10.
 `https://raw.githubusercontent.com/hawkthorne/hawkthorne-journey/master/src/images/{characters,npc,enemies,...}`
 Regole rodate: `sleep 1` tra file (rate-limit), verifica png >5KB.
 Layout noti: personaggi 12×16 frame 48×48 (mappa ANIM, riga destra,
-sinistra=riga−1); hilda 32×48; babyabed 20×25; acorn 44×40 (5col);
-hippy 48×48 (6×2); bat 30×22 (5col); cornelius boss 200×220 (3×5);
-acornBoss 75×75 (8×7); cornelius_lightning 144×192 (3col).
+sinistra=riga−1); hilda 32×48; babyabed 20×25; **acorn 220×40 = 10 col di
+22×20** (0-1 morte, 2-5 camminata, 6-9 IN FIAMME — usate per gli élite;
+il vecchio taglio 44×40 spezzava lo sprite in 3); hippy 48×48 (6×2);
+bat 30×22 (5col); cornelius boss 200×220 (3×5); acornBoss 75×75 (8×7);
+cornelius_lightning 144×192 (3col).
 
 ### Fonte 2 (CC0, scriptabile): GitHub raw + OpenGameArt file diretti
 Priorità alle fonti automatizzabili via curl:
@@ -180,13 +186,9 @@ mid-boss (radura) — mettili anche nel pool degli slot generativi.
 ## §SESSIONI — campagna guidata (una per volta, in ordine)
 Ogni sessione: leggi questo file → esegui → criteri accettazione → rituale
 di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
-- **S1 — Fondamenta**: ✅ COMPLETATA (v10.1). Registri, quest-engine,
-  Atto I, achievement, strobo verificato pixel-stabile frame-per-frame.
-- **S2 — Atto II**: ✅ COMPLETATA (v10.2). Nuoto, betafish, icebat regina,
-  quest campioni, Gilbert alleato/giocabile/NPC hub, tutorial comandi.
-- **S3 — SCHELETRO GENERATIVO**: ✅ COMPLETATA (v10.4). CHUNKS+BIOMES,
-  assemblatore seeded, Linea Oscura, Partita Infinita, Sfida del Giorno
-  (#seed URL). Dettagli in CONTESTO. Pool chunk espandibile in ogni sessione.
+- **S1-S3**: ✅ COMPLETATE (v10.1-v10.5, dettagli in CONTESTO): registri +
+  quest-engine + Atti I-II; scheletro generativo, Linea Oscura, endless +
+  perk. Pool CHUNKS e registro PERKS espandibili in ogni sessione futura.
 - **S4 — Greendale + Atto III** (autoriale, e i suoi chunk alimentano S3):
   mondo campus, Dean+quest, Chang boss, Leonard, Atto III completo.
   Mini-boss villaggio. Poi Paintball + Atto IV: livello segreto, personaggi
