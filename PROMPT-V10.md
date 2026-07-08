@@ -4,16 +4,7 @@
 > architettura, storia, asset, fasi. Leggi PRIMA le memorie `hawkthorne-assets`
 > e `fan-content-fidelity`.
 
-## CHANGELOG vs V9
-- Roadmap lineare (19 punti) → **sistemi data-driven** + **6 sessioni guidate**.
-- Nuovo: campagna narrativa in 4 atti (spina S3E20 + espansione originale).
-- Nuovo: registro fonti asset CC0 con URL e strategia di download verificata.
-- Nuovo: regole anti-spreco token per Claude Code stesso (§TOKEN).
-- Nuovo: clausola auto-rigenerativa (§FINE SESSIONE).
-- Netcode robusto declassato a nice-to-have (Sessione 6).
-- Mondi: da 2 previsti a 5 nuovi, generabili come righe-dato.
-
-## CONTESTO (stato v10.3 — Sessioni 1-2 completate + title screen v2)
+## CONTESTO (stato v10.4 — Sessioni 1-3 completate)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -26,16 +17,27 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   7 mondi (hub, radura, foresta+Re Ghianda, villaggio, lago di gin,
   caverne+Gilbert, trono+Cornelius), co-op locale 2P, co-op online WebRTC,
   gamepad PS5+rumble, musica procedurale WebAudio, save localStorage `hawk_save`.
-- V10.1: registri `ENEMIES` (mkEnemy, spawn per-mondo nei def LEVELS),
-  `VFX` (drawVFX), `ACHIEVEMENTS` (award/bump, SAVE.cnt), `QUESTS` +
-  quest-engine (collect tile 'Z' / kill, fuori ordine, SAVE.quests).
-  Atto I e II completi. Registro MBOSSES (hopper/swooper/leaper: Re Ghianda,
-  Betafish, Regina pipistrelli), nuoto+ubriachezza nel gin, ACTS con intro/end
-  e pendingCut, NPC agganciati al terreno (groundAt), tutorial comandi
-  adattivo tastiera/PS5, Gilbert NPC hub + sbloccato gratis a fine Atto II.
+- V10.1-2: registri `ENEMIES`/`VFX`/`ACHIEVEMENTS`/`QUESTS`+quest-engine/
+  `MBOSSES` (hopper/swooper/leaper)/`ACTS` (intro/end, pendingCut). Atto I e
+  II completi, nuoto+ubriachezza nel gin, NPC a terra (groundAt), tutorial
+  adattivo tastiera/PS5, Gilbert alleato/giocabile a fine Atto II.
+- V10.4 (S3, SCHELETRO GENERATIVO): registri `BIOMES` (4 biomi: sky/song/
+  spawn/mini-boss) e `CHUNKS[]` (17 spezzoni handmade da 12 righe, tag
+  {b:bioma|any, d:1-3, i/o: riga suolo ingresso/uscita}); `genLevel(seed,prof)`
+  assembla con mulberry32: vincolo salita ≤2 righe tra chunk, cap start (P+C)
+  e cap end (porta X + slot mini-boss ogni 3 profondità), iniezione seeded di
+  nemici/casse/cuori/cristalli sui punti d'appoggio. `remixDef(def)` = Linea
+  Oscura per QUALSIASI def: flag remix → overlay `difference` bianco dopo
+  drawTiles (mondo invertito, sprite intatti), nemici +1hp/élite, mboss ×1.5,
+  dark spento. In endless remix ogni 5 profondità (modulo ≠ 4 = ruota sui
+  biomi). Menù titolo: PARTITA INFINITA ∞ (record in SAVE.endlessBest) e
+  SFIDA DEL GIORNO (seme AAAAMMGG o `#seed=N` nell'URL, condivisibile via
+  history.replaceState). Morte in endless = fine run → titolo. Solo locale
+  (il netcode manda indici di LEVELS). `loadLevel` accetta def-oggetto
+  (lvlIdx=-1: niente quest/atti/tutorial).
 - Debug: `_hawk.goto(n) .step(n) .tp(x) .soul() .super() .kill() .dmg(n)
   .beatRival() .p2() .give(n) .gems(n) .boon(id) .forge() .incubo() .next()
-  .fakeGuest() .reset() .info() .quest() .mbkill()`.
+  .fakeGuest() .reset() .info() .quest() .mbkill() .gen(seed,prof) .remix(n)`.
 
 ## VINCOLI NON NEGOZIABILI
 1. **Single-file, zero dipendenze runtime** (no CDN/font/fetch). Deve girare
@@ -185,18 +187,9 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
   Atto I, achievement, strobo verificato pixel-stabile frame-per-frame.
 - **S2 — Atto II**: ✅ COMPLETATA (v10.2). Nuoto, betafish, icebat regina,
   quest campioni, Gilbert alleato/giocabile/NPC hub, tutorial comandi.
-- **S3 — SCHELETRO GENERATIVO** (decisione architetturale con l'utente,
-  ispirata a Spelunky/Hades/Dead Cells: "spina autoriale, carne procedurale"):
-  a) libreria CHUNKS[]: spezzoni di righe-mappa handmade per bioma (10-16
-     colonne l'uno), con tag {bioma, difficoltà, ingresso/uscita quota};
-  b) assemblatore seeded: cuce i chunk garantendo il percorso, inietta
-     spawn dal registro ENEMIES per bioma, casse, cristalli, slot mini-boss;
-  c) pipeline REMIX/Darkest Timeline: re-istanzia mondi (autoriali o
-     generati) con palette invertita e nemici potenziati — costo asset zero;
-  d) DAILY SEED condivisibile (#seed nell'URL) + modalità "PARTITA INFINITA"
-     dal menù (mondi generati a difficoltà crescente finché non muori);
-  e) i mondi autoriali esistenti restano intatti: i loro pezzi migliori
-     vengono ritagliati come chunk e arricchiscono il pool.
+- **S3 — SCHELETRO GENERATIVO**: ✅ COMPLETATA (v10.4). CHUNKS+BIOMES,
+  assemblatore seeded, Linea Oscura, Partita Infinita, Sfida del Giorno
+  (#seed URL). Dettagli in CONTESTO. Pool chunk espandibile in ogni sessione.
 - **S4 — Greendale + Atto III** (autoriale, e i suoi chunk alimentano S3):
   mondo campus, Dean+quest, Chang boss, Leonard, Atto III completo.
   Mini-boss villaggio. Poi Paintball + Atto IV: livello segreto, personaggi
@@ -242,6 +235,10 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
    MBOSSES). Dopo ogni batch: `node -e "new Function(codice)"` per la sintassi.
 8. `_hawk.tp(x, y?)` accetta la Y; le quest/flag persistono in localStorage:
    i test possono riprendere dopo un reload senza rifare la trafila.
+9. Eventi periodici su cicli paralleli: usa moduli coprimi (remix %5 vs
+   biomi %4), altrimenti coincidono sempre sullo stesso bioma.
+10. Effetti full-screen si mangiano a vicenda (inversione `difference` +
+   buio `dark`): disattivane uno. Nei test di danno azzera prima `p.inv`.
 
 ## §FINE SESSIONE — rituale auto-rigenerativo (obbligatorio)
 Al termine di OGNI sessione, in quest'ordine:
