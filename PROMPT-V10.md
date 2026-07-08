@@ -1,17 +1,15 @@
 # PROMPT V10 — Hawkthorne "Leggendario" (campagna multi-sessione)
 
-> Incolla o indica questo file a Claude Code. Autosufficiente: contesto, regole,
-> architettura, storia, asset, fasi. Leggi PRIMA le memorie `hawkthorne-assets`
-> e `fan-content-fidelity`.
+> Autosufficiente: contesto, regole, architettura, storia, asset, fasi.
+> Leggi PRIMA le memorie `hawkthorne-assets` e `fan-content-fidelity`.
 
 ## CONTESTO (stato v10.4 — Sessioni 1-3 completate)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
-- `index.html` = gioco COMPLETO single-file (~1.1MB, asset base64 inline).
-  `assets.js` = copia esterna asset. Pipeline rigenerazione: script python in
-  cronologia git (commit v7/v8) genera `assets.js` e re-inlinea il blocco
-  `<script>window.HAWK_ASSETS=...</script>` in `index.html`.
+- `index.html` = gioco COMPLETO single-file (~1.2MB, asset base64 inline nel
+  blocco HAWK_ASSETS; `assets.js` copia esterna; script python di
+  rigenerazione nei commit v7/v8).
 - 20 personaggi giocabili (sprite autentici Project Hawkthorne), costumi,
   super a barra Meraviglia, tratti passivi, boons negozio, scivolata/schianto,
   7 mondi (hub, radura, foresta+Re Ghianda, villaggio, lago di gin,
@@ -154,9 +152,8 @@ oggetti rubati), statua Luis Guzmán (easter egg, sheet `guzman` nel repo),
    via canvas, nemici = studenti coi costumi `paintball` già scaricati.
 3. **DREAMATORIUM** — astratto, griglie/ologrammi procedurali, gravità
    variabile a zone. Arena di Abed-Oscuro.
-4. ~~Darkest remix~~ → assorbito in S3c. ~~Lago 2.0~~ → ✅ fatto in S2.
 Mini-boss restanti: turkey/"Fabbro fantasma" (villaggio), jumpingacorn
-mid-boss (radura). Betafish e icebat: ✅ fatti (registro MBOSSES).
+mid-boss (radura) — mettili anche nel pool degli slot generativi.
 
 ## §POTERI E SISTEMI
 - **Super combinati co-op** (entrambi 100%, premuti insieme): matrice
@@ -218,7 +215,7 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
   (overlay croce+3 bottoni, pointer events, convivenza con macOS = si attiva
   solo su touch device) + PWA offline; netcode robusto (heartbeat, timeout,
   riconnessione, lerp snapshot, bottone COPIA CODICE); selettore livello dal
-  hub post-completamento; daily seed condivisibile.
+  hub post-completamento; endless anche online (serve sync del seed).
 
 ## §REGOLE DI LAVORO (compressa V9, sempre valide)
 1. Animazioni: test frame-per-frame con `_hawk.step(1)` + screenshot
@@ -227,18 +224,15 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
 3. Zero errori console; funziona da file:// E su Pages, prova entrambi.
 4. GitHub raw: `sleep 1` tra file, verifica dimensione >5KB.
 5. Consegna solo roba TESTATA. Spettacolare sì, rotto no.
-6. Il rAF è SOSPESO nel browser headless: MAI Promise/rAF negli eval di test
-   (timeout); usa `_hawk.step`. I diff pixel: soglia >60, il micro-rumore AA
-   dei tratti (delta<60) è invisibile e non è un bug.
-7. ATTENZIONE agli slice python `s[s.index(A):s.index(B)]` per sostituire
-   blocchi: possono inghiottire blocchi inseriti in mezzo (successo con
-   MBOSSES). Dopo ogni batch: `node -e "new Function(codice)"` per la sintassi.
-8. `_hawk.tp(x, y?)` accetta la Y; le quest/flag persistono in localStorage:
-   i test possono riprendere dopo un reload senza rifare la trafila.
-9. Eventi periodici su cicli paralleli: usa moduli coprimi (remix %5 vs
-   biomi %4), altrimenti coincidono sempre sullo stesso bioma.
-10. Effetti full-screen si mangiano a vicenda (inversione `difference` +
-   buio `dark`): disattivane uno. Nei test di danno azzera prima `p.inv`.
+6. rAF SOSPESO in headless: niente Promise/rAF negli eval di test, usa
+   `_hawk.step`. Diff pixel: soglia >60 (sotto è rumore AA, non un bug).
+7. Gli slice python `index()..index()` inghiottono i blocchi inseriti in
+   mezzo. Dopo ogni batch: `node -e "new Function(codice)"` sulla sintassi.
+8. `_hawk.tp(x, y?)` accetta la Y; quest/flag persistono in localStorage:
+   i test riprendono dopo un reload senza rifare la trafila.
+9. Eventi periodici su cicli paralleli: moduli coprimi (remix %5 vs biomi
+   %4), o coincidono sempre. Overlay full-screen si annullano a coppie
+   (`difference` + buio dark): spegnine uno. Nei test di danno azzera `p.inv`.
 
 ## §FINE SESSIONE — rituale auto-rigenerativo (obbligatorio)
 Al termine di OGNI sessione, in quest'ordine:
