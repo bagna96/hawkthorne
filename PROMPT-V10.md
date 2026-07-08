@@ -62,8 +62,7 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 - Nuovi contenuti = **righe nei registri dati** (§ARCHITETTURA), non funzioni
   ad-hoc. Se stai scrivendo >30 righe di codice per UN nemico, fermati:
   stai violando l'architettura.
-- Screenshot: solo quando servono a una decisione. Analisi video: max 2
-  tentativi, poi fix per classe di problema.
+- Screenshot solo per decidere; analisi video max 2 tentativi poi fix di classe.
 - Non rigenerare `assets.js` per aggiunte singole: appendi la chiave base64
   al blocco HAWK_ASSETS con uno script mirato.
 
@@ -84,8 +83,7 @@ elemento nuovo = una riga. Il motore legge i registri, mai hardcode sparso.
 - `DIALOGHI`: stringhe brevi (max 2 righe a battuta), tono Duncan/nero,
   memorizzate nelle quest o in `LORE[]` per NPC ambientali.
 - `ACHIEVEMENTS[]`: {id, nome, cond, toast}.
-Beneficio: 10 nemici nuovi ≈ 10 righe + sheet. Moltiplicazione contenuto a
-costo token quasi nullo. Questo è il cuore della V10.
+Beneficio: 10 nemici nuovi ≈ 10 righe + sheet. Il cuore della V10.
 
 ## §ASSET — fonti e pipeline
 ### Fonte 1 (autentica, scriptabile): repo hawkthorne-journey
