@@ -212,8 +212,8 @@ function jp(code){ return !!justPressed[code]; }
 function anyDown(list){ return list.some(k => keys[k]); }
 function anyJP(list){ return list.some(k => justPressed[k]); }
 const SCHEMES = [
-  { left:['ArrowLeft'], right:['ArrowRight'], jump:['ArrowUp','Space','KeyZ'], atk:['KeyX','KeyK'], ab:['KeyC','KeyL'], down:['ArrowDown'], sup:['KeyV'], roll:['ShiftLeft','ShiftRight'] },
-  { left:['KeyA'], right:['KeyD'], jump:['KeyW'], atk:['KeyF'], ab:['KeyG'], down:['KeyS'], sup:['KeyH'], roll:['KeyR'] },
+  { left:['ArrowLeft'], right:['ArrowRight'], jump:['ArrowUp','Space','KeyZ'], atk:['KeyX','KeyK'], ab:['KeyC','KeyL'], down:['ArrowDown'], sup:['KeyV'], roll:['ShiftLeft','ShiftRight'], spell:['KeyQ'], spnext:['KeyE'] },
+  { left:['KeyA'], right:['KeyD'], jump:['KeyW'], atk:['KeyF'], ab:['KeyG'], down:['KeyS'], sup:['KeyH'], roll:['KeyR'], spell:['KeyT'], spnext:['KeyY'] },
 ];
 
 // ---------------- GAMEPAD (2 pad = 2 giocatori) ----------------
@@ -240,6 +240,8 @@ function pollGamepads(){
       ok:    b(9) || b(0),
       l1:    b(4),
       roll:  b(5),
+      spell: b(6),
+      spnext:b(12),
       start: b(9),
     };
     if (gp.buttons.some(x => x && x.pressed)) initAudio();
@@ -872,13 +874,19 @@ function genLevel(seed, depth){
     }
   for (let k = spots.length - 1; k > 0; k--){ const j = Math.floor(rng() * (k + 1)); const tmp = spots[k]; spots[k] = spots[j]; spots[j] = tmp; }
   const eDen = Math.min(0.16, 0.06 + dif * 0.025 + depth * 0.004);
-  let gems = 2, hearts = 1, cursed = 0, springs = 0, secrets = 0;
+  let gems = 2, hearts = 1, cursed = 0, springs = 0, secrets = 0, barriers = 0, altars = 0;
   for (const s of spots){
     const r = rng();
     if (gems > 0 && r < 0.05){ g[s.y][s.x] = 'g'; gems--; }
     else if (hearts > 0 && r < 0.08){ g[s.y][s.x] = 'h'; hearts--; }
     else if (springs < 2 && r < 0.11){ g[s.y][s.x] = 'J'; springs++; }               // molla/trampolino
     else if (secrets < 1 && r < 0.13){ g[s.y][s.x] = 'S'; secrets++; }               // blocco segreto (scatto per sfondarlo)
+    else if (barriers < 1 && depth >= 2 && r < 0.145){                               // barriera di ghiaccio (chiave: FUOCO)
+      g[s.y][s.x] = '*'; if (s.y - 1 >= 0) g[s.y - 1][s.x] = '*';
+      if (g[s.y][s.x + 1] === ' ') g[s.y][s.x + 1] = 'g';
+      barriers++;
+    }
+    else if (altars < 1 && depth >= 2 && r < 0.16){ g[s.y][s.x] = 'A'; altars++; }   // altare delle offerte
     else if (r < 0.11 + eDen) g[s.y][s.x] = 'e';
     else if (r < 0.15 + eDen) g[s.y][s.x] = (cursed < 1 && depth >= 2 && rng() < 0.3) ? (cursed++, 'x') : 'k';
     else if (r < 0.23 + eDen) g[s.y][s.x] = 'o';
@@ -1250,6 +1258,11 @@ const ABILITIES = [
   { id:'mutande',    nome:'MUTANDE-PARACADUTE',         icona:'🪂', cost:90,  desc:'Cadere nelle fosse non toglie cuori. Ti giudica e basta.' },
   { id:'karma',      nome:'IL KARMA DI SHIRLEY',        icona:'🙏', cost:280, desc:'Una resurrezione gratis a run. "Oh, che carino."' },
   { id:'coinmagnet', nome:'CALAMITA ETERNA',            icona:'🧲', cost:100, desc:'Pop pop! Le monete ti inseguono. Per sempre.' },
+  // — incantesimi elementali (cast Q/L2 · cambia con E/dpad-su) —
+  { id:'sp_fuoco',    nome:'FIAMMA DEL FALÒ DI PROTESTA', icona:'🔥', cost:60,  desc:'Incantesimo: proiettile perforante. Scioglie il ghiaccio (anche le barriere).' },
+  { id:'sp_ghiaccio', nome:'GELO BUROCRATICO',            icona:'❄️', cost:150, desc:'Incantesimo: ventaglio che congela. Rallenta tutto, come la segreteria.' },
+  { id:'sp_fulmine',  nome:'FULMINE DI CHANG (USO CIVILE)',icona:'⚡', cost:200, desc:'Incantesimo: folgora i 2 nemici più vicini. Omologato. Più o meno.' },
+  { id:'sp_vento',    nome:'VENTO DI FINE SEMESTRE',      icona:'🌪️', cost:180, desc:'Incantesimo: raffica che spazza nemici, proiettili e responsabilità.' },
 ];
 let abilSel = 0;
 // i boss ora lasciano un bel gruzzolo di Monete (la valuta del negozio)
@@ -1278,6 +1291,61 @@ function drawAbilities(){
   const items = abilitiesItems();
   drawMenuList('⬡ NEGOZIO DELLE ABILITÀ', 'Base (salto doppio · scatto · parete) GIÀ tue. Hai ' + SAVE.wallet + '¢. Ciò che compri resta PER SEMPRE.', items, abilSel, '#8ae8e8');
   if (abilSel < ABILITIES.length) text(ABILITIES[abilSel].desc, W/2, H - 54, 13, '#b0e0e0', 'center');
+}
+
+// ------------------------------------------------ INCANTESIMI ELEMENTALI (V10 S5 tappa 3)
+// Una riga = un incantesimo. Colore-firma, cast Q/L2, cambia con E/dpad-su.
+// Concatenane due DIVERSI entro 2 secondi: COMBO ELEMENTALE, danno ×1.5.
+const SPELLS = {
+  fuoco:    { nome:'FIAMMA DEL FALÒ DI PROTESTA', icona:'🔥', col:'#f5622a', cd:55,  desc:'Proiettile perforante. Scioglie le barriere di ghiaccio. Britta approva, poi si scusa.' },
+  ghiaccio: { nome:'GELO BUROCRATICO',            icona:'❄️', col:'#7ad8f5', cd:75,  desc:'Ventaglio che congela. I nemici rallentano, come una pratica in segreteria.' },
+  fulmine:  { nome:'FULMINE DI CHANG (USO CIVILE)',icona:'⚡', col:'#f5d442', cd:95,  desc:'Colpisce i 2 nemici più vicini. Omologato. Più o meno.' },
+  vento:    { nome:'VENTO DI FINE SEMESTRE',      icona:'🌪️', col:'#9af59a', cd:70,  desc:'Raffica che spazza nemici e proiettili. E ogni tua responsabilità.' },
+};
+let lastSpell = { id: null, t: -999 };
+function ownedSpells(){ return Object.keys(SPELLS).filter(id => SAVE.meta['sp_' + id]); }
+let spellSel = 0;
+function curSpell(){ const os = ownedSpells(); return os.length ? os[spellSel % os.length] : null; }
+function castSpell(p){
+  const id = curSpell(); if (!id) return;
+  const S = SPELLS[id];
+  if (p.spellCd > 0) return;
+  p.spellCd = S.cd;
+  // combo elementale: spell DIVERSO entro 120 frame = danno ×1.5
+  const comboEl = lastSpell.id && lastSpell.id !== id && frame - lastSpell.t < 120;
+  if (comboEl){ showToast('⚡ COMBO ELEMENTALE! (' + SPELLS[lastSpell.id].icona + '→' + S.icona + ' danno ×1.5)'); stinger('syn'); addShake(4); }
+  lastSpell = { id, t: frame };
+  const mul = comboEl ? 1.5 : 1;
+  sfx('fire'); rumble(p.slot, 140, 0.6);
+  burst(p.x + p.w/2, p.y + p.h/2, S.col, 14, 3);
+  if (id === 'fuoco'){
+    projs.push({ from:'player', owner:p, x:p.x + p.w/2, y:p.y + 8, w:12, h:12, vx:p.face*8, vy:0, t:80,
+      fire:true, pierce:true, spell:'fuoco', dmg:Math.round(2*mul) });
+  } else if (id === 'ghiaccio'){
+    for (let k = -1; k <= 1; k++)
+      projs.push({ from:'player', owner:p, x:p.x + p.w/2, y:p.y + 8, w:10, h:10, vx:p.face*(6.5 - Math.abs(k)), vy:k*1.8, t:60,
+        freeze:true, spell:'ghiaccio', dmg:Math.round(1*mul) });
+  } else if (id === 'fulmine'){
+    const vicini = enemies.filter(e => e.hp > 0 && Math.hypot(e.x - p.x, e.y - p.y) < 260)
+      .sort((a,b) => Math.hypot(a.x-p.x, a.y-p.y) - Math.hypot(b.x-p.x, b.y-p.y)).slice(0, 2);
+    if (!vicini.length && mboss && !mboss.dead && Math.hypot(mboss.x-p.x, mboss.y-p.y) < 260) { hitMboss(Math.round(3*mul), p); }
+    for (const e of vicini){
+      e.hp -= Math.round(3*mul); e.slowT = 60;
+      e._boltT = 8; e._boltFrom = { x: p.x + p.w/2, y: p.y + 4 };
+      burst(e.x + e.w/2, e.y + e.h/2, '#f5d442', 12, 3);
+      hitstop = Math.max(hitstop, 3);
+      if (e.hp <= 0) killEnemy(e, p);
+    }
+    if (!vicini.length) showToast('⚡ Il fulmine non ha trovato nessuno. Imbarazzante.');
+  } else if (id === 'vento'){
+    for (const e of enemies) if (Math.hypot(e.x - p.x, e.y - p.y) < 140){
+      e.vx = Math.sign(e.x - p.x || p.face) * 8; e.vy = -6; e.hp -= Math.round(1*mul);
+      if (e.hp <= 0) killEnemy(e, p);
+    }
+    for (const pr of projs) if (pr.from !== 'player' && pr.from !== 'ally' && Math.hypot(pr.x - p.x, pr.y - p.y) < 150){ pr.vx = -pr.vx; pr.vy = -2; }
+    if (!p.onGround) p.vy = Math.min(p.vy, -8);   // il vento ti solleva: mobilità!
+    parts.push({ ring:true, x:p.x + p.w/2, y:p.y + p.h/2, r:12, vx:0, vy:0, t:12, color:S.col });
+  }
 }
 
 const LEVELS = [
@@ -1459,6 +1527,11 @@ const OVER_LINES = [
   '"Ho visto community college più combattivi." — Cornelius',
   '"E pensare che i bambini di Abed ce l\'avevano quasi fatta." — Hilda',
   '"Condoglianze. Le salviette Hawthorne assorbono anche le lacrime." — Cornelius',
+  'Il colmo per una ghianda? Cadere lontano dall\'albero. Tu invece sei solo caduto. — Fat Neil',
+  '"Che seccatura amministrativa. Compili il modulo R-1N4SC-1TA in triplice copia." — La Direzione',
+  '"Come se fosse antani, lei risulta deceduto come se fosse a destra per due." — L\'Altare S.R.L.',
+  '"GLITCH CERTIF— no, aspetta. Stavolta sei morto davvero." — Il Gioco',
+  '"Sul suo curriculum scriveremo: \'ottimo tempismo, pessimo atterraggio\'." — Duncan',
 ];
 function gilbertPages(){ return [
   { who:'gilbert', text:'Basta. Vi ho battuti settecento volte in beta test. Come... come avete fatto?' },
@@ -1485,7 +1558,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v10.9';
+const GAME_VERSION = 'v10.10';
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -1512,6 +1585,7 @@ let boons = {};            // potenziamenti della run (stile Hades)
 let nightmare = false;     // Modalità Incubo (post-game)
 let hitstop = 0;           // fermo-immagine sui colpi (game feel)
 let wipeT = 0, wipeKind = 0;   // transizione "PowerPoint" kitsch (glitch voluto)
+let nightWave = null;          // TURNO DI NOTTE (rischio-ricompensa alla Kingdom): {total, spawned, t}
 let god = false, infSoul = false, cheatDirty = false;  // trucchi
 let slowT = 0;             // Discorso Winger: rallenta il mondo
 let superRain = null;      // Brittapocalisse
@@ -1658,7 +1732,7 @@ function mkPlayer(cdef, costume, x, y, slot){
     cpx:x, cpy:y, anim:0, downT:0,
     soul:0, shield:0, jail:null, sprintT:0, focusT:0, laserT:0, net:false,
     slideT:0, pounding:false, warpT:42, idleT:0, airT:0,
-    dashT:0, dashCd:0, dashDir:1, airDashes:0, wallDir:0, coyote:0, jbuf:0, squashT:0 };
+    dashT:0, dashCd:0, dashDir:1, airDashes:0, wallDir:0, coyote:0, jbuf:0, squashT:0, spellCd:0 };
 }
 function sheetOf(p){ return p.costume ? p.cdef.id + '__' + p.costume : p.cdef.id; }
 function alivePlayers(){ return players.filter(p => p.hp > 0); }
@@ -1682,7 +1756,7 @@ function loadLevel(i){
   const wMax = Math.max(...def.rows.map(r => r.length));
   const rows = def.rows.map(r => r.padEnd(wMax, ' ').split(''));
   lvl = { def, rows, w: wMax, h: rows.length, name: def.name, markers: [] };
-  enemies = []; projs = []; parts = []; babies = []; wdrops = []; fxShots = []; boss = null; rival = null; monkey = null; mboss = null;
+  enemies = []; projs = []; parts = []; babies = []; wdrops = []; fxShots = []; boss = null; rival = null; monkey = null; mboss = null; nightWave = null;
   if (!def.village) villageBurning = false;
   let sx = TS*2, sy = 0;
   for (let y = 0; y < lvl.h; y++) for (let x = 0; x < lvl.w; x++){
@@ -1843,13 +1917,17 @@ function tileAt(tx, ty){
   if (ty < 0 || ty >= lvl.h) return ' ';
   return lvl.rows[ty][tx];
 }
-function isSolid(c){ return c === '#' || c === 'B' || c === 'F' || c === 'S'; }
+function isSolid(c){ return c === '#' || c === 'B' || c === 'F' || c === 'S' || c === '*'; }
 // ---------------- MINI-GUIDE: hint-on-approach una-tantum, voce Abed (invisible tutorial) ----------------
 const GUIDE = {
   moves:  'ABED: hai doppio salto, SCATTO (Shift/R1, invulnerabile) e rimbalzo sui muri.',
   bounce: 'ABED: una molla. Saltaci sopra e ti sparerà in alto.',
   secret: 'ABED: blocco incrinato = finto. Sfondalo con lo SCATTO e prendi il premio.',
   spesa:  'ABED: le Monete comprano abilità permanenti al NEGOZIO (dal titolo).',
+  spell:  'ABED: niente incantesimi. Si comprano al NEGOZIO (dal titolo). È il capitalismo, ma magico.',
+  barrier:'ABED: barriera di ghiaccio. Serve il FUOCO. È letteralmente l\'unico enigma con una sola soluzione.',
+  altare: 'ABED: un altare delle offerte. GIÙ per negoziare organi e valute. Legalmente è "un chiosco".',
+  notte:  'ABED: GIÙ sulla porta = TURNO DI NOTTE. Ondata di nemici, bottino doppio. Cattiva idea. Fallo.',
 };
 function showGuide(id){
   const t = GUIDE[id]; if (!t) return;
@@ -2086,6 +2164,14 @@ function updateOnePlayer(p, atkBoxes){
   // super al 100% di Meraviglia
   if (pJP(p,'sup') && p.soul >= 100) activateSuper(p);
 
+  // INCANTESIMI: cast con Q/L2, cambio con E/dpad-su
+  if (p.spellCd > 0) p.spellCd--;
+  if (pJP(p,'spell')) { castSpell(p); if (!curSpell()) showGuide('spell'); }
+  if (pJP(p,'spnext')){
+    const os = ownedSpells();
+    if (os.length > 1){ spellSel = (spellSel + 1) % os.length; const S = SPELLS[curSpell()]; showToast(S.icona + ' ' + S.nome); sfx('text'); }
+  }
+
   if (p.atkCd > 0) p.atkCd--;
   if (p.atkT > 0) p.atkT--;
   if (pJP(p,'atk') && p.atkCd <= 0 && p.slideT <= 0 && !p.pounding){
@@ -2127,8 +2213,8 @@ function updateOnePlayer(p, atkBoxes){
     p.wsel = 1 - p.wsel; sfx('text');
     showToast(curWpn(p).icona + ' ' + curWpn(p).nome);
   }
-  // raccogli un'arma a terra (GIÙ)
-  if (pJP(p,'down') && p.onGround){
+  // raccogli un'arma a terra (GIÙ) — coyote: onGround oscilla quando sei fermo
+  if (pJP(p,'down') && (p.onGround || p.coyote > 0)){
     for (const wd of wdrops){
       if (Math.abs(p.x + p.w/2 - wd.x) < 36 && Math.abs(p.y + p.h - wd.y) < 54){
         const old = giveWeapon(p, wd.id);
@@ -2136,6 +2222,12 @@ function updateOnePlayer(p, atkBoxes){
         sfx('buy');
         break;
       }
+    }
+    // ALTARE DELLE OFFERTE: GIÙ vicino all'altare apre il banco degli scambi
+    if (!menu){
+      const atx = Math.floor((p.x + p.w/2) / TS), aty = Math.floor((p.y + p.h/2) / TS);
+      for (let dy = -1; dy <= 1 && !menu; dy++) for (let dx = -2; dx <= 2; dx++)
+        if (tileAt(atx + dx, aty + dy) === 'A'){ openAltare(p); break; }
     }
   }
   if (p.abCd > 0) p.abCd--;
@@ -2168,15 +2260,24 @@ function updateOnePlayer(p, atkBoxes){
     else if (c === '^'){ hurtPlayer(p, 1, tx*TS + 16); }
     else if (c === '~'){ if (!lvl.def.gin && !trait(p,'vicedean')) hurtPlayer(p, 1, tx*TS + 16); }
     else if (c === 'X'){
-      const locked = (boss && !boss.dead) || (rival && !rival.defeated) || (mboss && !mboss.dead);
+      const locked = (boss && !boss.dead) || (rival && !rival.defeated) || (mboss && !mboss.dead) || nightWave;
       if (!locked){
-        sfx('door');
-        if (endless) openPerks();
-        else if (lvlIdx >= 0 && lvlIdx < LEVELS.length - 1) nextLevel();
+        // TURNO DI NOTTE: tieni GIÙ mentre tocchi la porta = resti per l'ondata, bottino ×2
+        if (endless && !lvl.def.bossDepth && pDown(p,'down')){
+          const n = 8 + Math.min(10, endless.depth * 2);
+          nightWave = { total: n, spawned: 0, t: 0 };
+          showGuide('notte');
+          showToast('🌙 TURNO DI NOTTE ACCETTATO: ' + n + ' ospiti non paganti in arrivo. Bottino ×2.');
+          stinger('bossIntro'); setSong('boss'); addShake(6);
+        } else {
+          sfx('door');
+          if (endless) openPerks();
+          else if (lvlIdx >= 0 && lvlIdx < LEVELS.length - 1) nextLevel();
+        }
       }
     }
     else if (c === 'W' && endless){   // porta alternativa: ricompensa in anteprima, niente carte
-      const locked = (mboss && !mboss.dead);
+      const locked = (mboss && !mboss.dead) || nightWave;
       if (!locked){
         sfx('door');
         const ar = lvl.def.altRew || { tipo:'monete' };
@@ -2243,6 +2344,23 @@ function openShop(p){
   ]};
   sfx('text');
 }
+// ALTARE DELLE OFFERTE S.R.L. — ogni scelta è una scommessa (lezione di Isaac)
+function openAltare(p){
+  showGuide('altare');
+  menu = { type:'shop', title:'ALTARE DELLE OFFERTE S.R.L.', p, sel:0, items:[
+    { name:'Offri 1 CUORE → 35 monete ("il sangue è caro, di listino")', cost:0, act(q){
+        if (q.hp > 1){ q.hp--; addWallet(35); sfx('hurt'); burst(q.x + q.w/2, q.y, '#e85a7a', 12, 3); }
+        else showToast('L\'altare rifiuta: "Politica aziendale: niente ultimi cuori."'); } },
+    { name:'Offri 25 monete → 1 CUORE (tariffa festivi inclusa)', cost:25, act(q){
+        if (q.hp < q.maxhp){ q.hp++; sfx('heart'); }
+        else { addWallet(25); showToast('Cuori già pieni. Rimborso emesso in 0-3 giorni lavorativi.'); } } },
+    { name:'Offri 2 CRISTALLI → 45 monete (quotazione di ieri)', cost:0, act(q){
+        if (cristalli >= 2){ cristalli -= 2; addWallet(45); sfx('gem'); }
+        else showToast('Servono 2 cristalli. L\'altare finge di non vederti.'); } },
+    { name:'Offri 40 monete → un\'ARMA a sorpresa (reso non previsto)', cost:40, act(q){ giveWeapon(q, randomWeaponId()); } },
+  ]};
+  sfx('organ');
+}
 function tryForge(){
   if (lavagun){ showToast('Hai già la LANCIA-LAVA.'); return; }
   if (cristalli >= 3){
@@ -2262,11 +2380,38 @@ function updatePlay(){
   updateRain();
   const atkBoxes = [];
   for (const p of players) updateOnePlayer(p, atkBoxes);
-  // mini-guida di prossimità: il blocco segreto si spiega da solo quando ti avvicini
-  if (players[0] && frame % 8 === 0 && !((SAVE.flags||{}).seen||{}).secret){
+  // mini-guide di prossimità: le cose nuove si spiegano da sole quando ti avvicini
+  if (players[0] && frame % 8 === 0){
+    const seen = (SAVE.flags||{}).seen||{};
     const px = Math.floor((players[0].x + players[0].w/2)/TS), py = Math.floor((players[0].y + players[0].h/2)/TS);
-    for (let dy = -2; dy <= 2 && !((SAVE.flags||{}).seen||{}).secret; dy++)
-      for (let dx = -3; dx <= 3; dx++) if (tileAt(px+dx, py+dy) === 'S'){ showGuide('secret'); break; }
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -3; dx <= 3; dx++){
+      const tg = tileAt(px+dx, py+dy);
+      if (tg === 'S' && !seen.secret){ showGuide('secret'); }
+      else if (tg === '*' && !seen.barrier){ showGuide('barrier'); }
+      else if (tg === 'A' && !seen.altare){ showGuide('altare'); }
+    }
+  }
+  // TURNO DI NOTTE: ondata scaglionata, poi il bottino
+  if (nightWave){
+    nightWave.t++;
+    if (nightWave.spawned < nightWave.total && nightWave.t % 28 === 0){
+      const p0 = players[0];
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const id = Math.random() < 0.3 ? ((lvl.def.spawn||{}).f || 'bat') : ((lvl.def.spawn||{}).e || 'acorn');
+      const ne = mkEnemy(id, p0.x + side * (300 + Math.random() * 160), p0.y - 90);
+      if (nightWave.spawned % 3 === 2 && ne.type === 'walker') ne.elite = true;
+      enemies.push(ne);
+      nightWave.spawned++;
+      burst(ne.x + 12, ne.y + 12, '#aac6ff', 8, 2);
+    }
+    if (nightWave.spawned >= nightWave.total && enemies.every(e => e.hp <= 0)){
+      const rew = (20 + endless.depth * 8) * 2;
+      addWallet(rew);
+      if (Math.random() < 0.5) wdrops.push({ x: players[0].x + 80, y: players[0].y + 28, id: randomWeaponId() });
+      showToast('🌅 TURNO FINITO: +' + rew + ' monete. La direzione è fiera di te, in senso legale.');
+      stinger('clear'); setSong(lvl.def.song);
+      nightWave = null;
+    }
   }
   const alive = alivePlayers();
   if (!alive.length) return;
@@ -2421,7 +2566,16 @@ function updatePlay(){
     }
     const ptx = Math.floor((pr.x + pr.w/2) / TS), pty = Math.floor((pr.y + pr.h/2) / TS);
     const tc = tileAt(ptx, pty);
-    if ((tc === 'k' || tc === 'x') && !hostile){
+    if (tc === '*' && pr.spell === 'fuoco'){   // il fuoco scioglie la barriera (e le sue vicine)
+      for (const dy of [-1, 0, 1]) if (tileAt(ptx, pty + dy) === '*'){
+        setTile(ptx, pty + dy, ' ');
+        burst(ptx*TS + 16, (pty + dy)*TS + 16, '#bfe8ff', 16, 3);
+        if (frame % 2 === 0) parts.push({ txt:'💧', x:ptx*TS + 16, y:(pty + dy)*TS + 8, vx:0, vy:0.5, t:26, ng:1, color:'#bfe8ff' });
+      }
+      sfx('gem'); addShake(3); showToast('🔥❄️ La barriera si scioglie. La fisica ringrazia.');
+      pr.t = 0;
+    }
+    else if ((tc === 'k' || tc === 'x') && !hostile){
       tc === 'x' ? breakCursed(ptx, pty, pr.owner || alive[0]) : breakCrate(ptx, pty, pr.owner || alive[0]);
       pr.t = 0;
     }
@@ -3152,6 +3306,24 @@ function drawTiles(){
         ctx.beginPath(); ctx.moveTo(x + 24, y + 6); ctx.lineTo(x + 18, y + 14); ctx.stroke();
         ctx.fillStyle = 'rgba(138,232,232,' + (0.12 + Math.sin(frame*0.08)*0.08) + ')'; ctx.fillRect(x + 2, y + 2, 28, 28);
         break; }
+      case '*': {   // BARRIERA DI GHIACCIO: si scioglie solo col FUOCO (chiave elementale)
+        ctx.fillStyle = 'rgba(122,216,245,0.85)'; ctx.fillRect(x, y, TS, TS);
+        ctx.fillStyle = 'rgba(200,240,255,0.9)';
+        ctx.beginPath(); ctx.moveTo(x + 6, y + 26); ctx.lineTo(x + 12, y + 6); ctx.lineTo(x + 16, y + 26); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x + 18, y + 26); ctx.lineTo(x + 23, y + 12); ctx.lineTo(x + 27, y + 26); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.25 + Math.sin(frame * 0.07 + tx) * 0.15) + ')';
+        ctx.fillRect(x + 4, y + 4, 8, 3);
+        break; }
+      case 'A': {   // ALTARE DELLE OFFERTE S.R.L. — GIÙ per negoziare
+        ctx.fillStyle = '#3a3448'; ctx.fillRect(x + 4, y + 20, 24, 12);
+        ctx.fillStyle = '#4a4458'; ctx.fillRect(x + 8, y + 10, 16, 10);
+        ctx.fillStyle = '#f5d442';
+        const fl2 = Math.sin(frame * 0.15 + tx) * 2;
+        ctx.fillRect(x + 6, y + 2 - fl2, 3, 8 + fl2); ctx.fillRect(x + 23, y + 2 + fl2, 3, 8 - fl2);
+        ctx.fillStyle = '#f5822a'; ctx.fillRect(x + 6, y - fl2, 3, 3); ctx.fillRect(x + 23, y + fl2, 3, 3);
+        ctx.fillStyle = 'rgba(216,131,232,' + (0.4 + Math.sin(frame * 0.06) * 0.25) + ')';
+        ctx.fillRect(x + 13, y + 12, 6, 6);
+        break; }
       case '~': {
         const gin = lvl.def.gin;
         ctx.fillStyle = gin ? '#8a7a3a' : '#d83a1e'; ctx.fillRect(x, y + 6, TS, TS - 6);
@@ -3382,6 +3554,25 @@ function drawHUD(){
     text('L1', 96, H - 46, 10, 'rgba(255,255,255,0.4)');
   }
   if (curse > 0) text('☠ MALEDETTO: ancora ' + curse + ' uccisioni', W/2, H - 44, 13, '#e85ae8', 'center');
+  if (nightWave) text('🌙 TURNO DI NOTTE: ' + (nightWave.total - nightWave.spawned + enemies.filter(e => e.hp > 0).length) + ' ospiti rimasti', W/2, 70, 14, '#aac6ff', 'center');
+  // slot incantesimi (Q/L2 casta · E/su cambia)
+  const osp = ownedSpells();
+  if (osp.length){
+    for (let k = 0; k < osp.length; k++){
+      const S = SPELLS[osp[k]];
+      const selS = (spellSel % osp.length) === k;
+      const sx2 = 14 + k * 34, sy2 = H - 104;
+      ctx.fillStyle = selS ? 'rgba(122,216,245,0.25)' : 'rgba(20,20,40,0.6)';
+      ctx.fillRect(sx2, sy2, 30, 26);
+      ctx.strokeStyle = selS ? S.col : '#3a3a55'; ctx.lineWidth = 2;
+      ctx.strokeRect(sx2, sy2, 30, 26);
+      ctx.font = '15px "Courier New", monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#fff'; ctx.fillText(S.icona, sx2 + 15, sy2 + 19);
+      ctx.textAlign = 'left';
+      if (selS && p0.spellCd > 0){ ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(sx2, sy2, 30, 26 * (p0.spellCd / S.cd)); }
+    }
+    text('Q/L2', 14 + osp.length * 34 + 4, H - 86, 10, 'rgba(255,255,255,0.4)');
+  }
   // monete + cristalli
   ctx.fillStyle = '#f5d442'; ctx.fillRect(16, 62, 12, 14);
   ctx.fillStyle = '#c9a227'; ctx.fillRect(16, 72, 12, 4);
@@ -3447,11 +3638,11 @@ function drawMenu(){
   const bx = W/2 - 260, by = 150, bw = 520, bh = 100 + m.items.length * 34;
   ctx.fillStyle = '#101024'; ctx.fillRect(bx, by, bw, bh);
   ctx.strokeStyle = '#f5d442'; ctx.lineWidth = 3; ctx.strokeRect(bx + 3, by + 3, bw - 6, bh - 6);
-  text('IL BANCO DI HILDA', W/2, by + 34, 18, '#f5d442', 'center');
+  text(m.title || 'IL BANCO DI HILDA', W/2, by + 34, 18, '#f5d442', 'center');
   text('Monete: ' + SAVE.wallet, W/2, by + 56, 13, '#9a9ac0', 'center');
   m.items.forEach((it, i) => {
     const sel = i === m.sel;
-    text((sel ? '▶ ' : '  ') + it.name + '  — ' + menuCost(it) + ' monete', bx + 30, by + 88 + i*34, 14, sel ? '#5ae87a' : '#fff');
+    text((sel ? '▶ ' : '  ') + it.name + (menuCost(it) > 0 ? '  — ' + menuCost(it) + ' monete' : ''), bx + 30, by + 88 + i*34, 14, sel ? '#5ae87a' : '#fff');
   });
   if (trait(m.p,'pierce')) text('Sconto famiglia Hawthorne: -25%', W/2, by + 74, 11, '#f5d442', 'center');
   text('INVIO compra · X chiudi', W/2, by + bh - 14, 12, 'rgba(255,255,255,0.5)', 'center');
@@ -3784,6 +3975,17 @@ function drawPlay(){
       ctx.fillStyle = '#5ae87a'; ctx.fillRect(e.x - cam.x, e.y - 10 - cam.y, 26 * Math.min(1, e.hp / 3), 4);
     }
     if (e.elite){ ctx.fillStyle = 'rgba(232,74,74,0.8)'; ctx.fillRect(e.x - cam.x + 8, e.y - 6 - cam.y, 10, 3); }
+    if (e._boltT > 0){   // FULMINE DI CHANG: arco frastagliato dal caster al nemico
+      e._boltT--;
+      ctx.strokeStyle = 'rgba(245,212,66,' + (e._boltT / 8) + ')'; ctx.lineWidth = 3;
+      ctx.beginPath();
+      let bx0 = e._boltFrom.x - cam.x, by0 = e._boltFrom.y - cam.y;
+      const bx1 = e.x + e.w/2 - cam.x, by1 = e.y + e.h/2 - cam.y;
+      ctx.moveTo(bx0, by0);
+      for (let s = 1; s <= 4; s++)
+        ctx.lineTo(bx0 + (bx1 - bx0) * s/4 + (Math.random()-0.5) * 16, by0 + (by1 - by0) * s/4 + (Math.random()-0.5) * 16);
+      ctx.stroke();
+    }
   }
   if (rival && !rival.defeated) drawRival();
   if (mboss && !mboss.dead) drawMboss();
@@ -3864,6 +4066,16 @@ function drawPlay(){
     }
   }
   drawFXShots();
+  if (nightWave){   // il cielo si scurisce: è il turno di notte
+    ctx.fillStyle = 'rgba(10,10,44,0.42)'; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 14; i++){
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.35 + Math.sin(frame * 0.05 + i * 1.7) * 0.3) + ')';
+      ctx.fillRect((i * 211 + 40) % W, (i * 97) % 190, 2, 2);
+    }
+    ctx.font = '26px "Courier New", monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(240,240,210,0.9)'; ctx.fillText('🌙', W - 50, 120);
+    ctx.textAlign = 'left';
+  }
   drawDarkness();
   if (players.some(p => p.drunkT > 0)){
     ctx.fillStyle = 'rgba(220,140,180,0.10)'; ctx.fillRect(0, 0, W, H);
