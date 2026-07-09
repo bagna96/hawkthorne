@@ -57,30 +57,19 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   segreto sfondabile col dash (`breakSecret`). Motore `GUIDE`+`showGuide`
   (voce Abed una-tantum, SAVE.flags.seen). VFX esterno CC0 `fx_firework`
   (repo hawkthorne, 6×373×340) via `playFX`/`fxShots`/`drawFXShots`.
-- V10.9 (rifinitura su feedback): acorn FIXATO col ritaglio a bbox alpha
-  (walk x43 w14, fiamma x182 w16 — lo sheet NON è a griglia fissa!);
-  NEGOZIO a 16 voci (nuovi permanenti stile Rogue Legacy: cuorone +1 cuore,
-  avidita +20% monete, fortuna casse, scudetto, kit arma iniziale endless,
-  tessera sconto Hilda, mutande anti-fossa, karma resurrezione/run);
-  15 armi (+spillatrice, pollo, trombone, pallaneve `freeze`→e.slowT,
-  d20 danno casuale con popup 🎲); OGNI personaggio ha un `ab` (glifi ◯/✕
-  nelle desc); GLITCH COMICI voluti: walker capovolto 4% (`e.glitch`,
-  wrapper drawWalker→drawWalkerInner, toast "GLITCH CERTIFICATO™"),
-  transizione PowerPoint al load 15% (`wipeT/wipeKind`: scacchiera/stella/
-  veneziana con caption); SUOLO VIVO in drawTiles '#' (hash per-tile: erba
-  che ondeggia, fiori, sassi, funghi luminosi nel dark); MENU leggibili
-  (pannelli scuri dietro testo in drawMenuList+titolo, righe adattive se
-  molte voci, pausa 0.85).
-- V10.10 (S5 tappa 3): INCANTESIMI `SPELLS` (fuoco/ghiaccio/fulmine/vento;
-  cast Q/L2 `scheme.spell`, cambio E/dpad-su `spnext` b12; combo elementale
-  spell diverso <120f = ×1.5; nel negozio come `sp_*`; `ownedSpells`/
-  `curSpell`/`castSpell`; HUD 4 slot con cd); BARRIERA '*' (solida, il proj
-  `spell:'fuoco'` la scioglie ±1 tile); ALTARE 'A' (`openAltare`: menu con
-  `title` custom, scambi cuori/monete/cristalli/arma); TURNO DI NOTTE
-  (`nightWave`: GIÙ sulla porta X in endless → ondata scaglionata elite ogni
-  3, bottino ×2, porte lockate, overlay notte + 🌙 in HUD); fulmine a catena
-  visivo (`e._boltT/_boltFrom`); '*'/'A' iniettati in genLevel (depth≥2);
-  +6 OVER_LINES (colmo/British/antani).
+- V10.9: acorn fixato (bbox alpha: walk x43 w14, fiamma x182 w16 — sheet
+  NON a griglia fissa); NEGOZIO 16 voci (cuorone/avidita/fortuna/scudetto/
+  kit/tessera/mutande/karma); 15 armi (pallaneve `freeze`→e.slowT, d20
+  random); ogni personaggio ha `ab`; GLITCH comici (walker capovolto 4%
+  `e.glitch`, transizione PowerPoint 15% `wipeT/wipeKind`); SUOLO VIVO
+  (hash per-tile: erba/fiori/sassi/funghi); MENU leggibili (pannelli,
+  righe adattive, pausa 0.85).
+- V10.10 (S5 t3): `SPELLS` fuoco/ghiaccio/fulmine/vento (cast Q/L2, cambio
+  E/dpad-su b12, combo <120f = ×1.5, negozio `sp_*`, HUD 4 slot con cd,
+  fulmine a catena `e._boltT`); BARRIERA '*' (fuoco la scioglie ±1);
+  ALTARE 'A' `openAltare` (menu `m.title`, scambi cuori/monete/cristalli/
+  arma); TURNO DI NOTTE `nightWave` (GIÙ sulla porta → ondata, bottino ×2);
+  +6 OVER_LINES.
 - V10.11 (S5 tappa 4, MONDO INTERATTIVO): tile nuovi — '!' barile esplosivo
   (`igniteBarrel`/`explodeBarrel`, miccia `fuses[]` 26f, AOE 110px, rompe
   k/x/S vicini, REAZIONE A CATENA), '=' leva → `pullLever` apre tutti i '9'
