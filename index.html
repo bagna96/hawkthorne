@@ -37,9 +37,14 @@ function fitCanvas(){
 window.addEventListener('resize', fitCanvas); fitCanvas();
 
 // ------------------------------------------------ SALVATAGGIO
-let SAVE = { wallet: 0, chars: {}, finished: false };
+let SAVE = { wallet: 0, chars: {}, finished: false, meta: {}, shards: 0 };
 try { const s = localStorage.getItem('hawk_save'); if (s) SAVE = Object.assign(SAVE, JSON.parse(s)); } catch(e){}
+if (!SAVE.meta) SAVE.meta = {};
+// migrazione: chi arriva da un salvataggio vecchio riceve 5 Frammenti per provare l'albero
+if (!SAVE.metaInit){ SAVE.metaInit = 1; SAVE.shards = (SAVE.shards || 0) + 5; }
 function saveGame(){ try { localStorage.setItem('hawk_save', JSON.stringify(SAVE)); } catch(e){} }
+// ABILITÀ PERMANENTI (meta-progressione): sbloccate una volta, restano per SEMPRE — campagna ed endless
+function hasAbil(id){ return !!(SAVE.meta && SAVE.meta[id]); }
 
 // ------------------------------------------------ ROSTER
 // I 7 del gruppo di studio (gratis) + Gilbert + il resto di Greendale (a monete)
@@ -204,8 +209,8 @@ function jp(code){ return !!justPressed[code]; }
 function anyDown(list){ return list.some(k => keys[k]); }
 function anyJP(list){ return list.some(k => justPressed[k]); }
 const SCHEMES = [
-  { left:['ArrowLeft'], right:['ArrowRight'], jump:['ArrowUp','Space','KeyZ'], atk:['KeyX','KeyK'], ab:['KeyC','KeyL'], down:['ArrowDown'], sup:['KeyV'] },
-  { left:['KeyA'], right:['KeyD'], jump:['KeyW'], atk:['KeyF'], ab:['KeyG'], down:['KeyS'], sup:['KeyH'] },
+  { left:['ArrowLeft'], right:['ArrowRight'], jump:['ArrowUp','Space','KeyZ'], atk:['KeyX','KeyK'], ab:['KeyC','KeyL'], down:['ArrowDown'], sup:['KeyV'], roll:['ShiftLeft','ShiftRight'] },
+  { left:['KeyA'], right:['KeyD'], jump:['KeyW'], atk:['KeyF'], ab:['KeyG'], down:['KeyS'], sup:['KeyH'], roll:['KeyR'] },
 ];
 
 // ---------------- GAMEPAD (2 pad = 2 giocatori) ----------------
@@ -226,11 +231,12 @@ function pollGamepads(){
       right: ax >  0.4 || b(15),
       down:  ay >  0.5 || b(13),
       jump:  b(0),
-      atk:   b(2) || b(5),
+      atk:   b(2),
       ab:    b(1),
       sup:   b(3) || b(7),
       ok:    b(9) || b(0),
       l1:    b(4),
+      roll:  b(5),
       start: b(9),
     };
     if (gp.buttons.some(x => x && x.pressed)) initAudio();
@@ -1120,6 +1126,7 @@ function optionsItems(){
     { label:'AUDIO E MUSICA: ' + (o.audio ? 'SÌ ♪' : 'no'),  act(){ o.audio = !o.audio; muted = !o.audio; } },
     { label:'EFFETTO CRT: ' + (o.crt ? 'SÌ' : 'no'),          act(){ o.crt = !o.crt; crtOn = o.crt; } },
     { label:'SCUOTI-SCHERMO: ' + (o.shake ? 'SÌ' : 'no'),     act(){ o.shake = !o.shake; } },
+    { label:'MINIMAPPA: ' + (o.map === false ? 'no' : 'SÌ'),  act(){ o.map = o.map === false; } },
     { label:'SCHERMO INTERO',                                  act(){ try { document.fullscreenElement ? document.exitFullscreen() : cv.requestFullscreen(); } catch(e){} } },
     { label: confirmReset ? '⚠ SICURO? INVIO E SPARISCE TUTTO' : 'AZZERA SALVATAGGIO', act(){ if (confirmReset){ localStorage.removeItem('hawk_save'); location.reload(); } confirmReset = true; } },
     { label:'INDIETRO',                                        act(){ state = 'title'; } },
@@ -1133,6 +1140,8 @@ function cheatsItems(){
     { label:'LANCIA-LAVA SUBITO',                                  act(){ lavagun = true; cheatDirty = true; } },
     { label:'SBLOCCA TUTTI I PERSONAGGI',                          act(){ for (const c of CHARS) SAVE.chars[c.id] = true; saveGame(); cheatDirty = true; sfx('buy'); } },
     { label:'SBLOCCA POST-GAME: ' + (SAVE.finished ? 'GIÀ FATTO' : 'no'), act(){ SAVE.finished = true; saveGame(); cheatDirty = true; sfx('organ'); } },
+    { label:'FRAMMENTI ⬡ +10',                     act(){ SAVE.shards = (SAVE.shards||0)+10; saveGame(); cheatDirty = true; sfx('gem'); } },
+    { label:'SBLOCCA TUTTE LE ABILITÀ',            act(){ for (const a of ABILITIES) SAVE.meta[a.id] = 1; saveGame(); cheatDirty = true; sfx('craft'); } },
     { label:'INDIETRO',                                            act(){ state = 'title'; } },
   ];
 }
@@ -1174,6 +1183,42 @@ function drawCheats(){
   drawMenuList('TRUCCHI · IL CASSETTO DI PIERCE', 'Usarli spegne achievement e record. Pierce non giudica: Pierce approva.', cheatsItems(), cheatSel, '#e85ae8');
   drawActor('pierce', 'idle', 0, 60, H - 120, 1, 1.4);
   if (cheatDirty) text('☠ trucchi attivi in questa sessione', W/2, 150, 12, '#e85a7a', 'center');
+}
+
+// ------------------------------------------------ ALBERO DELLE ABILITÀ (meta-progressione permanente, V10 S5)
+// Sbloccate coi Frammenti (⬡): restano per SEMPRE, in campagna e in endless. Sono le "chiavi" metroidvania.
+const ABILITIES = [
+  { id:'djump',    nome:'DOPPIO SALTO',    icona:'🕊️', cost:3, desc:'Un secondo salto, bello alto. La chiave di mezza mappa.' },
+  { id:'dash',     nome:'SCATTO FANTASMA', icona:'💨', cost:4, desc:'Scatto/schivata con invulnerabilità. R1 sul pad · Shift.' },
+  { id:'walljump', nome:'PARETE VOLANTE',  icona:'🧗', cost:6, desc:'Scivola sui muri e rimbalza saltando. Verticalità pura.' },
+];
+let abilSel = 0;
+function grantShards(n){ SAVE.shards = (SAVE.shards || 0) + n; saveGame(); showToast('⬡ +' + n + ' FRAMMENTI DI HAWKTHORNE (' + SAVE.shards + ')'); }
+function abilitiesItems(){
+  const it = ABILITIES.map(a => ({
+    label: (SAVE.meta[a.id] ? '✅ ' : a.icona + ' ') + a.nome + (SAVE.meta[a.id] ? '' : '  — ⬡' + a.cost),
+    sub: a.desc, locked: !SAVE.meta[a.id],
+    act(){
+      if (SAVE.meta[a.id]){ sfx('text'); return; }
+      if ((SAVE.shards || 0) >= a.cost){ SAVE.shards -= a.cost; SAVE.meta[a.id] = 1; saveGame(); sfx('craft'); stinger('perk'); showToast(a.icona + ' ' + a.nome + ' SBLOCCATA per sempre!'); }
+      else sfx('hurt');
+    }
+  }));
+  it.push({ label:'INDIETRO', act(){ state = 'title'; } });
+  return it;
+}
+function updateAbilities(){
+  const items = abilitiesItems();
+  if (jp('ArrowUp') || jp('KeyW') || gpJP(0,'jump'))  { abilSel = (abilSel + items.length - 1) % items.length; sfx('text'); }
+  if (jp('ArrowDown') || jp('KeyS') || gpJP(0,'down')){ abilSel = (abilSel + 1) % items.length; sfx('text'); }
+  if (jp('Enter') || jp('Space') || gpJP(0,'ok')) items[abilSel].act();
+  if (jp('KeyX') || jp('Escape') || gpJP(0,'atk')) state = 'title';
+}
+function drawAbilities(){
+  const items = abilitiesItems();
+  drawMenuList('⬡ ALBERO DI HAWKTHORNE', 'Hai ' + (SAVE.shards || 0) + ' Frammenti ⬡ (li lasciano i boss). Le abilità restano PER SEMPRE.', items, abilSel, '#8ae8e8');
+  const a = ABILITIES[Math.min(abilSel, ABILITIES.length - 1)];
+  if (abilSel < ABILITIES.length) text(a.desc, W/2, H - 54, 13, '#b0e0e0', 'center');
 }
 
 const LEVELS = [
@@ -1381,7 +1426,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v10.6';
+const GAME_VERSION = 'v10.7';
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -1548,7 +1593,8 @@ function mkPlayer(cdef, costume, x, y, slot){
     hp: cdef.hp, maxhp: cdef.hp, inv:0, jumps:0, atkT:0, atkCd:0, abCd:0,
     cpx:x, cpy:y, anim:0, downT:0,
     soul:0, shield:0, jail:null, sprintT:0, focusT:0, laserT:0, net:false,
-    slideT:0, pounding:false, warpT:42, idleT:0, airT:0 };
+    slideT:0, pounding:false, warpT:42, idleT:0, airT:0,
+    dashT:0, dashCd:0, dashDir:1, airDashed:false, wallDir:0, coyote:0, jbuf:0, squashT:0 };
 }
 function sheetOf(p){ return p.costume ? p.cdef.id + '__' + p.costume : p.cdef.id; }
 function alivePlayers(){ return players.filter(p => p.hp > 0); }
@@ -1842,11 +1888,27 @@ function updateOnePlayer(p, atkBoxes){
   if (trait(p,'garrett') && p.hp < p.maxhp) spdMul *= 1.25;   // CRISI!
   if (trait(p,'rich')) spdMul *= 1.05;
   const acc = p.onGround ? 0.9 : 0.55;
+  // SCATTO FANTASMA (permanente): schivata con i-frame, a terra e in aria — R1 / Shift
+  if (p.dashCd > 0) p.dashCd--;
+  if (p.dashT > 0){
+    p.dashT--;
+    p.inv = Math.max(p.inv, 2);   // invulnerabile per tutta la schivata
+    if (frame % 2 === 0) parts.push({ x:p.x + p.w/2, y:p.y + p.h/2, vx:-p.dashDir*0.6, vy:0, t:12, ng:1, sz:4, color:'rgba(138,232,232,0.7)' });
+  }
+  if (hasAbil('dash') && pJP(p,'roll') && p.dashCd <= 0 && p.dashT <= 0 && (p.onGround || !p.airDashed)){
+    p.dashT = 11; p.dashCd = 26; p.inv = Math.max(p.inv, 12);   // i-frame per tutta la schivata
+    p.dashDir = pDown(p,'left') ? -1 : pDown(p,'right') ? 1 : p.face;
+    p.face = p.dashDir;
+    if (!p.onGround) p.airDashed = true;
+    sfx('jump'); rumble(p.slot, 90, 0.5);
+    burst(p.x + p.w/2, p.y + p.h/2, '#8ae8e8', 12, 3);
+  }
   if (p.slideT > 0){
     p.slideT--;
     p.vx = p.face * (trait(p,'troy') ? 9 : 7) * (p.slideT / (trait(p,'troy') ? 26 : 18));
     if (frame % 2 === 0) parts.push({ x:p.x + p.w/2 - p.face*10, y:p.y + p.h - 2, vx:-p.face, vy:-0.5, t:12, color:'#c8b89a' });
-  } else if (pDown(p, drunk ? 'right' : 'left'))  { p.vx = Math.max(p.vx - acc*spdMul, -p.cdef.speed*spdMul); p.face = -1; }
+  } else if (p.dashT > 0){ p.vx = p.dashDir * 9.5; }   // velocità dello scatto
+  else if (pDown(p, drunk ? 'right' : 'left'))  { p.vx = Math.max(p.vx - acc*spdMul, -p.cdef.speed*spdMul); p.face = -1; }
   else if (pDown(p, drunk ? 'left' : 'right')){ p.vx = Math.min(p.vx + acc*spdMul, p.cdef.speed*spdMul); p.face = 1; }
   else p.vx *= p.onGround ? 0.72 : 0.92;
   if (Math.abs(p.vx) < 0.05) p.vx = 0;
@@ -1855,16 +1917,35 @@ function updateOnePlayer(p, atkBoxes){
   if (p.onGround && Math.abs(p.vx) > 2.2 && frame % 9 === 0)
     parts.push({ x: p.x + p.w/2 - p.face*10, y: p.y + p.h - 3, vx: -p.face * 0.6, vy: -0.5, t: 14, color: 'rgba(205,195,175,0.7)' });
 
-  const maxJumps = 1 + (p.cdef.ab === 'dj' ? 1 : 0) + (boons.piuma ? 1 : 0);
+  // DOPPIO SALTO (permanente = tutti i personaggi) + salto innato dj / piuma
+  const maxJumps = 1 + ((hasAbil('djump') || p.cdef.ab === 'dj') ? 1 : 0) + (boons.piuma ? 1 : 0);
   // coyote time (salti anche 8 frame dopo il bordo) + jump buffer (input in anticipo)
-  if (p.onGround){ p.jumps = 0; p.coyote = 8; } else if (p.coyote > 0) p.coyote--;
+  if (p.onGround){ p.jumps = 0; p.coyote = 8; p.airDashed = false; } else if (p.coyote > 0) p.coyote--;
   if (pJP(p,'jump')) p.jbuf = 7; else if (p.jbuf > 0) p.jbuf--;
+  // PARETE VOLANTE: stato muro per wall-slide/wall-jump (solo se sbloccato e in aria)
+  p.wallDir = 0;
+  if (hasAbil('walljump') && !p.onGround){
+    const my = Math.floor((p.y + p.h/2) / TS);
+    if (isSolid(tileAt(Math.floor((p.x - 2) / TS), my)) && pDown(p,'left'))  p.wallDir = -1;
+    else if (isSolid(tileAt(Math.floor((p.x + p.w + 2) / TS), my)) && pDown(p,'right')) p.wallDir = 1;
+  }
   if (!inGin && pJP(p,'jump')){
-    if (p.onGround || p.coyote > 0){ p.vy = -p.cdef.jump; p.jumps = 1; p.coyote = 0; p.jbuf = 0; sfx('jump'); }
-    else if (p.jumps < maxJumps){ p.vy = -p.cdef.jump * 0.92; p.jumps++; p.jbuf = 0; sfx('jump'); burst(p.x+p.w/2, p.y+p.h, '#cccccc', 6, 1.5); }
+    if (p.wallDir){                                    // rimbalzo dal muro
+      p.vy = -p.cdef.jump; p.vx = -p.wallDir * p.cdef.speed * 1.5; p.face = -p.wallDir;
+      p.jumps = 1; p.jbuf = 0; sfx('jump'); burst(p.x + p.w/2, p.y + p.h/2, '#b8e8f0', 8, 2);
+    } else if (p.onGround || p.coyote > 0){ p.vy = -p.cdef.jump; p.jumps = 1; p.coyote = 0; p.jbuf = 0; sfx('jump'); }
+    else if (p.jumps < maxJumps){                      // doppio salto: più ALTO se sbloccato
+      p.vy = -p.cdef.jump * (hasAbil('djump') ? 1.02 : 0.92); p.jumps++; p.jbuf = 0; sfx('jump');
+      burst(p.x + p.w/2, p.y + p.h, '#cccccc', 8, 1.8);
+    }
+  }
+  if (p.wallDir && p.vy > 2){   // wall-slide: scivoli piano
+    p.vy = 2;
+    if (frame % 4 === 0) parts.push({ x: p.x + (p.wallDir > 0 ? p.w : 0), y: p.y + p.h/2, vx: 0, vy: 0.5, t: 12, color: 'rgba(184,232,240,0.6)' });
   }
   if (!pDown(p,'jump') && p.vy < -4) p.vy = -4;
   if (p.pounding) p.vy = 13;
+  if (p.dashT > 0) p.vy = 0;   // lo scatto è orizzontale: annulla la gravità
   if (trait(p,'vaughn') && p.vy > 4 && !pDown(p,'down')) p.vy = 4;   // Zen: cade piano
   p.preVy = p.vy;
   const wasAir = !p.onGround;
@@ -2366,7 +2447,7 @@ function hitMboss(n, byPlayer){
   if (mboss.hp <= 0){
     mboss.dead = true;
     burst(mboss.x + 33, mboss.y + 30, '#f5d442', 50, 5);
-    addWallet(15); cristalli += 3; sfx('craft'); addShake(12);
+    addWallet(15); cristalli += 3; grantShards(mboss.boss2 ? 3 : 2); sfx('craft'); addShake(12);
     showToast((mboss.def ? mboss.def.nome : 'MINI-BOSS') + ' SCONFITTO! +15 monete, +3 cristalli');
     if (mboss.boss2){
       stinger('clear');
@@ -2522,6 +2603,7 @@ function hitBoss(n){
     boss.dead = true;
     babies = [];
     burst(boss.x + 48, boss.y + 48, '#f5d442', 60, 5);
+    grantShards(5);
     setSong(null);
     if (!SAVE.finished){ SAVE.finished = true; saveGame(); }
     if (deaths === 0) award('streets_ahead');
@@ -3153,6 +3235,39 @@ function drawHUD(){
     ctx.fillRect(W/2 - 260, H - 90, 520, 30);
     text(toast.text, W/2, H - 69, 15, 'rgba(255,255,255,' + a + ')', 'center');
   }
+  drawMinimap();
+}
+// MINIMAPPA: la mappa del livello che segue il personaggio (dot lampeggiante)
+function drawMinimap(){
+  if (!lvl || !players.length || lvl.def.hub) return;
+  if (SAVE.opts && SAVE.opts.map === false) return;
+  const mw = 210, mh = 52, ox = W - mw - 14, oy = players[1] ? 92 : 78;
+  ctx.fillStyle = 'rgba(8,8,20,0.5)'; ctx.fillRect(ox - 3, oy - 3, mw + 6, mh + 6);
+  ctx.strokeStyle = 'rgba(138,232,232,0.45)'; ctx.lineWidth = 1; ctx.strokeRect(ox - 3, oy - 3, mw + 6, mh + 6);
+  const sx = mw / lvl.w, sy = mh / lvl.h, cw = Math.max(1, sx), ch = Math.max(1, sy);
+  ctx.fillStyle = 'rgba(150,152,180,0.5)';
+  for (let ty = 0; ty < lvl.h; ty++) for (let tx = 0; tx < lvl.w; tx++){
+    const c = lvl.rows[ty][tx];
+    if (c === '#' || c === 'B' || c === 'F' || c === '-') ctx.fillRect(ox + tx*sx, oy + ty*sy, cw, ch);
+  }
+  const dot = (tx, ty, col, r) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ox + tx*sx + sx/2, oy + ty*sy + sy/2, r, 0, 6.283); ctx.fill(); };
+  for (let ty = 0; ty < lvl.h; ty++) for (let tx = 0; tx < lvl.w; tx++){
+    const c = lvl.rows[ty][tx];
+    if (c === 'X') dot(tx, ty, '#5ae87a', 2.6);
+    else if (c === 'W') dot(tx, ty, '#f5d442', 2.6);
+    else if (c === 'g') dot(tx, ty, '#5ae8e8', 1.5);
+    else if (c === 'Z') dot(tx, ty, '#f5d442', 2);
+    else if (c === 'x') dot(tx, ty, '#a44ae8', 2);
+    else if (c === 'C' || c === 'c') dot(tx, ty, '#5ae87a', 1.5);
+  }
+  ctx.fillStyle = 'rgba(232,90,90,0.85)';
+  for (const e of enemies) if (e.hp > 0) ctx.fillRect(ox + (e.x/TS)*sx, oy + (e.y/TS)*sy, 2, 2);
+  if (mboss && !mboss.dead) dot(mboss.x/TS, mboss.y/TS, '#e8a84a', 3);
+  if (boss && !boss.dead) dot(boss.x/TS, boss.y/TS, '#a44ae8', 3);
+  for (const p of players) if (p.hp > 0){
+    ctx.fillStyle = Math.floor(frame/8) % 2 ? '#fff' : '#5ae8e8';
+    ctx.fillRect(ox + (p.x/TS)*sx - 1.5, oy + (p.y/TS)*sy - 1.5, 4, 4);
+  }
 }
 function drawMenu(){
   const m = menu;
@@ -3343,6 +3458,7 @@ function titleItems(){
         try { history.replaceState(null, '', '#seed=' + endless.seed); } catch(e){}
         state = 'select'; sfx('coin'); } });
   }
+  it.push({ label:'⬡ ABILITÀ' + (SAVE.shards ? ' (' + SAVE.shards + ' frammenti)' : ''), act(){ state = 'abilities'; abilSel = 0; sfx('text'); } });
   it.push({ label:'OPZIONI', act(){ state = 'options'; optSel = 0; confirmReset = false; sfx('text'); } });
   it.push({ label:'TRUCCHI', act(){ state = 'cheats'; cheatSel = 0; sfx('organ'); } });
   it.push({ label:'COMANDI', act(){ startCut(tutorialPages(), () => { state = 'title'; }); } });
@@ -3888,6 +4004,7 @@ function update(){
     case 'perk': updatePerk(); break;
     case 'options': updateOptions(); break;
     case 'cheats': updateCheats(); break;
+    case 'abilities': updateAbilities(); break;
     case 'cut': updateCut(); break;
     case 'play':
       if (menu) updateMenu();
@@ -3917,6 +4034,7 @@ function draw(){
     case 'perk':   drawPerk(); break;
     case 'options': drawOptions(); break;
     case 'cheats': drawCheats(); break;
+    case 'abilities': drawAbilities(); break;
     case 'cut':    drawCut(); break;
     case 'play':   drawPlay(); break;
     case 'guestplay': drawGuest(); break;
@@ -3924,10 +4042,11 @@ function draw(){
       drawPlay();
       ctx.fillStyle = 'rgba(4,4,12,0.7)'; ctx.fillRect(0, 0, W, H);
       text('PAUSA', W/2, 200, 48, '#f5d442', 'center');
-      text('P1: frecce + Z salto · X attacco · C abilità · V super', W/2, 270, 15, '#fff', 'center');
-      text('P2: WASD + F attacco · G abilità · H super  (joystick supportati)', W/2, 296, 15, '#fff', 'center');
-      text('GIÙ vicino a Hilda = negozio · GIÙ alla forgia = lancia-lava', W/2, 322, 14, '#9a9ac0', 'center');
-      text('M audio · F2 effetto CRT · P riprendi', W/2, 360, 14, '#5ae87a', 'center');
+      text('P1: frecce + Z salto · X attacco · C abilità · V super · Shift/R1 SCATTO', W/2, 268, 15, '#fff', 'center');
+      text('P2: WASD + F attacco · G abilità · H super · R scatto  (joystick supportati)', W/2, 292, 15, '#fff', 'center');
+      text('Doppio salto: premi salto in aria · Muro: tieni la direzione e salti (se sbloccati)', W/2, 316, 13, '#8ae8e8', 'center');
+      text('GIÙ vicino a Hilda = negozio · GIÙ alla forgia = lancia-lava', W/2, 340, 14, '#9a9ac0', 'center');
+      text('M audio · F2 CRT · P riprendi · ⬡ ABILITÀ dal titolo (le sblocchi coi Frammenti)', W/2, 372, 13, '#5ae87a', 'center');
       break;
     case 'over':   drawPlay(); drawOver(); break;
     case 'win':    drawWin(); break;
@@ -3986,6 +4105,8 @@ window._hawk = {
   step(n){ for (let i = 0; i < (n||1); i++){ update(); for (const k in justPressed) delete justPressed[k]; frame++; } draw(); },
   god(){ god = !god; cheatDirty = true; return god; },
   perk(id){ const pk = PERKS.find(x => x.id === id); if (pk){ pk.act(players[0]); checkSynergies(players[0]); } return Object.keys(boons); },
+  shards(n){ SAVE.shards = (SAVE.shards||0) + (n||10); saveGame(); return SAVE.shards; },
+  unlock(id){ if (id) SAVE.meta[id] = 1; else for (const a of ABILITIES) SAVE.meta[a.id] = 1; saveGame(); return SAVE.meta; },
   reset(){ localStorage.removeItem('hawk_save'); location.reload(); }
 };
 (function(){ const o = opts(); muted = !o.audio; crtOn = o.crt; })();   // applica le preferenze salvate
