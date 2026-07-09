@@ -88,6 +88,68 @@ Fonti: gamedeveloper.com, 300mind.studio, gamedesignskills.com,
 terraria.wiki.gg, choostgames.com, gamerant.com, github topics/2d-platformer;
 meta-progressione: rogue-legacy-2 wiki (73 upgrade castello), bugnet.io.
 
+## §RICERCA-GIOCHI (S5.5) — cosa rende SPECIALI i grandi, e come rubarglielo
+- **Binding of Isaac**: (1) ogni scelta è una SCOMMESSA — bombe/chiavi/
+  monete/cuori sono valute intercambiabili, sacrifichi una risorsa per
+  un'altra (→ da noi: altare che converte cuori↔monete↔cristalli, rischio
+  scelto); (2) SEGRETI OVUNQUE: muri bombardabili premiati = curiosità
+  ripagata (→ più blocchi 'S', stanze segrete nei chunk, tesori nascosti
+  DIETRO le cascate/alberi); (3) il pool di drop SI ESPANDE con gli unlock
+  (→ armi/perk nuovi entrano nel pool solo dopo la prima scoperta: senso di
+  collezione); (4) item volutamente scarsi nel pool = ogni run più varia;
+  (5) fallire = imparare (morire mostra "cosa hai scoperto stavolta").
+- **Hollow Knight**: (1) minimalismo: poche azioni, tutto emerge dalla
+  combinazione; (2) ATMOSFERA > testo: la storia si respira da rovine e
+  dettagli, non si legge (→ rovine con storia visiva nei biomi, statue di
+  Cornelius decadute, vecchi cartelli Hawthorne Wipes); (3) mappa
+  interconnessa con SCORCIATOIE che si aprono (→ nel generatore: porte di
+  ritorno che collegano fine→inizio livello); (4) i charm definiscono la
+  BUILD (già nostri perk ✓).
+- **Kingdom Two Crowns**: (1) comandi radicalmente minimi, complessità che
+  emerge; (2) ciclo GIORNO/NOTTE = ritmo costruisci/difendi (→ EVENTO
+  NOTTE opzionale in endless: resti oltre la porta? ondata + bottino x2,
+  rischio-ricompensa alla Kingdom); (3) l'ambiguità è design: non spiegare
+  tutto, lasciar scoprire (già filosofia mini-guide ✓).
+- **RISORSE GRATUITE trovate** (rispettare il vincolo single-file: si
+  scaricano, si inline-ano in base64, MAI runtime-fetch):
+  · OGA "Pixel Art Spells" (proiettili spell CC0 in B/N da RICOLORARE via
+    canvas = perfetti per SPELLS con colori-firma), collezione "cc0 special
+    effects", "Spell animation spritesheets" (fireball/freeze hi-res);
+  · GDevelop asset store free "Pixel Art Spell Magic FX";
+  · repo hawkthorne-journey: restano sparkle/splatters/steam/fire.png;
+  · github proyecto26/awesome-jsgames e raphamorim/awesome-canvas: pattern
+    e snippet canvas (LEGGERE le tecniche — particle, trail, shake — e
+    riscriverle inline, non importare librerie).
+
+## §COMICITÀ — playbook (Community + British + Scrubs + nonsense IT/EN)
+Ogni testo nuovo (dialogo, arma, perk, toast, boss, guida) passa per UNA
+di queste 4 lenti prima di entrare nel gioco:
+1. **META alla Community/Abed**: consapevolezza di essere in un gioco
+   ("Questo è chiaramente il livello dell'acqua. C'è sempre un livello
+   dell'acqua."); CALLBACK a lungo raggio — pianta una battuta al mondo 1,
+   falla pagare al mondo 5; regola-Beetlejuice: alla 3ª menzione di una
+   cosa, la cosa APPARE davvero sullo sfondo (contatore in SAVE.cnt);
+   gag ricorrenti tracciate (es. Leonard commenta OGNI negozio).
+2. **BRITISH alla Duncan**: understatement deadpan sui disastri ("Sei
+   morto. Che seccatura amministrativa."), self-deprecation, ironia di
+   classe; la battuta MINIMIZZA, mai enfatizza; morte e fallimento sono
+   sempre trattati come pratiche burocratiche.
+3. **SCRUBS**: NICKNAME descrittivi — il Custode/NPC chiama nemici e boss
+   con nomignoli ("Signor Ghianda Puntualmente Arrabbiata", "Dottoressa
+   Pipistrella"); daydream-cutaway: rara vignetta di 2s a schermo ("E
+   se..." freeze-frame seppia + didascalia) che NON blocca il gioco;
+   un NPC ostile per motivi mai chiariti (alla Janitor).
+4. **NONSENSE IT/EN (supercazzola/Elio/Python)**: parole ripetute fino
+   all'assurdo, nomi burocratici per cose epiche ("Modulo 7-bis del Salto
+   Prodigioso"), supercazzole nelle descrizioni ("come se fosse antani,
+   anche per il boss scomposto a destra"), il "colmo" nelle morti ("Il
+   colmo per una ghianda? Cadere lontano dall'albero."), premesse assurde
+   trattate con serietà totale.
+REGOLE D'ORO: max 2 righe a battuta; il nome resta LEGGIBILE (il comico va
+nel sottotitolo se il nome serve al gameplay); crudele mai col cast; la
+battuta non interrompe MAI l'azione. Applicare a: OVER_LINES, descrizioni
+armi/perk/abilità, taunt boss, guide di Abed, chiacchiere NPC, toast.
+
 ## VINCOLI NON NEGOZIABILI
 1. **Single-file, zero dipendenze runtime** (no CDN/font/fetch). Deve girare
    da doppio-click file:// e su Pages. Browser di riferimento utente: Safari;
@@ -237,9 +299,14 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
     pogo, combo aeree); AMBIENTE VIVO (bestioline, chiacchiere NPC). Poi
     POTERI = registro `SPELLS[]` elementale (fuoco/ghiaccio/fulmine/vento)
     cast chainabili mentre scatti, colori-firma, 4 slot HUD, chiavi colorate.
-    BASE della magia HP (S6). AMPLIA gli asset: scarica+inline altri sheet CC0
-    (repo hawkthorne ha fire/firework/sparkle/splatters/steam; OGA/Kenney per
-    incantesimi), verifica il layout a griglia prima di cablarli.
+    BASE della magia HP (S6). Asset: OGA "Pixel Art Spells" (CC0, B/N da
+    ricolorare via canvas = colori-firma gratis) + repo hawkthorne
+    (fire/sparkle/splatters/steam) — inline base64, verifica layout prima.
+    Dalla §RICERCA-GIOCHI, integra qui: ALTARE DI ISAAC (converte
+    cuori↔monete↔cristalli), più segreti nei chunk, pool armi/perk che si
+    espande con le scoperte, EVENTO NOTTE opzionale (ondata + bottino ×2).
+    Ogni testo nuovo passa dalle lenti di §COMICITÀ; fai anche un pass
+    comico sui testi ESISTENTI (OVER_LINES, descrizioni, taunt).
 - **S6 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
   (Dean+quest, Chang boss EL TIGRE, Leonard, mini-boss villaggio), Atto III;
   Paintball segreto + Atto IV (personaggi malvagi, Dreamatorium + Abed-Oscuro).
@@ -303,8 +370,10 @@ Al termine di OGNI sessione, in quest'ordine:
    sovrascrivi): spunta la sessione completata in §SESSIONI, integra lezioni
    apprese in §REGOLE o §TOKEN (max 3 righe nuove, elimina regole diventate
    ovvie), aggiorna CONTESTO con lo stato reale. Il prompt deve MIGLIORARE
-   ad ogni ciclo, non gonfiarsi: budget 260, alzato a 320 finché la §RICERCA
-   S4.6 non viene consumata dalla S5 (poi riassorbila e torna a 260).
+   ad ogni ciclo, non gonfiarsi: budget base 260, alzato a 390 finché
+   §RICERCA, §RICERCA-GIOCHI e §COMICITÀ non vengono consumate dalle
+   prossime sessioni. §COMICITÀ però è PERMANENTE (stile di scrittura,
+   non un backlog): quando comprimerai, riducila ma non eliminarla.
 6. Riporta all'utente: cosa è stato fatto, cosa testare a mano su Safari,
    qual è la prossima sessione.
 
