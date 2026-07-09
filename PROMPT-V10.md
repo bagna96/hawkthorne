@@ -81,14 +81,29 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   3, bottino ×2, porte lockate, overlay notte + 🌙 in HUD); fulmine a catena
   visivo (`e._boltT/_boltFrom`); '*'/'A' iniettati in genLevel (depth≥2);
   +6 OVER_LINES (colmo/British/antani).
+- V10.11 (S5 tappa 4, MONDO INTERATTIVO): tile nuovi — '!' barile esplosivo
+  (`igniteBarrel`/`explodeBarrel`, miccia `fuses[]` 26f, AOE 110px, rompe
+  k/x/S vicini, REAZIONE A CATENA), '=' leva → `pullLever` apre tutti i '9'
+  (cancello-botola nel pavimento col tesoro 'g' sotto, pattern iniettato in
+  genLevel con leva su spot vicino), 'i'→'I' torcia accesa dal fuoco
+  (proiettili fire, tolleranza +1 riga) che ILLUMINA il buio, ':' corrente
+  ascensionale (vy→-7.5, resetta salti/scatti, colonna ×4). **FIX STORICO
+  drawDarkness**: il velo ora vive su canvas separato `darkCv` (prima i
+  buchi destination-out foravano il MONDO = alone nero; ora la luce rivela
+  davvero — le caverne sono giocabili). Bestioline `critters` per bioma
+  (farfalla/uccello/topo/lucertola, scappano entro 90px), chiacchiere NPC
+  rare (parts txt 💬). POOL ESPANDIBILE `weaponPool()`: 6 armi base + 8 con
+  soglie SAVE.endlessBest (WEAPON_UNLOCKS, toast `checkWeaponUnlocks`).
+  Game over = bilancio run (`killsRun`, coinsRun, prossimo sblocco). Asset
+  inline: fx_sparkle (96×48, 4×24), fx_steam (96×24, 4×24) → playFX su
+  pickup arma e altare.
 - Debug: `.goto .step .tp .soul .super .kill .dmg .beatRival .p2 .give .gems
   .boon .forge .incubo .next .fakeGuest .reset .info .quest .mbkill .gen
   .remix .arma .pom .maledici .syn .god .perk .shards(n=+monete) .unlock(id?)`.
 
-## §RICERCA — residuo da applicare in tappa 3 (il resto è consumato)
-- **AMBIENTE REATTIVO**: bestioline, chiacchiere NPC; interattivi: leve→
-  cancelli gated dalle abilità, torce, casse esplosive, blocchi spingibili,
-  correnti, appigli/mantle, pogo, combo aeree.
+## §RICERCA — residuo (il resto è consumato)
+- **AMBIENTE REATTIVO** ✅ in gran parte fatto (v10.11). Restano: blocchi
+  spingibili, appigli/mantle, pogo, combo aeree, cancelli gated da abilità.
 - **MONDO VIVO SISTEMICO** (Terraria happiness): regole che toccano
   l'economia (li useranno i punti-casa HP).
 - **INCANTESIMI** ✅ fatti (v10.10); Noita spell-craft = evoluzione futura.
@@ -292,13 +307,11 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
     `firework` da asset esterno CC0 (repo hawkthorne, `playFX`/`fxShots`).
   - **tappa 3 ✅ (v10.10)**: SPELLS elementali con combo, barriera-chiave
     '*', ALTARE di Isaac, TURNO DI NOTTE, pass comico OVER_LINES.
-  - **tappa 4 (residuo, o dentro S6)**: altri INTERACT (leva→cancello,
-    torcia, cassa esplosiva, blocco spingibile, corrente, appigli/mantle,
-    pogo, combo aeree); AMBIENTE VIVO (bestioline, chiacchiere NPC);
-    pool armi/perk che si espande con le scoperte; asset OGA "Pixel Art
-    Spells" (CC0 B/N da ricolorare = VFX veri per gli spell) + repo
-    hawkthorne (fire/sparkle/splatters/steam); pass comico sui testi
-    VECCHI (descrizioni, taunt).
+  - **tappa 4 ✅ (v10.11)**: barili, leva+cancello-botola, torce che
+    illuminano, correnti, bestioline, chatter NPC, pool espandibile,
+    bilancio a fine run, sparkle/steam inline, FIX storico del buio.
+    S5 CHIUSA. Residui minori (spingibili, mantle/pogo, OGA spells B/N,
+    pass comico testi vecchi) → dentro S6 quando capita.
 - **S6 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
   (Dean+quest, Chang boss EL TIGRE, Leonard, mini-boss villaggio), Atto III;
   Paintball segreto + Atto IV (personaggi malvagi, Dreamatorium + Abed-Oscuro).
@@ -354,6 +367,9 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
 11. `p.onGround` OSCILLA vero/falso a frame alterni quando sei fermo
    (gravità 0.55 < 1px). Ogni condizione "a terra" per interazioni deve
    usare `(p.onGround || p.coyote > 0)`, mai onGround secco.
+12. Effetti "buca lo strato" (buio, nebbia): SEMPRE su canvas separato +
+   drawImage; destination-out sul canvas principale cancella il mondo
+   (alone nero). Verifica con getImageData (lum player > lum angolo).
 
 ## §FINE SESSIONE — rituale auto-rigenerativo (obbligatorio)
 Al termine di OGNI sessione, in quest'ordine:
