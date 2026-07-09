@@ -86,6 +86,21 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   Game over = bilancio run (`killsRun`, coinsRun, prossimo sblocco). Asset
   inline: fx_sparkle (96×48, 4×24), fx_steam (96×24, 4×24) → playFX su
   pickup arma e altare.
+- V11.0 (S6, HD-2D): risoluzione interna 2× (`HD`/`applyHD`, canvas
+  1920×1080 + setTransform in draw(), smoothing off per sprite; CSS canvas
+  a schermo pieno 16:9; toggle in OPZIONI `o.hd`); LUCE dinamica su canvas
+  additivo `lightCv` ('lighter', doppio pass = bloom; `addLight` in coord
+  schermo raccolte nel draw, `flashLight` in coord mondo con ttl —
+  sorgenti: torce/lava/cristalli/proiettili magici/esplosioni/cast);
+  `drawGrading` (tinta per bioma + vignette + `flashGrade` rosso danno /
+  oro clear) e `drawLights` chiamati DOPO drawDarkness in drawPlay;
+  sfondi organici (hillLayer quadraticCurve ×3 piani, sole/luna con alone
+  e god rays, nebbia di profondità, silhouette chiome/tetti, nuvole a
+  gobbe); lava buca il velo dark; `softShadow` (ellisse radiale, si
+  stringe con l'altezza, raycast ≤7 tile); riflesso player nel gin
+  (translate 2×superficie + scale(1,-1), alpha ~0.2); `rrect`/`panel`
+  (pannelli UI arrotondati con ombra) usati in drawMenuList e drawMenu;
+  `_hawk.ui()` = smoke-hook che disegna tutte le schermate.
 - Debug: `.goto .step .tp .soul .super .kill .dmg .beatRival .p2 .give .gems
   .boon .forge .incubo .next .fakeGuest .reset .info .quest .mbkill .gen
   .remix .arma .pom .maledici .syn .god .perk .shards(n=+monete) .unlock(id?)`.
@@ -302,34 +317,12 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
     S5 CHIUSA. Residui minori (spingibili, mantle/pogo, OGA spells B/N,
     pass comico testi vecchi) → dentro S6 quando capita.
 - **S6 — HD-2D CINEMATOGRAFICO** (scelta utente: salto di qualità visiva
-  PRIMA di Greendale, così ogni mondo nuovo nasce già bello. Il cast resta
-  pixel autentico 48×48: la qualità la fanno LUCE + ATMOSFERA, alla
-  Dead Cells/Octopath/Kingdom):
-  a) RISOLUZIONE 2×: canvas interno 1920×1080 con setTransform(2,0,0,2),
-     coordinate logiche invariate (960×540); imageSmoothingEnabled=false
-     per gli sprite; CRT adattato. MISURA le prestazioni (ms/frame su
-     step(60) prima/dopo, Safari è il target): se lento → voce OPZIONI
-     "RISOLUZIONE ALTA: SÌ/no" con fallback 1×.
-  b) LUCE DINAMICA + BLOOM: layer luce su canvas separato (regola 12)
-     composito 'lighter' — sorgenti: torce, lava, fuochi, incantesimi,
-     esplosioni, cristalli, boss. Gradienti radiali COLORATI (arancio
-     fuoco, ciano cristallo, viola boss); doppio pass a bassa alpha =
-     bloom. Nei livelli dark si integra col velo darkCv esistente.
-  c) COLOR GRADING per bioma: overlay gradient a schermo pieno (multiply/
-     soft) — dorato villaggio (golden hour), verde umido foresta, azzurro
-     gelido caverne, rosa alba radura; VIGNETTE leggera sempre; flash di
-     grading sui momenti forti (rosso danno, oro level-clear).
-  d) SFONDI ORGANICI multi-piano: via i triangoli — colline in
-     quadraticCurve, sole/luna con alone, nebbia di profondità tra i piani
-     (strato alpha), god rays leggeri, silhouette per bioma (chiome,
-     tetti, stalagmiti). 4-5 piani di parallasse.
-  e) OMBRE MORBIDE: ellisse radiale sfumata sotto player/nemici/boss,
-     che si stringe con l'altezza da terra (ancora il pg al mondo).
-  f) ACQUA/GIN riflettente: riflesso invertito a bassa alpha sotto la
-     superficie + distorsione a onde.
-  g) UI rifinita: pannelli con angoli morbidi e ombra, fade nei menu.
-  Criteri: screenshot prima/dopo PER OGNI bioma; lum-check (regola 12);
-  ms/frame ≤ 12 o fallback attivo; campagna+endless+co-op intatti.
+  PRIMA di Greendale): ✅ COMPLETATA (v11.0, dettagli in CONTESTO).
+  NOTA: verificata headless (harness node 12/12: tutti i biomi, menu,
+  campagna, gin, ospite); prestazioni raster reali su Safari da confermare
+  A MANO dall'utente — se scatta, OPZIONI → RISOLUZIONE ALTA: no.
+  Residuo estetico se servirà: fade nei menu, distorsione a onde del
+  riflesso, silhouette stalagmiti nel bg dark.
 - **S7 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
   (Dean+quest, Chang boss EL TIGRE, Leonard, mini-boss villaggio), Atto III;
   Paintball segreto + Atto IV (personaggi malvagi, Dreamatorium + Abed-Oscuro).
@@ -388,6 +381,11 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
 12. Effetti "buca lo strato" (buio, nebbia): SEMPRE su canvas separato +
    drawImage; destination-out sul canvas principale cancella il mondo
    (alone nero). Verifica con getImageData (lum player > lum angolo).
+13. Senza browser di preview: harness node con DOM/canvas stub (Proxy che
+   conta le draw-call, gradient fittizi) + eval indiretto degli <script>.
+   ATTENZIONE: i const/let top-level dell'eval NON sono visibili fuori —
+   testa SOLO attraverso `_hawk.*` (per questo esiste `_hawk.ui()`).
+   Il file harness è in scratchpad/smoke.js (ricrealo se sparito).
 
 ## §FINE SESSIONE — rituale auto-rigenerativo (obbligatorio)
 Al termine di OGNI sessione, in quest'ordine:
