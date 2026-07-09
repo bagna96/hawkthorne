@@ -52,21 +52,21 @@ const CHARS = [
   { id:'jeff',    name:'JEFF WINGER',     hp:3, speed:3.2, jump:11.2, ab:'dj',   ability:'Doppio salto',        desc:'"Obiezione!" Salta di nuovo in aria.', cost:0 },
   { id:'britta',  name:'BRITTA PERRY',    hp:3, speed:3.1, jump:10.8, ab:'fire', ability:'Palla di fuoco [C]',  desc:'Dà fuoco a tutto. Come sempre.', cost:0 },
   { id:'abed',    name:'ABED NADIR',      hp:3, speed:3.0, jump:10.8, ab:'glide',ability:'Planata (tieni salto)',desc:'Conosce i pattern del gioco. Plana.', cost:0 },
-  { id:'troy',    name:'TROY BARNES',     hp:3, speed:3.9, jump:12.2, ab:null,  ability:'Atleta',              desc:'Il più veloce, il salto più alto.', cost:0 },
+  { id:'troy',    name:'TROY BARNES',     hp:3, speed:3.9, jump:12.2, ab:'dj',  ability:'Salto da ricevitore',  desc:'Il più veloce, il salto più alto. E adesso salta pure DUE volte.', cost:0 },
   { id:'annie',   name:'ANNIE EDISON',    hp:3, speed:3.1, jump:11.0, ab:'blade',ability:'Pugnale rapido',      desc:'Attacco più grande e più veloce.', cost:0 },
   { id:'shirley', name:'SHIRLEY BENNETT', hp:3, speed:3.0, jump:10.8, ab:'wave', ability:'Onda di perdono [C]', desc:'"Oh, che carino." Spazza i nemici vicini.', cost:0 },
-  { id:'pierce',  name:'PIERCE HAWTHORNE',hp:5, speed:2.5, jump:10.4, ab:null,  ability:'Pelle dura',          desc:'5 cuori. È pur sempre un Hawthorne.', cost:0 },
+  { id:'pierce',  name:'PIERCE HAWTHORNE',hp:5, speed:2.5, jump:10.4, ab:'wave', ability:'Salvietta Umida [◯/C]', desc:'5 cuori E un\'onda di salviette Hawthorne. Igienizzante.', cost:0 },
   { id:'gilbert', name:'GILBERT LAWSON',  hp:4, speed:3.4, jump:11.4, ab:'fire', ability:'Fulmine [C]',         desc:'Beta tester dal 1979. Si sblocca finendo il gioco.', cost:100 },
   { id:'chang',   name:'BEN CHANG',       hp:3, speed:3.3, jump:11.0, ab:'fire', ability:'Furia [C]',           desc:'EL TIGRE CHINO. Instabile, infiammabile.', cost:30 },
   { id:'dean',    name:'IL DEAN',         hp:3, speed:3.0, jump:11.0, ab:'wave', ability:'Annuncio [C]',        desc:'"Salve salvino!" Ha un costume per tutto.', cost:30 },
-  { id:'leonard', name:'LEONARD',         hp:4, speed:2.2, jump:10.0, ab:null,  ability:'Veterano',            desc:'Zitto, Leonard. Però ha 4 cuori.', cost:40 },
-  { id:'fatneil', name:'FAT NEIL',        hp:4, speed:2.8, jump:10.5, ab:null,  ability:'Dungeon Master',      desc:'Conosce i dadi e il dolore.', cost:30 },
+  { id:'leonard', name:'LEONARD',         hp:4, speed:2.2, jump:10.0, ab:'fire', ability:'Polpetta bollente [◯/C]', desc:'Zitto, Leonard. Però ha 4 cuori e lancia polpette roventi.', cost:40 },
+  { id:'fatneil', name:'FAT NEIL',        hp:4, speed:2.8, jump:10.5, ab:'blade',ability:'Matita del DM',       desc:'Conosce i dadi e il dolore. Colpo più largo: tiro per colpire +2.', cost:30 },
   { id:'duncan',  name:'PROF. DUNCAN',    hp:3, speed:3.0, jump:10.8, ab:'wave', ability:'Terapia [C]',         desc:'Psicologia britannica applicata ai mostri.', cost:40 },
-  { id:'vaughn',  name:'VAUGHN',          hp:3, speed:3.8, jump:12.0, ab:null,  ability:'Zen',                 desc:'Niente maglietta, niente problemi.', cost:30 },
-  { id:'vicki',   name:'VICKI',           hp:3, speed:3.2, jump:11.0, ab:null,  ability:'Matita',              desc:'Non chiederle la matita.', cost:20 },
-  { id:'buddy',   name:'BUDDY',           hp:3, speed:3.1, jump:10.8, ab:null,  ability:'New member',          desc:'Vuole solo entrare nel gruppo di studio.', cost:20 },
-  { id:'garrett', name:'GARRETT',         hp:3, speed:3.0, jump:10.6, ab:null,  ability:'CRISI!',              desc:'"CRISI DI GARRETT!" Urla, poi corre.', cost:20 },
-  { id:'guzman',  name:'GUZMAN',          hp:3, speed:3.2, jump:11.0, ab:null,  ability:'Leggenda',            desc:'La statua era solo l\'inizio.', cost:40 },
+  { id:'vaughn',  name:'VAUGHN',          hp:3, speed:3.8, jump:12.0, ab:'glide',ability:'Zen aereo (tieni ✕)', desc:'Niente maglietta, niente gravità, niente problemi.', cost:30 },
+  { id:'vicki',   name:'VICKI',           hp:3, speed:3.2, jump:11.0, ab:'blade',ability:'LA matita',           desc:'Gliel\'hanno chiesta. Ora la usa. Colpo grande.', cost:20 },
+  { id:'buddy',   name:'BUDDY',           hp:3, speed:3.1, jump:10.8, ab:'fire', ability:'Entusiasmo ardente [◯/C]', desc:'Vuole entrare nel gruppo. Lanciando fuoco, se serve.', cost:20 },
+  { id:'garrett', name:'GARRETT',         hp:3, speed:3.0, jump:10.6, ab:'wave', ability:'CRISI SONICA! [◯/C]', desc:'"CRISI DI GARRETT!" L\'urlo è letteralmente un\'arma.', cost:20 },
+  { id:'guzman',  name:'GUZMAN',          hp:3, speed:3.2, jump:11.0, ab:'dj',   ability:'Balzo da statua',     desc:'La statua era solo l\'inizio. Doppio salto leggendario.', cost:40 },
   { id:'rich',    name:'RICH',            hp:3, speed:3.4, jump:11.4, ab:'dj',  ability:'Perfetto',            desc:'Bravo in tutto. Irritante.', cost:60 },
   { id:'vicedean',name:'VICE DEAN LAYBOURNE', hp:4, speed:3.0, jump:11.0, ab:'glide', ability:'Aria condizionata', desc:'La Scuola di Riparazione Condizionatori.', cost:60 },
 ];
@@ -377,7 +377,8 @@ function mkEnemy(id, x, y){
   const d = ENEMIES[id] || ENEMIES.acorn;
   if (d.ai === 'fly') return { type:'flyer', x0:x, y0:y, x, y, w:d.w, h:d.h, t:Math.random()*99, hp:d.hp, anim:0, sprite:d.sheet, eid:id };
   if (d.ai === 'chase') return { type:'ghost', x, y, w:d.w, h:d.h, hp:d.hp, anim:Math.random()*99, t:0, eid:id };
-  return { type:'walker', x:x+3, y:y+8, w:d.w, h:d.h, vx:-d.speed, vy:0, hp:d.hp, anim:Math.random()*99, sprite:d.sheet, eid:id };
+  // 4%: GLITCH CERTIFICATO — cammina a testa in giù (puramente estetico, non inficia il gioco)
+  return { type:'walker', x:x+3, y:y+8, w:d.w, h:d.h, vx:-d.speed, vy:0, hp:d.hp, anim:Math.random()*99, sprite:d.sheet, eid:id, glitch: Math.random() < 0.04 ? 1 : 0 };
 }
 // VFX: un player generico per gli sheet di effetti
 const VFX = {
@@ -966,9 +967,14 @@ const WEAPONS = {
   keytar:    { nome:'KEYTAR DI TROY',    icona:'🎹', tipo:'onda',       cd:38, dmg:2, vel:4.2, rumb:[150,0.6] },
   lancialava:{ nome:'LANCIA-LAVA',       icona:'🔥', tipo:'proiettile', cd:26, dmg:2, vel:7, fire:true, pierce:true, rumb:[190,0.8] },
   spadalaser:{ nome:'SPADA LASER DI ABED',icona:'🗡️', tipo:'arco',       cd:9,  atkT:8,  aw:42, dmg:2, kb:2, hs:2, rumb:[70,0.35] },
-  ascia:     { nome:'ASCIA VICHINGA',     icona:'🪓', tipo:'smash',      cd:42, atkT:15, aw:48, dmg:4, launch:true, kb:8, hs:8, rumb:[260,1] },
+  ascia:     { nome:'ASCIA VICHINGA (NOLEGGIATA)', icona:'🪓', tipo:'smash', cd:42, atkT:15, aw:48, dmg:4, launch:true, kb:8, hs:8, rumb:[260,1] },
   shuriken:  { nome:'SHURIKEN DI ANNIE',  icona:'🌟', tipo:'proiettile', cd:8,  dmg:1, vel:11, pierce:true, rumb:[40,0.2] },
   bazooka:   { nome:'BAZOOKA DI CHANG',   icona:'🚀', tipo:'proiettile', cd:44, dmg:4, vel:6, fire:true, rumb:[280,1] },
+  spillatrice:{nome:'SPILLATRICE DEL REGISTRO', icona:'📎', tipo:'proiettile', cd:7, dmg:1, vel:12, rumb:[35,0.2] },
+  pollo:     { nome:'COSCIA DI POLLO TATTICO', icona:'🍗', tipo:'arco',  cd:16, atkT:10, aw:34, dmg:2, kb:3, hs:2, rumb:[90,0.4] },
+  trombone:  { nome:'TROMBONE DELLA VERGOGNA', icona:'🎺', tipo:'onda',  cd:52, dmg:3, vel:3.2, rumb:[220,0.8] },
+  pallaneve: { nome:'PALLA DI NEVE DEL DECANO', icona:'❄️', tipo:'proiettile', cd:20, dmg:1, vel:8, freeze:true, rumb:[60,0.3] },
+  d20:       { nome:'IL D20 DI FAT NEIL', icona:'🎲', tipo:'rimbalzo',   cd:34, dmg:2, d20:true, rumb:[110,0.55] },
 };
 let wdrops = [];        // armi a terra {x, y, id}
 let pendingArma = false;
@@ -1192,20 +1198,29 @@ function drawMenuList(titolo, sotto, items, sel, colore){
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, '#0e0c2a'); g.addColorStop(1, '#1c1440');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  for (let i = 0; i < 25; i++){
-    const sx = (i * 219 + frame) % W, sy = (i * 149) % H;
-    ctx.fillStyle = 'rgba(255,255,255,' + (0.08 + (i % 3) * 0.05) + ')';
+  for (let i = 0; i < 25; i++){   // stelle tenui: decorano, non disturbano
+    const sx = (i * 219 + Math.floor(frame / 3)) % W, sy = (i * 149) % H;
+    ctx.fillStyle = 'rgba(255,255,255,' + (0.04 + (i % 3) * 0.02) + ')';
     ctx.fillRect(sx, sy, 2, 2);
   }
-  text(titolo, W/2, 90, 32, colore, 'center');
-  text(sotto, W/2, 122, 13, 'rgba(255,255,255,0.55)', 'center');
-  const my = 180;
+  // la lista si adatta: tante voci = righe più strette (niente più menu fuori schermo)
+  const my = 168;
+  const step = Math.min(42, Math.floor((H - my - 70) / Math.max(1, items.length)));
+  const fs = step < 34 ? 15 : 18;
+  // pannello scuro dietro a TUTTO il testo: leggibilità prima di tutto
+  ctx.fillStyle = 'rgba(5,5,14,0.78)';
+  ctx.fillRect(W/2 - 310, 56, 620, 84);
+  ctx.fillRect(W/2 - 310, my - 28, 620, items.length * step + 40);
+  ctx.strokeStyle = 'rgba(138,232,232,0.25)'; ctx.lineWidth = 1;
+  ctx.strokeRect(W/2 - 310, my - 28, 620, items.length * step + 40);
+  text(titolo, W/2, 90, 30, colore, 'center');
+  text(sotto, W/2, 122, 13, 'rgba(255,255,255,0.7)', 'center');
   for (let i = 0; i < items.length; i++){
     const s = i === sel;
-    if (s){ ctx.fillStyle = 'rgba(245,212,66,0.12)'; ctx.fillRect(W/2 - 260, my + i*42 - 22, 520, 32); }
-    text((s ? '▶ ' : '') + items[i].label, W/2, my + i*42, 18, s ? '#5ae87a' : 'rgba(255,255,255,0.75)', 'center');
+    if (s){ ctx.fillStyle = 'rgba(245,212,66,0.16)'; ctx.fillRect(W/2 - 280, my + i*step - fs - 3, 560, fs + 12); }
+    text((s ? '▶ ' : '') + items[i].label, W/2, my + i*step, fs, s ? '#5ae87a' : 'rgba(255,255,255,0.85)', 'center');
   }
-  text('↑↓ scegli · INVIO conferma · X/ESC indietro', W/2, H - 24, 12, 'rgba(255,255,255,0.4)', 'center');
+  text('↑↓ scegli · INVIO/✕ conferma · X/◯ o ESC indietro', W/2, H - 20, 12, 'rgba(255,255,255,0.5)', 'center');
 }
 function drawOptions(){ drawMenuList('OPZIONI', 'Le preferenze si salvano da sole.', optionsItems(), optSel, '#f5d442'); }
 function drawCheats(){
@@ -1218,13 +1233,23 @@ function drawCheats(){
 // Le mosse base (salto doppio/scatto/parete) sono GRATIS e subito. Qui compri poteri AVANZATI con le Monete
 // guadagnate giocando le missioni. Una volta comprati restano per SEMPRE — campagna ed endless.
 const ABILITIES = [
-  { id:'triplejump', nome:'TRIPLO SALTO',      icona:'🪽', cost:120, desc:'Un terzo salto in aria. Raggiungi l\'irraggiungibile.' },
-  { id:'airdash',    nome:'SCATTO DOPPIO',     icona:'⚡', cost:150, desc:'Due scatti in aria prima di toccare terra. Serpeggia.' },
-  { id:'dashblade',  nome:'SCATTO TAGLIENTE',  icona:'🗡️', cost:180, desc:'Lo scatto ferisce chi attraversi. Schivi E colpisci.' },
-  { id:'glide',      nome:'ALI DI FALCO',      icona:'🦅', cost:140, desc:'Tieni salto per planare dolcemente. Vale per tutti.' },
-  { id:'groundslam', nome:'SCHIANTO SISMICO',  icona:'💥', cost:200, desc:'GIÙ+attacco in aria: onda d\'urto enorme a terra.' },
-  { id:'reflect',    nome:'SCATTO-SPECCHIO',   icona:'🛡️', cost:220, desc:'Scattare rispedisce al mittente i proiettili vicini.' },
-  { id:'coinmagnet', nome:'CALAMITA ETERNA',   icona:'🧲', cost:100, desc:'Le monete volano da sole verso di te. Per sempre.' },
+  // — movimento avanzato —
+  { id:'triplejump', nome:'TRIPLO SALTO',              icona:'🪽', cost:120, desc:'Un terzo salto in aria. La fisica ha smesso di guardare.' },
+  { id:'airdash',    nome:'SCATTO DOPPIO',             icona:'⚡', cost:150, desc:'Due scatti in aria prima di toccare terra. Serpeggia.' },
+  { id:'dashblade',  nome:'SCATTO TAGLIENTE',          icona:'🗡️', cost:180, desc:'Lo scatto ferisce chi attraversi. Schivi E colpisci.' },
+  { id:'glide',      nome:'ALI DI FALCO (USATE)',      icona:'🦅', cost:140, desc:'Tieni ✕/salto per planare. Trovate su eBay da Pierce.' },
+  { id:'groundslam', nome:'SCHIANTO SISMICO',          icona:'💥', cost:200, desc:'GIÙ+▢ in aria: onda d\'urto enorme. I vicini si lamentano.' },
+  { id:'reflect',    nome:'SCATTO-SPECCHIO',           icona:'🛡️', cost:220, desc:'Scattare (R1) rispedisce i proiettili al mittente. Con gli interessi.' },
+  // — potenziamenti da vero castello (stile Rogue Legacy) —
+  { id:'cuorone',    nome:'UN CUORE IN PIÙ (DI PIERCE)', icona:'❤️', cost:250, desc:'Tutti partono con un cuore extra. Ora i suoi 5 si spiegano.' },
+  { id:'avidita',    nome:'PARCELLA DI JEFF',           icona:'💰', cost:160, desc:'+20% monete da ogni fonte. Obiezione? Respinta.' },
+  { id:'fortuna',    nome:'DADO NON TRUCCATO (FIDATI)', icona:'🍀', cost:180, desc:'Le casse regalano roba migliore. Ha-GAMBLING onesto.' },
+  { id:'scudetto',   nome:'PIGIAMA DA BATTAGLIA',       icona:'🛡', cost:120, desc:'Inizi ogni run con uno scudo di rose già indossato.' },
+  { id:'kit',        nome:'KIT DEL BETA TESTER (1979)', icona:'⚙️', cost:200, desc:'In Partita Infinita parti con un\'arma casuale in mano.' },
+  { id:'tessera',    nome:'TESSERA FEDELTÀ DI HILDA',   icona:'💳', cost:140, desc:'Sconto del 20% al banco di Hilda. Lei fa finta di niente.' },
+  { id:'mutande',    nome:'MUTANDE-PARACADUTE',         icona:'🪂', cost:90,  desc:'Cadere nelle fosse non toglie cuori. Ti giudica e basta.' },
+  { id:'karma',      nome:'IL KARMA DI SHIRLEY',        icona:'🙏', cost:280, desc:'Una resurrezione gratis a run. "Oh, che carino."' },
+  { id:'coinmagnet', nome:'CALAMITA ETERNA',            icona:'🧲', cost:100, desc:'Pop pop! Le monete ti inseguono. Per sempre.' },
 ];
 let abilSel = 0;
 // i boss ora lasciano un bel gruzzolo di Monete (la valuta del negozio)
@@ -1460,7 +1485,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v10.8';
+const GAME_VERSION = 'v10.9';
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -1477,6 +1502,7 @@ let crtOn = true;
 function showToast(text){ toast = { text, t: 170 }; }
 function addWallet(n){
   if (boons.dado) n *= 1 + Math.min(3, bl('dado'));
+  if (hasAbil('avidita')) n = Math.ceil(n * 1.2);   // PARCELLA DI JEFF
   if (nightmare) n *= 2;
   SAVE.wallet += n; coinsRun += n; saveGame();
 }
@@ -1485,6 +1511,7 @@ function addWallet(n){
 let boons = {};            // potenziamenti della run (stile Hades)
 let nightmare = false;     // Modalità Incubo (post-game)
 let hitstop = 0;           // fermo-immagine sui colpi (game feel)
+let wipeT = 0, wipeKind = 0;   // transizione "PowerPoint" kitsch (glitch voluto)
 let god = false, infSoul = false, cheatDirty = false;  // trucchi
 let slowT = 0;             // Discorso Winger: rallenta il mondo
 let superRain = null;      // Brittapocalisse
@@ -1542,10 +1569,11 @@ function breakCrate(tx, ty, p){
   }
   burst(tx*TS+16, ty*TS+16, '#a8763e', 14, 2.5);
   soulGain(p, 4);
+  const lucky = hasAbil('fortuna') ? 0.12 : 0;   // DADO NON TRUCCATO
   const r = Math.random();
-  if (r < 0.15){ cristalli++; sfx('gem'); showToast('+1 CRISTALLO (' + cristalli + ')'); }
-  else if (r < 0.4 && p && p.hp < p.maxhp){ p.hp++; sfx('heart'); }
-  else { addWallet(3); sfx('coin'); }
+  if (r < 0.15 + lucky){ cristalli++; sfx('gem'); showToast('+1 CRISTALLO (' + cristalli + ')'); }
+  else if (r < 0.4 + lucky && p && p.hp < p.maxhp){ p.hp++; sfx('heart'); }
+  else { addWallet(hasAbil('fortuna') ? 5 : 3); sfx('coin'); }
 }
 
 // ---------------- SUPER-POTERI (carica MERAVIGLIA al 100%) ----------------
@@ -1623,9 +1651,10 @@ function updateRain(){
 
 // ------------------------------------------------ GIOCATORI
 function mkPlayer(cdef, costume, x, y, slot){
+  const bonusHp = hasAbil('cuorone') ? 1 : 0;   // UN CUORE IN PIÙ (permanente)
   return { cdef, costume, slot, scheme: SCHEMES[slot],
     x, y, w:20, h:28, vx:0, vy:0, face:1, onGround:false,
-    hp: cdef.hp, maxhp: cdef.hp, inv:0, jumps:0, atkT:0, atkCd:0, abCd:0,
+    hp: cdef.hp + bonusHp, maxhp: cdef.hp + bonusHp, inv:0, jumps:0, atkT:0, atkCd:0, abCd:0,
     cpx:x, cpy:y, anim:0, downT:0,
     soul:0, shield:0, jail:null, sprintT:0, focusT:0, laserT:0, net:false,
     slideT:0, pounding:false, warpT:42, idleT:0, airT:0,
@@ -1720,6 +1749,8 @@ function loadLevel(i){
   for (const m of lvl.markers) m.y = groundAt(m.x + 12, m.y) - 28;
   if (monkey) monkey.y = groundAt(monkey.x + 12, monkey.y) - 32;
   buildGroups();
+  // 15%: transizione "PowerPoint" volutamente kitsch (estetica, non tocca il gameplay)
+  if (!def.hub && Math.random() < 0.15){ wipeT = 44; wipeKind = Math.floor(Math.random() * 3); }
   setSong(def.song);
 }
 function mkWalker(x, y){ return { type:'walker', x:x+3, y:y+8, w:26, h:24, vx:-0.8, vy:0, hp:1, anim:Math.random()*99 }; }
@@ -1908,7 +1939,8 @@ function ghostRevive(p){
 }
 function fallRespawn(p){
   deaths++;
-  if (!god) p.hp -= 1;
+  if (!god && !hasAbil('mutande')) p.hp -= 1;   // MUTANDE-PARACADUTE: la fossa ti giudica e basta
+  else if (hasAbil('mutande') && !god) showToast('🪂 La fossa ti ha giudicato. Le mutande hanno retto.');
   if (p.hp <= 0){
     if (!ghostRevive(p)){
       p.downT = 240;
@@ -2067,11 +2099,11 @@ function updateOnePlayer(p, atkBoxes){
       if (w && w.tipo === 'proiettile'){
         p.atkCd = w.cd; wsfx(p.wpn[p.wsel]); rumble(p.slot, w.rumb[0], w.rumb[1]);
         projs.push({ from:'player', owner:p, x:p.x + p.w/2 + p.face*8, y:p.y + 10, w:10, h:10,
-          vx:p.face*w.vel, vy:0, t:90, fire:w.fire, pierce:w.pierce, paint:w.paint, dmg:w.dmg });
+          vx:p.face*w.vel, vy:0, t:90, fire:w.fire, pierce:w.pierce, paint:w.paint, freeze:w.freeze, dmg:w.dmg });
       } else if (w && w.tipo === 'rimbalzo'){
         if (!projs.some(pr => pr.ball)){
           p.atkCd = w.cd; wsfx('dodgeball'); rumble(p.slot, w.rumb[0], w.rumb[1]);
-          projs.push({ from:'player', owner:p, ball:true, bounces: synActive('MVP DI GREENDALE') ? 10 : 5,
+          projs.push({ from:'player', owner:p, ball:true, d20:w.d20, bounces: synActive('MVP DI GREENDALE') ? 10 : 5,
             x:p.x + p.w/2, y:p.y + 6, w:14, h:14, vx:p.face*6.5, vy:-2.5, t:300, grav:true, dmg:w.dmg });
         } else p.atkCd = 6;
       } else if (w && w.tipo === 'onda'){
@@ -2325,7 +2357,8 @@ function updatePlay(){
       if (e.type === 'walker'){
         e.anim++;
         e.hitWall = false;
-        e.vx = Math.sign(e.vx || -1) * 0.8 * spd * (e.elite ? 1.4 : 1);
+        if (e.slowT > 0){ e.slowT--; if (frame % 8 === 0) parts.push({ x:e.x + Math.random()*e.w, y:e.y + Math.random()*e.h, vx:0, vy:0.3, t:12, ng:1, sz:2, color:'#bfe8ff' }); }
+        e.vx = Math.sign(e.vx || -1) * 0.8 * spd * (e.elite ? 1.4 : 1) * (e.slowT > 0 ? 0.35 : 1);
         const dir = Math.sign(e.vx);
         moveAndCollide(e);
         if (e.hitWall) e.vx = -dir * 0.8;
@@ -2405,7 +2438,10 @@ function updatePlay(){
     if (pr.from === 'player'){
       for (const e of enemies){
         if (e.hp > 0 && overlap(pr, e) && !(pr.hitCd > 0)){
-          e.hp -= (pr.dmg || 1);
+          let dmProj = pr.dmg || 1;
+          if (pr.d20){ dmProj = 1 + Math.floor(Math.random() * 4); parts.push({ txt:'🎲' + dmProj + (dmProj === 4 ? ' CRITICO!' : ''), x:e.x + e.w/2, y:e.y - 12, vx:0, vy:-0.8, t:36, color: dmProj === 4 ? '#f5d442' : '#fff' }); }
+          e.hp -= dmProj;
+          if (pr.freeze){ e.slowT = 130; burst(e.x + e.w/2, e.y + e.h/2, '#bfe8ff', 8, 2); }
           if (pr.paint){
             burst(e.x+e.w/2, e.y+e.h/2, ['#e85ae8','#5ae8e8','#f5d442','#5ae87a'][Math.floor(Math.random()*4)], 10, 2.5);
             if (synActive('PITTORE A COTTIMO')) addWallet(2);
@@ -2795,6 +2831,22 @@ function updateCut(){
 
 // ------------------------------------------------ DISEGNO: MONDO
 function drawWalker(e){
+  if (e.glitch){   // glitch voluto: nemico capovolto, con tanto di certificazione
+    if (!e.gToast){
+      e.gToast = 1;
+      SAVE.flags = SAVE.flags || {}; SAVE.flags.seen = SAVE.flags.seen || {};
+      if (!SAVE.flags.seen.glitch){ SAVE.flags.seen.glitch = 1; saveGame(); showToast('🐛 GLITCH CERTIFICATO™: quel nemico ha installato l\'aggiornamento a testa in giù.'); }
+    }
+    ctx.save();
+    const cyw = Math.round(e.y - cam.y) + e.h / 2;
+    ctx.translate(0, cyw * 2); ctx.scale(1, -1);
+    drawWalkerInner(e);
+    ctx.restore();
+    return;
+  }
+  drawWalkerInner(e);
+}
+function drawWalkerInner(e){
   const x = Math.round(e.x - cam.x), y = Math.round(e.y - cam.y);
   const dir = Math.sign(e.vx || -1);
   if (e.sprite === 'en_hippy' && IMGS.en_hippy && IMGS.en_hippy.complete && IMGS.en_hippy.naturalWidth){
@@ -2807,11 +2859,13 @@ function drawWalker(e){
     return;
   }
   if (IMGS.en_acorn && IMGS.en_acorn.complete && IMGS.en_acorn.naturalWidth){
-    // sheet 220×40 = 10 col × 2 righe di 22×20; col2 = camminata, col7 = IN FIAMME (élite)
+    // lo sheet NON è a griglia fissa: bbox esatte via scansione alpha (fix "coda staccata")
+    // walk = x43 w14 · fiamme élite = x182 w16
     const hop = Math.abs(Math.sin(e.anim * 0.15)) * 3;
+    const sxA = e.elite ? 182 : 43, swA = e.elite ? 16 : 14;
     ctx.save(); ctx.translate(x + 13, y + e.h - 38 - hop);
     ctx.scale(dir > 0 ? -1 : 1, 1);
-    ctx.drawImage(IMGS.en_acorn, (e.elite ? 7 : 2) * 22 + 1, 0, 20, 20, -20, 0, 40, 40);
+    ctx.drawImage(IMGS.en_acorn, sxA, 0, swA, 20, -swA, 0, swA * 2, 40);
     ctx.restore();
     return;
   }
@@ -3028,14 +3082,39 @@ function drawTiles(){
     if (' TuwP'.includes(c)) continue;
     const x = tx*TS - cam.x, y = ty*TS - cam.y;
     switch(c){
-      case '#':
+      case '#': {
         ctx.fillStyle = '#8a5a34'; ctx.fillRect(x, y, TS, TS);
         ctx.fillStyle = '#6b4527'; ctx.fillRect(x + 4, y + 14, 6, 6); ctx.fillRect(x + 20, y + 22, 6, 6);
         if (!isSolid(tileAt(tx, ty - 1))){
           ctx.fillStyle = lvl.def.dark ? '#4a6a5a' : '#3aa84a'; ctx.fillRect(x, y, TS, 8);
           ctx.fillStyle = lvl.def.dark ? '#5a8a6a' : '#55cc60'; ctx.fillRect(x, y, TS, 3);
+          // il suolo VIVE: decorazioni deterministiche per tile, erba che ondeggia al vento
+          const hsh = ((tx * 73 + ty * 37) >>> 0) % 10;
+          const sw2 = Math.sin(frame * 0.05 + tx * 1.3) * 2;
+          if (tileAt(tx, ty - 1) === ' '){
+            if (hsh < 4){          // ciuffi d'erba
+              ctx.strokeStyle = lvl.def.dark ? '#5a8a6a' : '#3fae50'; ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(x + 6, y + 2);  ctx.quadraticCurveTo(x + 6 + sw2, y - 6,  x + 7 + sw2 * 1.6,  y - 10);
+              ctx.moveTo(x + 15, y + 2); ctx.quadraticCurveTo(x + 15 + sw2, y - 8, x + 16 + sw2 * 1.6, y - 13);
+              ctx.moveTo(x + 24, y + 2); ctx.quadraticCurveTo(x + 24 + sw2, y - 5, x + 25 + sw2 * 1.6, y - 8);
+              ctx.stroke();
+            } else if (hsh === 4 && !lvl.def.dark){   // fiorellino che dondola
+              ctx.strokeStyle = '#3fae50'; ctx.lineWidth = 2;
+              ctx.beginPath(); ctx.moveTo(x + 16, y + 2); ctx.lineTo(x + 16 + sw2, y - 8); ctx.stroke();
+              ctx.fillStyle = ['#e85a7a', '#f5d442', '#8a6ae8'][tx % 3];
+              ctx.beginPath(); ctx.arc(x + 16 + sw2, y - 10, 3.5, 0, 7); ctx.fill();
+              ctx.fillStyle = '#fff'; ctx.fillRect(x + 15 + sw2, y - 11, 2, 2);
+            } else if (hsh === 5){                    // sassolini
+              ctx.fillStyle = '#9a9aa2'; ctx.fillRect(x + 8, y - 3, 5, 3); ctx.fillRect(x + 20, y - 2, 4, 2);
+            } else if (hsh === 6 && lvl.def.dark){    // funghetto luminoso (caverne)
+              ctx.fillStyle = '#d8e8d8'; ctx.fillRect(x + 14, y - 5, 3, 5);
+              ctx.fillStyle = 'rgba(140,240,190,' + (0.6 + Math.sin(frame * 0.1 + tx) * 0.3) + ')';
+              ctx.beginPath(); ctx.arc(x + 15, y - 6, 4, Math.PI, 0); ctx.fill();
+            }
+          }
         }
-        break;
+        break; }
       case 'B':
         ctx.fillStyle = '#6e6e7a'; ctx.fillRect(x, y, TS, TS);
         ctx.fillStyle = '#585862';
@@ -3377,7 +3456,7 @@ function drawMenu(){
   if (trait(m.p,'pierce')) text('Sconto famiglia Hawthorne: -25%', W/2, by + 74, 11, '#f5d442', 'center');
   text('INVIO compra · X chiudi', W/2, by + bh - 14, 12, 'rgba(255,255,255,0.5)', 'center');
 }
-function menuCost(it){ return Math.ceil(it.cost * (menu && trait(menu.p,'pierce') ? 0.75 : 1)); }
+function menuCost(it){ return Math.ceil(it.cost * (menu && trait(menu.p,'pierce') ? 0.75 : 1) * (hasAbil('tessera') ? 0.8 : 1)); }
 function netBitJP(k){ return net.role === 'host' && (netIn.cur & NETBITS[k]) && !(netIn.prev & NETBITS[k]); }
 function updateMenu(){
   const m = menu;
@@ -3524,16 +3603,21 @@ function drawTitle(){
   // menù vero
   const items = titleItems();
   const my = 250, sp = 32;
+  // pannello dietro il menù: il cast teletrasportato è bello, ma il testo si deve LEGGERE
+  ctx.fillStyle = 'rgba(8,8,22,0.66)';
+  ctx.fillRect(W/2 - 235, my - 26, 470, items.length * sp + 36);
+  ctx.strokeStyle = 'rgba(245,212,66,0.2)'; ctx.lineWidth = 1;
+  ctx.strokeRect(W/2 - 235, my - 26, 470, items.length * sp + 36);
   for (let i = 0; i < items.length; i++){
     const sel = i === titleSel;
     if (sel){
-      ctx.fillStyle = 'rgba(245,212,66,0.12)';
+      ctx.fillStyle = 'rgba(245,212,66,0.16)';
       ctx.fillRect(W/2 - 190, my + i*sp - 19, 380, 27);
       drawActor('abed', 'walk', titleT, W/2 - 230, my + i*sp - 34, 1, 0.65);
     }
-    text((sel ? '▶ ' : '') + items[i].label, W/2, my + i*sp, 18, sel ? '#5ae87a' : 'rgba(255,255,255,0.75)', 'center');
+    text((sel ? '▶ ' : '') + items[i].label, W/2, my + i*sp, 18, sel ? '#5ae87a' : 'rgba(255,255,255,0.9)', 'center');
   }
-  text('↑↓ scegli · INVIO conferma  (o ✕ sul pad)', W/2, my + items.length*sp + 12, 12, 'rgba(255,255,255,0.4)', 'center');
+  text('↑↓ scegli · INVIO conferma  (o ✕ sul pad)', W/2, my + items.length*sp + 4, 12, 'rgba(255,255,255,0.5)', 'center');
   // versione in angolo
   text(GAME_VERSION, W - 10, H - 10, 12, 'rgba(255,255,255,0.45)', 'right');
   text('sei stagioni e un film', 10, H - 10, 11, 'rgba(255,255,255,0.3)');
@@ -3786,6 +3870,28 @@ function drawPlay(){
   }
   if (slowT > 0){ ctx.fillStyle = 'rgba(80,120,255,0.12)'; ctx.fillRect(0, 0, W, H); }
   drawHUD();
+  // transizione PowerPoint: scacchiera / stella / veneziana, rigorosamente in versione di prova
+  if (wipeT > 0){
+    wipeT--;
+    const k = wipeT / 44;
+    ctx.fillStyle = '#000';
+    if (wipeKind === 0){
+      const cs = 80;
+      for (let gy = 0; gy <= H/cs; gy++) for (let gx2 = 0; gx2 <= W/cs; gx2++){
+        const dsz = ((gx2 + gy) % 2 ? Math.min(1, k * 1.6) : Math.max(0, k * 1.6 - 0.6));
+        if (dsz > 0) ctx.fillRect(gx2*cs + cs*(1-dsz)/2, gy*cs + cs*(1-dsz)/2, cs*dsz, cs*dsz);
+      }
+    } else if (wipeKind === 1){
+      ctx.save(); ctx.translate(W/2, H/2); ctx.rotate((1-k) * 0.8);
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++){ const rr = (i % 2 ? 760 : 300) * k * 1.9; const a = i * Math.PI/5 - Math.PI/2; ctx.lineTo(Math.cos(a)*rr, Math.sin(a)*rr); }
+      ctx.closePath(); ctx.fill(); ctx.restore();
+    } else {
+      const nrow = 8, rh = H / nrow;
+      for (let i = 0; i < nrow; i++) ctx.fillRect(0, i*rh, W, rh*k);
+    }
+    if (wipeT > 18) text(['Transizione: Scacchiera (licenza scaduta)','Transizione: Stella a 5 punte ★ (versione di prova)','Transizione: Veneziana — l\'ha scelta Abed'][wipeKind], W/2, H/2 + 4, 14, '#f5d442', 'center');
+  }
   if (menu) drawMenu();
 }
 
@@ -4013,6 +4119,10 @@ function startRun(){
   const cdef = CHARS[selIdx];
   players = [mkPlayer(cdef, selCostume, 0, 0, 0)];
   if (cdef.id === 'guzman'){ SAVE.wallet += 10; saveGame(); showToast('Bonus Leggenda: +10 monete'); }
+  // sbloccabili permanenti che scattano a inizio run
+  if (hasAbil('scudetto')) players[0].shield = 1;                                  // PIGIAMA DA BATTAGLIA
+  if (hasAbil('karma')) boons.fantasma = (boons.fantasma || 0) + 1;                // KARMA DI SHIRLEY
+  if (hasAbil('kit') && endless) giveWeapon(players[0], randomWeaponId());          // KIT DEL BETA TESTER
   if (endless){
     endless.depth = 0;
     sfx('organ');
@@ -4134,7 +4244,7 @@ function draw(){
     case 'guestplay': drawGuest(); break;
     case 'pause':
       drawPlay();
-      ctx.fillStyle = 'rgba(4,4,12,0.7)'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = 'rgba(4,4,12,0.85)'; ctx.fillRect(0, 0, W, H);
       text('PAUSA', W/2, 200, 48, '#f5d442', 'center');
       text('P1: frecce + Z salto · X attacco · C abilità · V super · Shift/R1 SCATTO', W/2, 268, 15, '#fff', 'center');
       text('P2: WASD + F attacco · G abilità · H super · R scatto  (joystick supportati)', W/2, 292, 15, '#fff', 'center');
