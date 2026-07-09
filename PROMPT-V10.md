@@ -49,48 +49,37 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   toggle Opzioni); META-PROGRESSIONE PERMANENTE `SAVE.meta`/`SAVE.shards`
   (Frammenti ⬡ dai boss: mboss +2/3, boss +5) + registro `ABILITIES` + stato
   `abilities` ("Albero di Hawkthorne" dal titolo, `hasAbil(id)`); movimento
-  sbloccabile e PERSISTENTE ovunque: `djump` (doppio salto alto universale),
-  `dash` (scatto/schivata i-frame, scheme.roll = Shift, pad R1/b5; atk pad
-  ora solo ▢/b2), `walljump` (wall-slide + rimbalzo). Migrazione: +5 shard
-  ai save vecchi. Cheat FRAMMENTI/SBLOCCA ABILITÀ.
+  sbloccabile: `djump`, `dash` (roll=Shift, pad R1/b5; atk pad solo ▢/b2),
+  `walljump`.
+- V10.8 (S5 tappa 2 + rework): mosse base GRATIS/subito (`BASE_ABIL`,
+  `hasAbil` = BASE||meta); l'Albero → NEGOZIO in Monete (`SAVE.wallet`) con 7
+  poteri avanzati (`ABILITIES`: triplejump/airdash/dashblade/glide/groundslam/
+  reflect/coinmagnet, effetti in updateOnePlayer). `grantShards`→ora dà Monete.
+  INTERACT: 'J' molla (bounce), 'S' blocco segreto solido sfondabile con dash
+  (`breakSecret`); iniettati in genLevel. Motore `GUIDE`+`showGuide` (voce
+  Abed, SAVE.flags.seen, no marker perenni): guide moves/bounce/secret.
+  +4 armi (spadalaser/ascia/shuriken/bazooka). VFX esterno CC0 `fx_firework`
+  (repo hawkthorne, 6×373×340) via `playFX`/`fxShots`/`drawFXShots`.
 - Debug: `.goto .step .tp .soul .super .kill .dmg .beatRival .p2 .give .gems
   .boon .forge .incubo .next .fakeGuest .reset .info .quest .mbkill .gen
-  .remix .arma .pom .maledici .syn .god .perk .shards(n) .unlock(id?)`.
+  .remix .arma .pom .maledici .syn .god .perk .shards(n=+monete) .unlock(id?)`.
 
-## §RICERCA (S4.6, luglio 2026) — "MONDO VIVO", distillata da web+GitHub
-Movente: l'utente trova il gioco ancora "asettico". Priorità: ambiente
-interattivo, mini-guide contestuali, movimento fluido, poteri elementali.
-- **MINI-GUIDE INVISIBILI** (gamedeveloper "invisible tutorials"): 5 leve —
-  affordance (forma=funzione, colore che stacca l'oggetto interattivo),
-  skill-gate (non prosegui senza usare la meccanica), metodo dimostrativo
-  (un NPC/nemico la mostra da lontano prima), trial&error a basso costo con
-  checkpoint vicino, aiuto SOLO a chi arranca (timer di inattività). Regola:
-  hint breve e IN TONO (voce Abed) alla PRIMA volta che ti avvicini a una
-  nuova interazione, mostrato una volta (SAVE.flags.seen), poi mai più.
-  Evita l'errore dei marker lampeggianti ovunque: uccidono la scoperta.
-- **AMBIENTE REATTIVO** (300mind, gamedesignskills): far vivere lo spazio =
-  alberi che ondeggiano, luci che tremolano, macchinari in moto, bestioline;
-  interattivi = porte, leve/interruttori→cancelli, casse esplosive, torce
-  accendibili, molle/trampolini, blocchi spingibili, correnti d'acqua/vento,
-  passaggi e muri fragili che nascondono segreti, superfici scalabili. La
-  differenza tra un barile statico e uno che esplode CAMBIA come giochi.
-- **MONDO VIVO SISTEMICO** (Terraria NPC happiness): regole che si
-  intrecciano (bioma preferito, vicinato) e toccano l'economia → il mondo
-  reagisce alle tue scelte. Storytelling ambientale (gamedeveloper): mostra
-  l'esito di eventi passati, chiacchiere ambientali degli NPC, dettagli.
-- **MOVIMENTO** (Celeste/Hollow Knight/Dead Cells; refs GitHub topics/
-  2d-platformer): kit base ✅ fatto in tappa 1 (doppio salto/scatto/parete).
-  Restano per tappa 2: pogo, mantle/arrampicata sul bordo, combo aeree.
+## §RICERCA (S4.6) — "MONDO VIVO", da web+GitHub (in gran parte consumata)
+Movente: l'utente trova il gioco "asettico". Restano da applicare (tappa 3):
+- **AMBIENTE REATTIVO** (300mind, gamedesignskills): far vivere lo spazio
+  (bestioline, luci, chiacchiere NPC) e ampliare gli interattivi: leve→
+  cancelli gated dalle abilità, torce, casse esplosive, blocchi spingibili,
+  correnti, appigli. Fatti: molla, blocco segreto, mini-guide (v10.8).
+- **MONDO VIVO SISTEMICO** (Terraria happiness): regole intrecciate che
+  toccano l'economia (userà i punti-casa HP). Storytelling ambientale.
 - **POTERI = INCANTESIMI ELEMENTALI** (Wizard of Legend + Hogwarts Legacy):
-  cast rapidi, chainabili in combo mentre scatti; colori-firma per elemento
-  (segnale visivo), 4 slot su HUD, chiavi elementali su ostacoli colorati
-  (Wingardium=giallo). Questo è ANCHE la base della magia HP (vedi S6):
-  costruiscilo generico (registro SPELLS: elemento, cast, danno, vfx, combo).
-- **SPELL-CRAFT profondo** (Noita, futuro): bacchetta = spell+modificatori+trigger.
-Fonti: gamedeveloper.com (invisible tutorials; environmental storytelling),
-300mind.studio + gamedesignskills.com (ambienti interattivi/distruttibili),
-terraria.wiki.gg (NPC happiness), blog.rwittmann.com (movimento Hollow
-Knight), choostgames.com (spell-craft roguelite), gamerant.com (Hogwarts
+  cast rapidi chainabili mentre scatti, colori-firma, 4 slot HUD, chiavi
+  colorate (Wingardium=giallo). Registro `SPELLS`. Base della magia HP (S6).
+  Spell-craft profondo (Noita) = evoluzione futura.
+- **MINI-GUIDE / MOVIMENTO** ✅ fatti (v10.7-8). Da fare: pogo, mantle, combo aeree.
+Fonti: gamedeveloper.com (invisible tutorials; env. storytelling),
+300mind.studio + gamedesignskills.com (ambienti interattivi),
+terraria.wiki.gg (NPC happiness), choostgames.com (spell-craft), gamerant.com (Hogwarts
 Legacy combat), github.com/topics/2d-platformer.
 
 ## VINCOLI NON NEGOZIABILI
@@ -228,27 +217,23 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
   (nuove armi/sinergie = righe nei registri, boss nuovi = chiavi MBOSSES).
 - **S5 — MONDO VIVO** (priorità utente: uccidere l'"asettico"; §RICERCA.
   Data-driven, glifi PS5, mini-guide in tono. Spezzata in tappe):
-  - **tappa 1 ✅ (v10.7)**: MINIMAPPA che segue il pg (drawMinimap in HUD,
-    dot lampeggiante, porte/boss/gemme, toggle in Opzioni); META-PROGRESSIONE
-    PERMANENTE `SAVE.meta`+`SAVE.shards` (Frammenti ⬡ dai boss) → registro
-    `ABILITIES` + menu "ALBERO DI HAWKTHORNE" dal titolo; le abilità restano
-    PER SEMPRE (campagna+endless). MOVIMENTO sbloccabile: doppio salto ALTO
-    universale (`djump`), SCATTO FANTASMA con i-frame (`dash`, Shift/R1,
-    a terra e in aria), PARETE VOLANTE (`walljump` = wall-slide+wall-jump).
-    `hasAbil(id)`. Debug `_hawk.shards/unlock`. Roll su scheme+pad(R1).
-  - **tappa 2 (prossima)**: le abilità sono già le CHIAVI metroidvania →
-    OPEN-WORLD: `INTERACT[]` (leva→cancello, molla, torcia, cassa esplosiva,
-    blocco spingibile, corrente, muro fragile→segreto, appigli) con cancelli
-    che si aprono SOLO con doppio salto/scatto/parete; motore `GUIDE`/hint-
-    on-approach (fumetto Abed una-tantum, SAVE.flags.seen[id], no marker
-    perenni); AMBIENTE VIVO (alberi/luci/bestioline, chiacchiere NPC);
-    aggiungi al menu abilità mosse "già pronte" chieste dall'utente: pogo,
-    mantle/arrampicata sul bordo, combo aeree, dash a mezz'aria potenziato.
-  - **tappa 3**: POTERI = registro `SPELLS[]` elementale (fuoco/ghiaccio/
-    fulmine/vento) cast rapidi chainabili mentre scatti, colori-firma, 4 slot
-    HUD, chiavi colorate sugli ostacoli. BASE della magia HP (S6, "sistema
-    magico globale"). Usa VFX/sprite esterni CC0 (§ASSET: cerca su GitHub/
-    OGA effetti-incantesimo, scarica+inline base64, verifica visiva).
+  - **tappa 1 ✅ (v10.7)**: MINIMAPPA (drawMinimap, segue il pg, toggle Opz.).
+  - **tappa 2 ✅ (v10.8)**: mosse base (doppio salto/scatto/parete) ora GRATIS
+    e SUBITO (`BASE_ABIL`, richiesta utente); l'Albero è diventato NEGOZIO in
+    Monete (`SAVE.wallet`) con 7 poteri AVANZATI (triplo salto, scatto doppio/
+    tagliente, ali di falco, schianto sismico, scatto-specchio, calamita) che
+    restano per sempre in `SAVE.meta`; INTERACT open-world: molla 'J', blocco
+    segreto 'S' (solido, si sfonda con lo SCATTO → premio); motore `GUIDE`
+    hint-on-approach voce-Abed una-tantum (SAVE.flags.seen). +4 armi. VFX
+    `firework` da asset esterno CC0 (repo hawkthorne, `playFX`/`fxShots`).
+  - **tappa 3 (prossima)**: altri INTERACT (leva→cancello gated dalle abilità,
+    torcia, cassa esplosiva, blocco spingibile, corrente, appigli/mantle,
+    pogo, combo aeree); AMBIENTE VIVO (bestioline, chiacchiere NPC). Poi
+    POTERI = registro `SPELLS[]` elementale (fuoco/ghiaccio/fulmine/vento)
+    cast chainabili mentre scatti, colori-firma, 4 slot HUD, chiavi colorate.
+    BASE della magia HP (S6). AMPLIA gli asset: scarica+inline altri sheet CC0
+    (repo hawkthorne ha fire/firework/sparkle/splatters/steam; OGA/Kenney per
+    incantesimi), verifica il layout a griglia prima di cablarli.
 - **S6 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
   (Dean+quest, Chang boss EL TIGRE, Leonard, mini-boss villaggio), Atto III;
   Paintball segreto + Atto IV (personaggi malvagi, Dreamatorium + Abed-Oscuro).
@@ -264,6 +249,15 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
   Boccino d'Oro = ANNIE'S BOOBS che ha rubato la pallina. "Quidditch" =
   raccogli-monete a gravità ridotta su scope del custode. Abed commenta
   quanto sia "legalmente distinguibile da qualsiasi franchise noto".
+  **SET HP AMPLIATO (richiesta utente)**: incantesimi-firma come poteri/boon
+  — "EXPULSO-CHANG" (respinta), "WINGARDIUM CACIOSA" (solleva blocchi/nemici
+  gialli = chiave-colore), "SVEGLIUS TOTALIS", "PATRONO: UN ABED OLOGRAFICO",
+  "AVADA KEBABRA" (spell proibito di Star-Burns, ti costa un cuore); pozioni
+  di Shirley (Felix Felici-tè), erbologia con la Piantagione di Chang; lezioni
+  = mini-stanze a sfida (Trasfigurazione con Troy, Volo con Vaughn); classifica
+  Coppa delle Case sul save (punti-casa persistenti); Malandrino's Map =
+  la minimappa "sono solennemente un idiota"; sala comune per casa nell'hub;
+  Star-Burns = "Severus Piagnataccia". Sprite/effetti CC0 dove servono.
 - **S7 — Sistemi e polish**: combo super, livelli super, boss rush, pagina
   achievement, speedrun, transizioni a cerchio, VFX esterni, side-quest,
   slot save + export/import.
