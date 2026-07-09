@@ -71,6 +71,16 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   che ondeggia, fiori, sassi, funghi luminosi nel dark); MENU leggibili
   (pannelli scuri dietro testo in drawMenuList+titolo, righe adattive se
   molte voci, pausa 0.85).
+- V10.10 (S5 tappa 3): INCANTESIMI `SPELLS` (fuoco/ghiaccio/fulmine/vento;
+  cast Q/L2 `scheme.spell`, cambio E/dpad-su `spnext` b12; combo elementale
+  spell diverso <120f = ×1.5; nel negozio come `sp_*`; `ownedSpells`/
+  `curSpell`/`castSpell`; HUD 4 slot con cd); BARRIERA '*' (solida, il proj
+  `spell:'fuoco'` la scioglie ±1 tile); ALTARE 'A' (`openAltare`: menu con
+  `title` custom, scambi cuori/monete/cristalli/arma); TURNO DI NOTTE
+  (`nightWave`: GIÙ sulla porta X in endless → ondata scaglionata elite ogni
+  3, bottino ×2, porte lockate, overlay notte + 🌙 in HUD); fulmine a catena
+  visivo (`e._boltT/_boltFrom`); '*'/'A' iniettati in genLevel (depth≥2);
+  +6 OVER_LINES (colmo/British/antani).
 - Debug: `.goto .step .tp .soul .super .kill .dmg .beatRival .p2 .give .gems
   .boon .forge .incubo .next .fakeGuest .reset .info .quest .mbkill .gen
   .remix .arma .pom .maledici .syn .god .perk .shards(n=+monete) .unlock(id?)`.
@@ -81,35 +91,21 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   correnti, appigli/mantle, pogo, combo aeree.
 - **MONDO VIVO SISTEMICO** (Terraria happiness): regole che toccano
   l'economia (li useranno i punti-casa HP).
-- **INCANTESIMI ELEMENTALI** (Wizard of Legend + Hogwarts Legacy): cast
-  chainabili mentre scatti, colori-firma, 4 slot HUD, chiavi colorate.
-  Registro `SPELLS` = base magia HP (S6). Noita spell-craft = futuro.
+- **INCANTESIMI** ✅ fatti (v10.10); Noita spell-craft = evoluzione futura.
 Fonti: gamedeveloper.com, 300mind.studio, gamedesignskills.com,
 terraria.wiki.gg, choostgames.com, gamerant.com, github topics/2d-platformer;
 meta-progressione: rogue-legacy-2 wiki (73 upgrade castello), bugnet.io.
 
 ## §RICERCA-GIOCHI (S5.5) — cosa rende SPECIALI i grandi, e come rubarglielo
-- **Binding of Isaac**: (1) ogni scelta è una SCOMMESSA — bombe/chiavi/
-  monete/cuori sono valute intercambiabili, sacrifichi una risorsa per
-  un'altra (→ da noi: altare che converte cuori↔monete↔cristalli, rischio
-  scelto); (2) SEGRETI OVUNQUE: muri bombardabili premiati = curiosità
-  ripagata (→ più blocchi 'S', stanze segrete nei chunk, tesori nascosti
-  DIETRO le cascate/alberi); (3) il pool di drop SI ESPANDE con gli unlock
-  (→ armi/perk nuovi entrano nel pool solo dopo la prima scoperta: senso di
-  collezione); (4) item volutamente scarsi nel pool = ogni run più varia;
-  (5) fallire = imparare (morire mostra "cosa hai scoperto stavolta").
-- **Hollow Knight**: (1) minimalismo: poche azioni, tutto emerge dalla
-  combinazione; (2) ATMOSFERA > testo: la storia si respira da rovine e
-  dettagli, non si legge (→ rovine con storia visiva nei biomi, statue di
-  Cornelius decadute, vecchi cartelli Hawthorne Wipes); (3) mappa
-  interconnessa con SCORCIATOIE che si aprono (→ nel generatore: porte di
-  ritorno che collegano fine→inizio livello); (4) i charm definiscono la
-  BUILD (già nostri perk ✓).
-- **Kingdom Two Crowns**: (1) comandi radicalmente minimi, complessità che
-  emerge; (2) ciclo GIORNO/NOTTE = ritmo costruisci/difendi (→ EVENTO
-  NOTTE opzionale in endless: resti oltre la porta? ondata + bottino x2,
-  rischio-ricompensa alla Kingdom); (3) l'ambiguità è design: non spiegare
-  tutto, lasciar scoprire (già filosofia mini-guide ✓).
+- **Binding of Isaac** (altare ✅ v10.10): resta da fare — (1) SEGRETI
+  OVUNQUE: più blocchi 'S', stanze segrete nei chunk, tesori nascosti
+  dietro cascate/alberi; (2) il pool di drop SI ESPANDE con gli unlock
+  (armi/perk entrano nel pool dopo la prima scoperta: collezione);
+  (3) morire mostra "cosa hai scoperto stavolta" (fallire = imparare).
+- **Hollow Knight**: ATMOSFERA > testo — rovine con storia visiva nei
+  biomi, statue di Cornelius decadute, vecchi cartelli Hawthorne Wipes;
+  scorciatoie che si aprono (porte di ritorno fine→inizio nel generatore).
+- **Kingdom Two Crowns** (notte ✅ v10.10): ambiguità come design ✓.
 - **RISORSE GRATUITE trovate** (rispettare il vincolo single-file: si
   scaricano, si inline-ano in base64, MAI runtime-fetch):
   · OGA "Pixel Art Spells" (proiettili spell CC0 in B/N da RICOLORARE via
@@ -294,19 +290,15 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
     segreto 'S' (solido, si sfonda con lo SCATTO → premio); motore `GUIDE`
     hint-on-approach voce-Abed una-tantum (SAVE.flags.seen). +4 armi. VFX
     `firework` da asset esterno CC0 (repo hawkthorne, `playFX`/`fxShots`).
-  - **tappa 3 (prossima)**: altri INTERACT (leva→cancello gated dalle abilità,
+  - **tappa 3 ✅ (v10.10)**: SPELLS elementali con combo, barriera-chiave
+    '*', ALTARE di Isaac, TURNO DI NOTTE, pass comico OVER_LINES.
+  - **tappa 4 (residuo, o dentro S6)**: altri INTERACT (leva→cancello,
     torcia, cassa esplosiva, blocco spingibile, corrente, appigli/mantle,
-    pogo, combo aeree); AMBIENTE VIVO (bestioline, chiacchiere NPC). Poi
-    POTERI = registro `SPELLS[]` elementale (fuoco/ghiaccio/fulmine/vento)
-    cast chainabili mentre scatti, colori-firma, 4 slot HUD, chiavi colorate.
-    BASE della magia HP (S6). Asset: OGA "Pixel Art Spells" (CC0, B/N da
-    ricolorare via canvas = colori-firma gratis) + repo hawkthorne
-    (fire/sparkle/splatters/steam) — inline base64, verifica layout prima.
-    Dalla §RICERCA-GIOCHI, integra qui: ALTARE DI ISAAC (converte
-    cuori↔monete↔cristalli), più segreti nei chunk, pool armi/perk che si
-    espande con le scoperte, EVENTO NOTTE opzionale (ondata + bottino ×2).
-    Ogni testo nuovo passa dalle lenti di §COMICITÀ; fai anche un pass
-    comico sui testi ESISTENTI (OVER_LINES, descrizioni, taunt).
+    pogo, combo aeree); AMBIENTE VIVO (bestioline, chiacchiere NPC);
+    pool armi/perk che si espande con le scoperte; asset OGA "Pixel Art
+    Spells" (CC0 B/N da ricolorare = VFX veri per gli spell) + repo
+    hawkthorne (fire/sparkle/splatters/steam); pass comico sui testi
+    VECCHI (descrizioni, taunt).
 - **S6 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
   (Dean+quest, Chang boss EL TIGRE, Leonard, mini-boss villaggio), Atto III;
   Paintball segreto + Atto IV (personaggi malvagi, Dreamatorium + Abed-Oscuro).
@@ -359,6 +351,9 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
 10. Nei test headless azzera `hitstop` prima di simulare input (li mangia);
    il gamepad NON si simula via eval: pollGamepads sovrascrive GP a ogni
    update — le vie da pad si collaudano a mano.
+11. `p.onGround` OSCILLA vero/falso a frame alterni quando sei fermo
+   (gravità 0.55 < 1px). Ogni condizione "a terra" per interazioni deve
+   usare `(p.onGround || p.coyote > 0)`, mai onGround secco.
 
 ## §FINE SESSIONE — rituale auto-rigenerativo (obbligatorio)
 Al termine di OGNI sessione, in quest'ordine:
