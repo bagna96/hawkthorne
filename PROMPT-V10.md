@@ -86,8 +86,7 @@ interattivo, mini-guide contestuali, movimento fluido, poteri elementali.
   (segnale visivo), 4 slot su HUD, chiavi elementali su ostacoli colorati
   (Wingardium=giallo). Questo è ANCHE la base della magia HP (vedi S6):
   costruiscilo generico (registro SPELLS: elemento, cast, danno, vfx, combo).
-- **SPELL-CRAFT profondo** (Noita): opzionale/futuro — bacchetta = spell +
-  modificatori + trigger; teniamolo come evoluzione, non per la S5.
+- **SPELL-CRAFT profondo** (Noita, futuro): bacchetta = spell+modificatori+trigger.
 Fonti: gamedeveloper.com (invisible tutorials; environmental storytelling),
 300mind.studio + gamedesignskills.com (ambienti interattivi/distruttibili),
 terraria.wiki.gg (NPC happiness), blog.rwittmann.com (movimento Hollow
