@@ -45,10 +45,17 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   con ondata, remix dal 10°, cuore pietà, arma garantita; Linea Oscura →
   %7); musica a LAYER (`musicLayers`) + `stinger(...)`; pausa da Options,
   Incubo/costumi da pad.
-- Debug: `_hawk.goto(n) .step(n) .tp(x) .soul() .super() .kill() .dmg(n)
-  .beatRival() .p2() .give(n) .gems(n) .boon(id) .forge() .incubo() .next()
-  .fakeGuest() .reset() .info() .quest() .mbkill() .gen(seed,prof) .remix(n)
-  .arma(id) .pom(id) .maledici() .syn() .god() .perk(id)`.
+- V10.7 (S5 tappa 1, MONDO VIVO): MINIMAPPA (`drawMinimap`, segue il pg,
+  toggle Opzioni); META-PROGRESSIONE PERMANENTE `SAVE.meta`/`SAVE.shards`
+  (Frammenti ⬡ dai boss: mboss +2/3, boss +5) + registro `ABILITIES` + stato
+  `abilities` ("Albero di Hawkthorne" dal titolo, `hasAbil(id)`); movimento
+  sbloccabile e PERSISTENTE ovunque: `djump` (doppio salto alto universale),
+  `dash` (scatto/schivata i-frame, scheme.roll = Shift, pad R1/b5; atk pad
+  ora solo ▢/b2), `walljump` (wall-slide + rimbalzo). Migrazione: +5 shard
+  ai save vecchi. Cheat FRAMMENTI/SBLOCCA ABILITÀ.
+- Debug: `.goto .step .tp .soul .super .kill .dmg .beatRival .p2 .give .gems
+  .boon .forge .incubo .next .fakeGuest .reset .info .quest .mbkill .gen
+  .remix .arma .pom .maledici .syn .god .perk .shards(n) .unlock(id?)`.
 
 ## §RICERCA (S4.6, luglio 2026) — "MONDO VIVO", distillata da web+GitHub
 Movente: l'utente trova il gioco ancora "asettico". Priorità: ambiente
@@ -71,13 +78,9 @@ interattivo, mini-guide contestuali, movimento fluido, poteri elementali.
   intrecciano (bioma preferito, vicinato) e toccano l'economia → il mondo
   reagisce alle tue scelte. Storytelling ambientale (gamedeveloper): mostra
   l'esito di eventi passati, chiacchiere ambientali degli NPC, dettagli.
-- **MOVIMENTO** (Celeste/Hollow Knight/Dead Cells; refs GitHub
-  topics/2d-platformer, HernanMGC/2DCharacterController, gschier/2d-platformer):
-  il kit "standard che fa sentire il pg come un arto": schivata con i-frame
-  (dodge-roll), scatto a terra/in aria (1 per volo, ricarica a terra/uccisione),
-  wall-jump + wall-slide, pogo (schianto che rimbalza su testa/hazard),
-  doppio salto ALTO, arrampicata/mantle sul bordo, combo aeree/juggle.
-  Coyote+buffer+salto variabile già fatti. Curve di accelerazione morbide.
+- **MOVIMENTO** (Celeste/Hollow Knight/Dead Cells; refs GitHub topics/
+  2d-platformer): kit base ✅ fatto in tappa 1 (doppio salto/scatto/parete).
+  Restano per tappa 2: pogo, mantle/arrampicata sul bordo, combo aeree.
 - **POTERI = INCANTESIMI ELEMENTALI** (Wizard of Legend + Hogwarts Legacy):
   cast rapidi, chainabili in combo mentre scatti; colori-firma per elemento
   (segnale visivo), 4 slot su HUD, chiavi elementali su ostacoli colorati
@@ -224,27 +227,29 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
   armi + sinergie + economia + boss delle profondità + audio a layer.
   Pool CHUNKS, PERKS, WEAPONS e SYNERGIES: espandibili in ogni sessione
   (nuove armi/sinergie = righe nei registri, boss nuovi = chiavi MBOSSES).
-- **S5 — MONDO VIVO** (priorità utente: uccidere l'"asettico"; applica
-  TUTTA la §RICERCA. Data-driven, glifi PS5, mini-guide in tono):
-  a) registro `INTERACT[]` (una riga = un'interazione): leva→cancello,
-     molla/trampolino, torcia accendibile, cassa esplosiva, blocco
-     spingibile, corrente/vento, muro fragile→segreto, superficie scalabile.
-     Un solo motore le legge dai tile; ognuna con affordance di colore.
-  b) motore `GUIDE`/hint-on-approach: alla PRIMA vicinanza a un'interazione
-     nuova, fumetto breve voce-Abed una-tantum (SAVE.flags.seen[id]), poi
-     mai più; niente marker perenni. Copre anche armi/perk/porte già esistenti.
-  c) AMBIENTE VIVO: alberi/erba che ondeggiano, luci che tremolano, bestioline
-     di sfondo, chiacchiere ambientali NPC, dettagli reattivi (estende
-     ambientFX/parallax già presenti) — ogni bioma deve "respirare".
-  d) MOVIMENTO fluido (kit completo richiesto): dodge-roll con i-frame,
-     dash a terra/in aria, wall-jump + wall-slide, pogo, doppio salto ALTO,
-     arrampicata/mantle sul bordo, combo aeree. Su pad e tastiera; scie e
-     polvere; tutte insegnate con mini-guide. Cerca valori "già pronti"
-     dalle ref GitHub in §RICERCA invece di reinventarli.
-  e) POTERI = registro `SPELLS[]` elementale (fuoco/ghiaccio/fulmine/vento):
-     cast rapidi chainabili in combo mentre scatti, colori-firma, 4 slot
-     HUD, chiavi colorate sugli ostacoli. È la BASE della magia HP (S6):
-     costruiscilo generico e riusabile ovunque (= "sistema magico globale").
+- **S5 — MONDO VIVO** (priorità utente: uccidere l'"asettico"; §RICERCA.
+  Data-driven, glifi PS5, mini-guide in tono. Spezzata in tappe):
+  - **tappa 1 ✅ (v10.7)**: MINIMAPPA che segue il pg (drawMinimap in HUD,
+    dot lampeggiante, porte/boss/gemme, toggle in Opzioni); META-PROGRESSIONE
+    PERMANENTE `SAVE.meta`+`SAVE.shards` (Frammenti ⬡ dai boss) → registro
+    `ABILITIES` + menu "ALBERO DI HAWKTHORNE" dal titolo; le abilità restano
+    PER SEMPRE (campagna+endless). MOVIMENTO sbloccabile: doppio salto ALTO
+    universale (`djump`), SCATTO FANTASMA con i-frame (`dash`, Shift/R1,
+    a terra e in aria), PARETE VOLANTE (`walljump` = wall-slide+wall-jump).
+    `hasAbil(id)`. Debug `_hawk.shards/unlock`. Roll su scheme+pad(R1).
+  - **tappa 2 (prossima)**: le abilità sono già le CHIAVI metroidvania →
+    OPEN-WORLD: `INTERACT[]` (leva→cancello, molla, torcia, cassa esplosiva,
+    blocco spingibile, corrente, muro fragile→segreto, appigli) con cancelli
+    che si aprono SOLO con doppio salto/scatto/parete; motore `GUIDE`/hint-
+    on-approach (fumetto Abed una-tantum, SAVE.flags.seen[id], no marker
+    perenni); AMBIENTE VIVO (alberi/luci/bestioline, chiacchiere NPC);
+    aggiungi al menu abilità mosse "già pronte" chieste dall'utente: pogo,
+    mantle/arrampicata sul bordo, combo aeree, dash a mezz'aria potenziato.
+  - **tappa 3**: POTERI = registro `SPELLS[]` elementale (fuoco/ghiaccio/
+    fulmine/vento) cast rapidi chainabili mentre scatti, colori-firma, 4 slot
+    HUD, chiavi colorate sugli ostacoli. BASE della magia HP (S6, "sistema
+    magico globale"). Usa VFX/sprite esterni CC0 (§ASSET: cerca su GitHub/
+    OGA effetti-incantesimo, scarica+inline base64, verifica visiva).
 - **S6 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
   (Dean+quest, Chang boss EL TIGRE, Leonard, mini-boss villaggio), Atto III;
   Paintball segreto + Atto IV (personaggi malvagi, Dreamatorium + Abed-Oscuro).
