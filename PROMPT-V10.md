@@ -50,6 +50,47 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   .fakeGuest() .reset() .info() .quest() .mbkill() .gen(seed,prof) .remix(n)
   .arma(id) .pom(id) .maledici() .syn() .god() .perk(id)`.
 
+## §RICERCA (S4.6, luglio 2026) — "MONDO VIVO", distillata da web+GitHub
+Movente: l'utente trova il gioco ancora "asettico". Priorità: ambiente
+interattivo, mini-guide contestuali, movimento fluido, poteri elementali.
+- **MINI-GUIDE INVISIBILI** (gamedeveloper "invisible tutorials"): 5 leve —
+  affordance (forma=funzione, colore che stacca l'oggetto interattivo),
+  skill-gate (non prosegui senza usare la meccanica), metodo dimostrativo
+  (un NPC/nemico la mostra da lontano prima), trial&error a basso costo con
+  checkpoint vicino, aiuto SOLO a chi arranca (timer di inattività). Regola:
+  hint breve e IN TONO (voce Abed) alla PRIMA volta che ti avvicini a una
+  nuova interazione, mostrato una volta (SAVE.flags.seen), poi mai più.
+  Evita l'errore dei marker lampeggianti ovunque: uccidono la scoperta.
+- **AMBIENTE REATTIVO** (300mind, gamedesignskills): far vivere lo spazio =
+  alberi che ondeggiano, luci che tremolano, macchinari in moto, bestioline;
+  interattivi = porte, leve/interruttori→cancelli, casse esplosive, torce
+  accendibili, molle/trampolini, blocchi spingibili, correnti d'acqua/vento,
+  passaggi e muri fragili che nascondono segreti, superfici scalabili. La
+  differenza tra un barile statico e uno che esplode CAMBIA come giochi.
+- **MONDO VIVO SISTEMICO** (Terraria NPC happiness): regole che si
+  intrecciano (bioma preferito, vicinato) e toccano l'economia → il mondo
+  reagisce alle tue scelte. Storytelling ambientale (gamedeveloper): mostra
+  l'esito di eventi passati, chiacchiere ambientali degli NPC, dettagli.
+- **MOVIMENTO** (Celeste/Hollow Knight/Dead Cells; refs GitHub
+  topics/2d-platformer, HernanMGC/2DCharacterController, gschier/2d-platformer):
+  il kit "standard che fa sentire il pg come un arto": schivata con i-frame
+  (dodge-roll), scatto a terra/in aria (1 per volo, ricarica a terra/uccisione),
+  wall-jump + wall-slide, pogo (schianto che rimbalza su testa/hazard),
+  doppio salto ALTO, arrampicata/mantle sul bordo, combo aeree/juggle.
+  Coyote+buffer+salto variabile già fatti. Curve di accelerazione morbide.
+- **POTERI = INCANTESIMI ELEMENTALI** (Wizard of Legend + Hogwarts Legacy):
+  cast rapidi, chainabili in combo mentre scatti; colori-firma per elemento
+  (segnale visivo), 4 slot su HUD, chiavi elementali su ostacoli colorati
+  (Wingardium=giallo). Questo è ANCHE la base della magia HP (vedi S6):
+  costruiscilo generico (registro SPELLS: elemento, cast, danno, vfx, combo).
+- **SPELL-CRAFT profondo** (Noita): opzionale/futuro — bacchetta = spell +
+  modificatori + trigger; teniamolo come evoluzione, non per la S5.
+Fonti: gamedeveloper.com (invisible tutorials; environmental storytelling),
+300mind.studio + gamedesignskills.com (ambienti interattivi/distruttibili),
+terraria.wiki.gg (NPC happiness), blog.rwittmann.com (movimento Hollow
+Knight), choostgames.com (spell-craft roguelite), gamerant.com (Hogwarts
+Legacy combat), github.com/topics/2d-platformer.
+
 ## VINCOLI NON NEGOZIABILI
 1. **Single-file, zero dipendenze runtime** (no CDN/font/fetch). Deve girare
    da doppio-click file:// e su Pages. Browser di riferimento utente: Safari;
@@ -161,7 +202,7 @@ oggetti rubati), statua Luis Guzmán (easter egg, sheet `guzman` nel repo),
 Mini-boss restanti: turkey/"Fabbro fantasma" (villaggio), jumpingacorn
 mid-boss (radura) — mettili anche nel pool degli slot generativi.
 
-## §POTERI E SISTEMI (per S6)
+## §POTERI E SISTEMI (per S7)
 - **Super combinati co-op** (entrambi al 100%, insieme): matrice COMBO_SUPERS;
   Troy+Abed="SPARANO LAVA", default="ABBRACCIO DI GRUPPO" (cura+stun).
 - **Livelli super** (ogni 5 usi, I→III); **boss rush** + **speedrun timer**;
@@ -172,7 +213,7 @@ mid-boss (radura) — mettili anche nel pool degli slot generativi.
 ## §ARTE E AUDIO
 - Parallax e meteo: ✅ fatti (v10.5). Mancano: transizioni a cerchio retro
   tra livelli, neve segreta, glitch-meteo del Dreamatorium.
-- Musica: vedi §RICERCA (layer dinamici, stinger). Sempre WebAudio.
+- Musica a layer + stinger: ✅ fatti (v10.6). Sempre WebAudio.
 - VFX esterni (Foozle/pimen) SOLO per super e boss, non rumore di fondo.
 
 ## §SESSIONI — campagna guidata (una per volta, in ordine)
@@ -183,31 +224,46 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
   armi + sinergie + economia + boss delle profondità + audio a layer.
   Pool CHUNKS, PERKS, WEAPONS e SYNERGIES: espandibili in ogni sessione
   (nuove armi/sinergie = righe nei registri, boss nuovi = chiavi MBOSSES).
-- **S5 — Greendale + Atto III e IV** (autoriale; i chunk alimentano S3):
-  campus, Dean+quest, Chang boss EL TIGRE, Leonard, Atto III completo,
-  mini-boss villaggio; poi Paintball segreto + Atto IV: personaggi malvagi,
-  Dreamatorium + Abed-Oscuro (arena generata: procedurale come mandato
-  narrativo).
-- **S6 — Sistemi, polish e HOGWARTS DI GREENDALE**: combo super, livelli
-  super, boss rush, incubo, pagina achievement, speedrun, parallax/meteo/
-  transizioni/stinger, VFX esterni, side-quest, slot save + export/import.
-  **TEMA HARRY POTTER (richiesto dall'utente, tono Ricky Gervais — comico,
-  assurdo, un filo crudele ma mai col cast)**: mondo segreto "SCUOLA DI MAGIA
-  E STREGONERIA DI GREENDALE" (ingresso: armadietto 9¾ a Greendale che ti
-  fa sbattere il muso al primo tentativo). Il Cappello Parlante è il DEAN
-  con un cappello che smista insultando ("Grifondoro? Tu? Sii serio. Casa
-  Tassofrasso-Wipes, sezione B."). Le 4 case: Grifondork, Serpeverde-Chang,
-  Corvo-Nadir e Tassofrasso-Wipes (sponsorizzata). Pierce = insegnante di
-  "Difesa Contro le Arti Noiose" (già in costume wizard, livello 6 Laser
-  Lotus = canonico). Boss: **LORD CHANGEMORT** (Chang calvo con serpente
-  di feltro, fulmini propri, parla di sé in terza persona). Il Boccino
-  d'Oro è ANNIE'S BOOBS che ha rubato la pallina e giudica tutti. Bacchette
-  = boons magici temporanei; "quidditch" = minigioco raccogli-monete a
-  gravità ridotta su scope che sono chiaramente scope del custode. Quest
-  con dialoghi alla Gervais: il narratore Abed commenta quanto sia legalmente
-  distinguibile da qualsiasi franchise noto ("per motivi che i nostri
-  avvocati definiscono 'importantissimi'").
-- **S7 — Nice-to-have** (solo se tutto sopra è solido): touch iPhone/iPad
+- **S5 — MONDO VIVO** (priorità utente: uccidere l'"asettico"; applica
+  TUTTA la §RICERCA. Data-driven, glifi PS5, mini-guide in tono):
+  a) registro `INTERACT[]` (una riga = un'interazione): leva→cancello,
+     molla/trampolino, torcia accendibile, cassa esplosiva, blocco
+     spingibile, corrente/vento, muro fragile→segreto, superficie scalabile.
+     Un solo motore le legge dai tile; ognuna con affordance di colore.
+  b) motore `GUIDE`/hint-on-approach: alla PRIMA vicinanza a un'interazione
+     nuova, fumetto breve voce-Abed una-tantum (SAVE.flags.seen[id]), poi
+     mai più; niente marker perenni. Copre anche armi/perk/porte già esistenti.
+  c) AMBIENTE VIVO: alberi/erba che ondeggiano, luci che tremolano, bestioline
+     di sfondo, chiacchiere ambientali NPC, dettagli reattivi (estende
+     ambientFX/parallax già presenti) — ogni bioma deve "respirare".
+  d) MOVIMENTO fluido (kit completo richiesto): dodge-roll con i-frame,
+     dash a terra/in aria, wall-jump + wall-slide, pogo, doppio salto ALTO,
+     arrampicata/mantle sul bordo, combo aeree. Su pad e tastiera; scie e
+     polvere; tutte insegnate con mini-guide. Cerca valori "già pronti"
+     dalle ref GitHub in §RICERCA invece di reinventarli.
+  e) POTERI = registro `SPELLS[]` elementale (fuoco/ghiaccio/fulmine/vento):
+     cast rapidi chainabili in combo mentre scatti, colori-firma, 4 slot
+     HUD, chiavi colorate sugli ostacoli. È la BASE della magia HP (S6):
+     costruiscilo generico e riusabile ovunque (= "sistema magico globale").
+- **S6 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
+  (Dean+quest, Chang boss EL TIGRE, Leonard, mini-boss villaggio), Atto III;
+  Paintball segreto + Atto IV (personaggi malvagi, Dreamatorium + Abed-Oscuro).
+  **HARRY POTTER INTEGRATO** (tono Ricky Gervais — comico, assurdo, crudele
+  ma mai col cast): la magia elementale della S5 diventa BACCHETTE/incantesimi
+  usabili in tutto il gioco + mondo-vetrina "SCUOLA DI MAGIA E STREGONERIA DI
+  GREENDALE" (ingresso: armadietto 9¾, muso al muro la prima volta). Cappello
+  Parlante = il DEAN che smista insultando ("Casa Tassofrasso-Wipes, sez. B").
+  Case: Grifondork, Serpeverde-Chang, Corvo-Nadir, Tassofrasso-Wipes (sponsor.)
+  con punti-casa che toccano l'economia della run (stile Terraria happiness).
+  Pierce = "Difesa Contro le Arti Noiose" (già wizard, Laser Lotus canonico).
+  Boss **LORD CHANGEMORT** (Chang calvo, serpente di feltro, terza persona).
+  Boccino d'Oro = ANNIE'S BOOBS che ha rubato la pallina. "Quidditch" =
+  raccogli-monete a gravità ridotta su scope del custode. Abed commenta
+  quanto sia "legalmente distinguibile da qualsiasi franchise noto".
+- **S7 — Sistemi e polish**: combo super, livelli super, boss rush, pagina
+  achievement, speedrun, transizioni a cerchio, VFX esterni, side-quest,
+  slot save + export/import.
+- **S8 — Nice-to-have** (solo se tutto sopra è solido): touch iPhone/iPad
   (overlay croce+3 bottoni, pointer events, convivenza con macOS = si attiva
   solo su touch device) + PWA offline; netcode robusto (heartbeat, timeout,
   riconnessione, lerp snapshot, bottone COPIA CODICE); selettore livello dal
@@ -243,8 +299,8 @@ Al termine di OGNI sessione, in quest'ordine:
    sovrascrivi): spunta la sessione completata in §SESSIONI, integra lezioni
    apprese in §REGOLE o §TOKEN (max 3 righe nuove, elimina regole diventate
    ovvie), aggiorna CONTESTO con lo stato reale. Il prompt deve MIGLIORARE
-   ad ogni ciclo, non gonfiarsi: budget massimo 260 righe totali
-   (la §RICERCA S3.6 è stata consumata dalla S4 e riassorbita).
+   ad ogni ciclo, non gonfiarsi: budget 260, alzato a 320 finché la §RICERCA
+   S4.6 non viene consumata dalla S5 (poi riassorbila e torna a 260).
 6. Riporta all'utente: cosa è stato fatto, cosa testare a mano su Safari,
    qual è la prossima sessione.
 
