@@ -261,7 +261,7 @@ oggetti rubati), statua Luis Guzmán (easter egg, sheet `guzman` nel repo),
 Mini-boss restanti: turkey/"Fabbro fantasma" (villaggio), jumpingacorn
 mid-boss (radura) — mettili anche nel pool degli slot generativi.
 
-## §POTERI E SISTEMI (per S7)
+## §POTERI E SISTEMI (per S8)
 - **Super combinati co-op** (entrambi al 100%, insieme): matrice COMBO_SUPERS;
   Troy+Abed="SPARANO LAVA", default="ABBRACCIO DI GRUPPO" (cura+stun).
 - **Livelli super** (ogni 5 usi, I→III); **boss rush** + **speedrun timer**;
@@ -301,7 +301,36 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
     bilancio a fine run, sparkle/steam inline, FIX storico del buio.
     S5 CHIUSA. Residui minori (spingibili, mantle/pogo, OGA spells B/N,
     pass comico testi vecchi) → dentro S6 quando capita.
-- **S6 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
+- **S6 — HD-2D CINEMATOGRAFICO** (scelta utente: salto di qualità visiva
+  PRIMA di Greendale, così ogni mondo nuovo nasce già bello. Il cast resta
+  pixel autentico 48×48: la qualità la fanno LUCE + ATMOSFERA, alla
+  Dead Cells/Octopath/Kingdom):
+  a) RISOLUZIONE 2×: canvas interno 1920×1080 con setTransform(2,0,0,2),
+     coordinate logiche invariate (960×540); imageSmoothingEnabled=false
+     per gli sprite; CRT adattato. MISURA le prestazioni (ms/frame su
+     step(60) prima/dopo, Safari è il target): se lento → voce OPZIONI
+     "RISOLUZIONE ALTA: SÌ/no" con fallback 1×.
+  b) LUCE DINAMICA + BLOOM: layer luce su canvas separato (regola 12)
+     composito 'lighter' — sorgenti: torce, lava, fuochi, incantesimi,
+     esplosioni, cristalli, boss. Gradienti radiali COLORATI (arancio
+     fuoco, ciano cristallo, viola boss); doppio pass a bassa alpha =
+     bloom. Nei livelli dark si integra col velo darkCv esistente.
+  c) COLOR GRADING per bioma: overlay gradient a schermo pieno (multiply/
+     soft) — dorato villaggio (golden hour), verde umido foresta, azzurro
+     gelido caverne, rosa alba radura; VIGNETTE leggera sempre; flash di
+     grading sui momenti forti (rosso danno, oro level-clear).
+  d) SFONDI ORGANICI multi-piano: via i triangoli — colline in
+     quadraticCurve, sole/luna con alone, nebbia di profondità tra i piani
+     (strato alpha), god rays leggeri, silhouette per bioma (chiome,
+     tetti, stalagmiti). 4-5 piani di parallasse.
+  e) OMBRE MORBIDE: ellisse radiale sfumata sotto player/nemici/boss,
+     che si stringe con l'altezza da terra (ancora il pg al mondo).
+  f) ACQUA/GIN riflettente: riflesso invertito a bassa alpha sotto la
+     superficie + distorsione a onde.
+  g) UI rifinita: pannelli con angoli morbidi e ombra, fade nei menu.
+  Criteri: screenshot prima/dopo PER OGNI bioma; lum-check (regola 12);
+  ms/frame ≤ 12 o fallback attivo; campagna+endless+co-op intatti.
+- **S7 — GREENDALE + SCUOLA DI MAGIA (Atto III/IV, HP integrato)**: campus
   (Dean+quest, Chang boss EL TIGRE, Leonard, mini-boss villaggio), Atto III;
   Paintball segreto + Atto IV (personaggi malvagi, Dreamatorium + Abed-Oscuro).
   **HARRY POTTER INTEGRATO** (tono Ricky Gervais — comico, assurdo, crudele
@@ -325,10 +354,10 @@ di fine (§FINE SESSIONE). Non sforare nello scope della sessione successiva.
   Coppa delle Case sul save (punti-casa persistenti); Malandrino's Map =
   la minimappa "sono solennemente un idiota"; sala comune per casa nell'hub;
   Star-Burns = "Severus Piagnataccia". Sprite/effetti CC0 dove servono.
-- **S7 — Sistemi e polish**: combo super, livelli super, boss rush, pagina
+- **S8 — Sistemi e polish**: combo super, livelli super, boss rush, pagina
   achievement, speedrun, transizioni a cerchio, VFX esterni, side-quest,
   slot save + export/import.
-- **S8 — Nice-to-have** (solo se tutto sopra è solido): touch iPhone/iPad
+- **S9 — Nice-to-have** (solo se tutto sopra è solido): touch iPhone/iPad
   (overlay croce+3 bottoni, pointer events, convivenza con macOS = si attiva
   solo su touch device) + PWA offline; netcode robusto (heartbeat, timeout,
   riconnessione, lerp snapshot, bottone COPIA CODICE); selettore livello dal
@@ -368,12 +397,12 @@ Al termine di OGNI sessione, in quest'ordine:
 4. Incrementa `GAME_VERSION` in index.html (mostrata nell'angolo del titolo).
 5. **Rigenera questo file** come `PROMPT-V10.md` aggiornato (stesso nome,
    sovrascrivi): spunta la sessione completata in §SESSIONI, integra lezioni
-   apprese in §REGOLE o §TOKEN (max 3 righe nuove, elimina regole diventate
-   ovvie), aggiorna CONTESTO con lo stato reale. Il prompt deve MIGLIORARE
-   ad ogni ciclo, non gonfiarsi: budget base 260, alzato a 390 finché
-   §RICERCA, §RICERCA-GIOCHI e §COMICITÀ non vengono consumate dalle
-   prossime sessioni. §COMICITÀ però è PERMANENTE (stile di scrittura,
-   non un backlog): quando comprimerai, riducila ma non eliminarla.
+   apprese in §REGOLE o §TOKEN, elimina regole diventate ovvie, aggiorna
+   CONTESTO con lo stato reale. NIENTE budget di righe (scelta utente):
+   usa tutte le righe che servono a sviluppare il gioco AL MEGLIO — ma
+   scrivi denso: se una cosa si può dire in modo più sintetico E più
+   preciso, dilla così; via il ridondante e il già-consumato, mai il
+   necessario. §COMICITÀ è PERMANENTE (stile di scrittura, non backlog).
 6. Riporta all'utente: cosa è stato fatto, cosa testare a mano su Safari,
    qual è la prossima sessione.
 
