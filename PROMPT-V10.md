@@ -51,36 +51,42 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   `abilities` ("Albero di Hawkthorne" dal titolo, `hasAbil(id)`); movimento
   sbloccabile: `djump`, `dash` (roll=Shift, pad R1/b5; atk pad solo ▢/b2),
   `walljump`.
-- V10.8 (S5 tappa 2 + rework): mosse base GRATIS/subito (`BASE_ABIL`,
-  `hasAbil` = BASE||meta); l'Albero → NEGOZIO in Monete (`SAVE.wallet`) con 7
-  poteri avanzati (`ABILITIES`: triplejump/airdash/dashblade/glide/groundslam/
-  reflect/coinmagnet, effetti in updateOnePlayer). `grantShards`→ora dà Monete.
-  INTERACT: 'J' molla (bounce), 'S' blocco segreto solido sfondabile con dash
-  (`breakSecret`); iniettati in genLevel. Motore `GUIDE`+`showGuide` (voce
-  Abed, SAVE.flags.seen, no marker perenni): guide moves/bounce/secret.
-  +4 armi (spadalaser/ascia/shuriken/bazooka). VFX esterno CC0 `fx_firework`
+- V10.8 (S5 tappa 2): mosse base GRATIS/subito (`BASE_ABIL`, `hasAbil` =
+  BASE||meta); Albero → NEGOZIO in Monete (`ABILITIES`, effetti in
+  updateOnePlayer; `grantShards`→Monete). INTERACT: 'J' molla, 'S' blocco
+  segreto sfondabile col dash (`breakSecret`). Motore `GUIDE`+`showGuide`
+  (voce Abed una-tantum, SAVE.flags.seen). VFX esterno CC0 `fx_firework`
   (repo hawkthorne, 6×373×340) via `playFX`/`fxShots`/`drawFXShots`.
+- V10.9 (rifinitura su feedback): acorn FIXATO col ritaglio a bbox alpha
+  (walk x43 w14, fiamma x182 w16 — lo sheet NON è a griglia fissa!);
+  NEGOZIO a 16 voci (nuovi permanenti stile Rogue Legacy: cuorone +1 cuore,
+  avidita +20% monete, fortuna casse, scudetto, kit arma iniziale endless,
+  tessera sconto Hilda, mutande anti-fossa, karma resurrezione/run);
+  15 armi (+spillatrice, pollo, trombone, pallaneve `freeze`→e.slowT,
+  d20 danno casuale con popup 🎲); OGNI personaggio ha un `ab` (glifi ◯/✕
+  nelle desc); GLITCH COMICI voluti: walker capovolto 4% (`e.glitch`,
+  wrapper drawWalker→drawWalkerInner, toast "GLITCH CERTIFICATO™"),
+  transizione PowerPoint al load 15% (`wipeT/wipeKind`: scacchiera/stella/
+  veneziana con caption); SUOLO VIVO in drawTiles '#' (hash per-tile: erba
+  che ondeggia, fiori, sassi, funghi luminosi nel dark); MENU leggibili
+  (pannelli scuri dietro testo in drawMenuList+titolo, righe adattive se
+  molte voci, pausa 0.85).
 - Debug: `.goto .step .tp .soul .super .kill .dmg .beatRival .p2 .give .gems
   .boon .forge .incubo .next .fakeGuest .reset .info .quest .mbkill .gen
   .remix .arma .pom .maledici .syn .god .perk .shards(n=+monete) .unlock(id?)`.
 
-## §RICERCA (S4.6) — "MONDO VIVO", da web+GitHub (in gran parte consumata)
-Movente: l'utente trova il gioco "asettico". Restano da applicare (tappa 3):
-- **AMBIENTE REATTIVO** (300mind, gamedesignskills): far vivere lo spazio
-  (bestioline, luci, chiacchiere NPC) e ampliare gli interattivi: leve→
+## §RICERCA — residuo da applicare in tappa 3 (il resto è consumato)
+- **AMBIENTE REATTIVO**: bestioline, chiacchiere NPC; interattivi: leve→
   cancelli gated dalle abilità, torce, casse esplosive, blocchi spingibili,
-  correnti, appigli. Fatti: molla, blocco segreto, mini-guide (v10.8).
-- **MONDO VIVO SISTEMICO** (Terraria happiness): regole intrecciate che
-  toccano l'economia (userà i punti-casa HP). Storytelling ambientale.
-- **POTERI = INCANTESIMI ELEMENTALI** (Wizard of Legend + Hogwarts Legacy):
-  cast rapidi chainabili mentre scatti, colori-firma, 4 slot HUD, chiavi
-  colorate (Wingardium=giallo). Registro `SPELLS`. Base della magia HP (S6).
-  Spell-craft profondo (Noita) = evoluzione futura.
-- **MINI-GUIDE / MOVIMENTO** ✅ fatti (v10.7-8). Da fare: pogo, mantle, combo aeree.
-Fonti: gamedeveloper.com (invisible tutorials; env. storytelling),
-300mind.studio + gamedesignskills.com (ambienti interattivi),
-terraria.wiki.gg (NPC happiness), choostgames.com (spell-craft), gamerant.com (Hogwarts
-Legacy combat), github.com/topics/2d-platformer.
+  correnti, appigli/mantle, pogo, combo aeree.
+- **MONDO VIVO SISTEMICO** (Terraria happiness): regole che toccano
+  l'economia (li useranno i punti-casa HP).
+- **INCANTESIMI ELEMENTALI** (Wizard of Legend + Hogwarts Legacy): cast
+  chainabili mentre scatti, colori-firma, 4 slot HUD, chiavi colorate.
+  Registro `SPELLS` = base magia HP (S6). Noita spell-craft = futuro.
+Fonti: gamedeveloper.com, 300mind.studio, gamedesignskills.com,
+terraria.wiki.gg, choostgames.com, gamerant.com, github topics/2d-platformer;
+meta-progressione: rogue-legacy-2 wiki (73 upgrade castello), bugnet.io.
 
 ## VINCOLI NON NEGOZIABILI
 1. **Single-file, zero dipendenze runtime** (no CDN/font/fetch). Deve girare
