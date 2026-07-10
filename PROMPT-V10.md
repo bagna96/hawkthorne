@@ -4,8 +4,8 @@
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
 > `game-feel-expectations` (gusti dell'utente: juice + roguelite, PS5).
 
-## CONTESTO (stato v14.2 — Sessioni 1-7 + kit LoL + ridisegno livelli;
-## asset ospiti HP/Naruto già scaricati in assets/guest/, da integrare)
+## CONTESTO (stato v15.0 — Sessioni 1-7 + kit LoL + ridisegno livelli +
+## S-OSPITI: Harry/ninja giocabili, Konoha, Fuffi, NPC Hogwarts)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -159,10 +159,30 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   `raidT`/`updateRaid` = ASSALTI periodici ogni ~35-60s (riusano ambush
   con flag raid, mai in hub/boss). GOTCHA: guardie su `cut` (l'oggetto)
   sono fragili nei test (resta appeso se salti updateCut) — usa `state`.
-- Debug: `.goto .step .tp .soul(azzera anche i cd) .super(=castUlt) .pow
-  .kill .dmg .beatRival .p2 .give .gems .boon .forge .incubo .next
-  .fakeGuest .reset .info .quest .mbkill .gen .remix .arma .pom .maledici
-  .syn .god .perk .shards .unlock .ui`.
+- **V15.0 (S-OSPITI ✅)**: registro `GUESTS` {anims [y,fw,fh,n] su strip a
+  righe, face:-1 = arte GBA guarda a sinistra, scale} + `drawGuestActor`;
+  `drawActor` DEVIA in testa se GUESTS[sheetKey] → select/dialoghi/NPC/2P
+  gratis; branch guest in drawWalkerInner/drawFlyer/drawMboss (griglia 2
+  righe calma/furia + `flip`). GIOCABILI (premi, `needs`+`lockHint` in
+  CHARS, flag settato da hitMboss via def.sblocco/sbloccoMsg/ach):
+  harry (Changemort→guestHP), naruto/sasuke/rocklee/kakashi (Zabuza→
+  guestKonoha). KITS: Expelliarmus/Lumos/EXPECTO PATRONUM (beam+nova),
+  kunai/Rasengan/KAGE BUNSHIN (volley 14), shuriken/Chidori(+storm)/KATON
+  (lava), Konoha Senpū/Loto/OTTO PORTE (focus), pierce/Raikiri/EVOCAZIONE
+  (quake). SCUOLA: spawn gnomo/doxy + lettere-spawn extra `def.spawn[c]`
+  (v=tentacula), NPC π=Piton φ=Gazza δ=Silente (groups, ids g_*, NAMES),
+  porta '³'→CANE_DEF (corridoio vietato, FUFFI 'Ƒ' hopper 4+4 frame) e
+  torii '@'→KONOHA_DEF (bgImg dipinto a parallasse SPECCHIATO anti-cuciture,
+  ninja/tigre y/corvo, ZABUZA 'Ƶ' ai-tigre, X bloccata finché vive).
+  Luce automatica sul mboss nei livelli dark. Pipeline asset:
+  tools_guest_extract.py (scan/preview) + tools_guest_build.py (strip/
+  griglie in assets/guest/out/ + guests.json) + tools_guest_inline.py
+  (base64→HAWK_ASSETS). Achievement fuffi/hokage.
+- Debug: `.goto(n | 'konoha'|'cane'|'paint') .char(id) .step .tp .soul
+  (azzera anche i cd) .super(=castUlt) .pow .kill .dmg .beatRival .p2
+  .give .gems .boon .forge .incubo .next .fakeGuest .reset .info(+mboss/
+  nEnemies/nGroups/guests/fail) .quest .mbkill .gen .remix .arma .pom
+  .maledici .syn .god .perk .shards .unlock .ui`.
 
 ## §RICERCA-GIOCHI — residuo utile
 - **Isaac**: pool drop che si espande ✅; restano stanze segrete nei chunk
@@ -238,52 +258,17 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
   = mini-stanze a sfida (Trasfigurazione con Troy); pozioni di Shirley;
   sale comuni nell'hub; chunk campus/scuola per l'endless; minimappa
   "Malandrino" (rinominarla quando sei a scuola); daydream-cutaway Scrubs.
-- **S-OSPITI (PROSSIMA, richiesta esplicita dell'utente) — HARRY POTTER
-  e NARUTO giocabili + nemici + ambientazioni**. Gli asset sono GIÀ NEL
-  REPO in `assets/guest/` (28 png, rippati e verificati — vedi CREDITS.md):
-  · **HP (GBA PoA + Pietra Filosofale)**: `hp_harry` 1361×1400 (sezioni
-    etichettate: Movement 4-dir, Lumos, Spell Casting, e BATTLE side-view
-    con Idle/Attack-con-scia/Special/Damage/Death = pronto per il
-    platformer), `hp_dumbledore` 881×234, `hp_snape` 646×184, `hp_filch`
-    260×318, creature `hp_doxy/gnome/tentacula` e `hp_fluffy` 2487×376
-    (mini-boss a tre teste!), tileset `hp_greathall/hallways(1952×6864!)/
-    library/potions/commonroom`.
-  · **Naruto (GBA "Naruto RPG")**: template di battaglia IDENTICO per
-    tutto il cast (`nrpg_naruto` 248×392 con sezioni IDLE/CRITICAL/ATTACK/
-    JUTSU CHARGE/USE/SWAP/HIT/DEAD/SHADOW → UNA mappatura li sblocca
-    tutti): naruto, sasuke, sakura, kakashi, rocklee, gaara(+beast),
-    itachi, orochimaru, zabuza, haku, hinata, jiraiya + `nrpg_nar_enemies`
-    656×904 e `nrpg_nar_battlebg` (sfondi dipinti, ottimi per parallax).
-  · **PIPELINE per altri sheet** (Ron/Hermione/Voldemort, Ninja Council
-    con sprite azione side-scroller): pagina spriters-resource del gioco →
-    asset id (regex su title) → l'immagine VERA è in
-    `/media/assets/<bucket>/<id>.png` dentro la pagina dell'asset
-    (`/download/<id>/` è dietro Cloudflare: non usarlo). Slug noti:
-    game_boy_advance/harrypotterthephilosopherssorcerersstone, .../
-    harrypotter3, .../narutorpg, .../narutoninjacouncil(2), ds_dsi/
-    narutopathoftheninja. Con curl -A Mozilla + sleep 1.
-  · **INTEGRAZIONE**: (1) chroma-key: gli sheet hanno sfondo pieno —
-    rimuovilo via python (colore = pixel(0,0)) PRIMA dell'inline;
-    (2) registro `GUESTS` {sheet, anims:{idle/walk/jump/atk/hurt/dead:
-    [x,y,w,h,frames]}, scale} + `drawGuest` (drawActor è hardcoded sul
-    layout hawkthorne 12×16: NON forzarlo); (3) giocabili = righe CHARS
-    con flag `guest:id` (sheetOf/drawPlayer deviano su drawGuest), kit
-    già progettati: HARRY base Expelliarmus (bolt bianco), pow Lumos
-    (stordisce, cd 5), ult EXPECTO PATRONUM (cervo olografico = beam +
-    nova luce); NARUTO base kunai (bolt), pow Rasengan (dashstrike),
-    ult KAGE BUNSHIN (volley di cloni); SASUKE base shuriken, pow Chidori
-    (dashstrike fulmine), ult Katon (lava cone); KAKASHI/ROCK LEE/GAARA
-    a piacere; (4) NEMICI: doxy/gnomo/tentacula spawn della SCUOLA,
-    Fluffy mini-boss nuova lettera MBOSSES, ninja del suono nel
-    Dreamatorium; Filch/Snape/Dumbledore NPC groups a scuola (battute
-    lente-comiche, Piton=Severus Piagnataccia ha finalmente la faccia);
-    (5) AMBIENTI: rifare il MONDO 7 coi tileset Hogwarts veri (drawTiles:
-    supporto a tile TEXTURED da tileset — vedi S-GRAFICA) e aggiungere
-    il mondo bonus KONOHA (portale crossover dalla scuola, sfida ninja,
-    sfondi nrpg_battlebg, Abed che commenta il crossover: "due franchise
-    in un fan-game di un terzo franchise. Inception legale").
-    I giocabili ospiti si SBLOCCANO giocando (Harry: finisci la scuola;
-    Naruto: batti la sfida di Konoha) — sono premi, non default.
+- **S-OSPITI ✅ COMPLETATA (v15.0)** — Harry/Naruto/Sasuke/Rock Lee/
+  Kakashi giocabili, creature HP a scuola, Fuffi, Konoha+Zabuza, NPC
+  Piton/Gazza/Silente (dettagli in CONTESTO V15.0). RESIDUI quando
+  capita: Gaara/Itachi/Haku/Hinata/Jiraiya (sheet piccoli 152×200,
+  layout 4 bande da decifrare — gli altri 28 png grezzi restano in
+  assets/guest/); Ron/Hermione/Voldemort via pipeline spriters-resource
+  (pagina asset → `/media/assets/<bucket>/<id>.png`, il /download/ è
+  dietro Cloudflare; slug: game_boy_advance/harrypotter*, .../narutorpg,
+  .../narutoninjacouncil(2), ds_dsi/narutopathoftheninja; curl -A
+  Mozilla + sleep 1); ninja del suono nel Dreamatorium; lezioni della
+  scuola come mini-stanze; Quidditch a gravità ridotta (residui S7).
 - **S-GRAFICA — OLTRE L'8-BIT (richiesta utente: "definizione più
   complessa che segua gli aggiornamenti")**: il cast Community resta
   pixel-48 SACRO; tutto il resto sale di definizione: (1) `drawTiles`
@@ -362,6 +347,15 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
 23. Muri-cancello: se non arrivano al SOFFITTO, il walljump (mossa base)
     li scala e il puzzle sparisce. Aperture minime 2 tile. Le porte e le
     leve devono essere generose (porte 3 tile, leve con tolleranza).
+24. Sheet GBA rippati: DUE sfondi da rimuovere — quello esterno (pixel
+    0,0) E i RIQUADRI-CELLA dietro ogni frame (colore diverso!). Se la
+    segmentazione trova segmenti tutti larghi uguali (es. 40), stai
+    segmentando i riquadri, non gli sprite: serve `key_trim` per-frame
+    (tools_guest_extract.py). L'arte di battaglia GBA guarda a SINISTRA.
+25. Mappe bonus scritte a mano: SEMPRE muri B ai bordi (senza, il
+    giocatore esce dal mondo e rinasce allo spawn) e porta X alta 3 tile
+    anche lì. Il taglio del salto variabile castra i `vy` iniettati nei
+    bot: simulare il salto con justPressed['Space'] + keys tenuto.
 
 ## §FINE SESSIONE — rituale (obbligatorio)
 1. Verifica criteri accettazione; 2. commit+push (`vX.Y: sintesi`);
