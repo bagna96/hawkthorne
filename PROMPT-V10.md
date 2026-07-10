@@ -4,8 +4,8 @@
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
 > `game-feel-expectations` (gusti dell'utente: juice + roguelite, PS5).
 
-## CONTESTO (stato v15.0 — Sessioni 1-7 + kit LoL + ridisegno livelli +
-## S-OSPITI: Harry/ninja giocabili, Konoha, Fuffi, NPC Hogwarts)
+## CONTESTO (stato v16.0 — Sessioni 1-7 + kit LoL + ridisegno livelli +
+## S-OSPITI (HP/Naruto) + STRANGER THINGS/caos/tile Hogwarts)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -178,7 +178,24 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   tools_guest_extract.py (scan/preview) + tools_guest_build.py (strip/
   griglie in assets/guest/out/ + guests.json) + tools_guest_inline.py
   (base64→HAWK_ASSETS). Achievement fuffi/hokage.
-- Debug: `.goto(n | 'konoha'|'cane'|'paint') .char(id) .step .tp .soul
+- **V16.0 (STRANGER THINGS + caos + S-GRAFICA/1)**: crepa 'ψ' nelle
+  CAVERNE → gauntlet SOTTOSOPRA in 2 stanze (exitTo accetta anche un DEF:
+  stanza2 dichiarata prima della 1) con sfondi dipinti a strati
+  (bgImg + bgImg2 alpha, parallasse a specchio): mboss 'Đ' DEMOGORGONE
+  (leaper) e 'Ѵ' VECNA (mago, minion demodog) → sblocco guestST =
+  UNDICI (bolt pierce/Presa psichica jail/ult nova CHIUDO IO IL CANCELLO)
+  e JIM HOPPER (4❤, bolt/quake/ult rain CAFFÈ E CONTEMPLAZIONE). 27
+  giocabili. Nemici: demodog/demogrey/demobat (fan-sprite GitHub, vedi
+  CREDITS: Sunairaa, Gonzalo6282, elen-c-sales — TSR non ha giochi ST).
+  CAOS CRESCENTE: mazzi CAOS_W/CAOS_F pescati da rinforzi+assalti+
+  imboscate, p = min(0.85, 0.12+lvlIdx·0.1) — crossover ovunque, misurato
+  (demogrey al villaggio, tigri a Greendale, ninja a scuola). S-GRAFICA
+  prima consegna: registro TILESETS + texture nel case 'B' di drawTiles
+  (esposto=muro, interno=rombi+variante colonna) — Scuola e Corridoio con
+  i muri GBA veri di Hogwarts (g_hogtiles da hp_hallways, bordi rattoppati
+  via builder). Luce automatica sul mboss nei livelli dark. Strip pesanti:
+  quantizzazione FASTOCTREE+alpha binaria nel builder (37KB→4KB).
+- Debug: `.goto(n | 'konoha'|'cane'|'paint'|'sotto'|'vecna') .char(id) .step .tp .soul
   (azzera anche i cd) .super(=castUlt) .pow .kill .dmg .beatRival .p2
   .give .gems .boon .forge .incubo .next .fakeGuest .reset .info(+mboss/
   nEnemies/nGroups/guests/fail) .quest .mbkill .gen .remix .arma .pom
@@ -269,19 +286,16 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
   .../narutoninjacouncil(2), ds_dsi/narutopathoftheninja; curl -A
   Mozilla + sleep 1); ninja del suono nel Dreamatorium; lezioni della
   scuola come mini-stanze; Quidditch a gravità ridotta (residui S7).
-- **S-GRAFICA — OLTRE L'8-BIT (richiesta utente: "definizione più
-  complessa che segua gli aggiornamenti")**: il cast Community resta
-  pixel-48 SACRO; tutto il resto sale di definizione: (1) `drawTiles`
-  impara le TEXTURE — atlanti tileset (Hogwarts già in guest/, cercarne
-  CC0 per radura/villaggio/caverne: OGA/Kenney) al posto dei fillRect,
-  con registro TILESETS {mondo → atlas, mapping tile→(sx,sy)}; (2) sfondi
-  DIPINTI multilivello (nrpg_battlebg + OGA parallax packs) sopra le
-  colline procedurali; (3) sprite ambiente hi-res (alberi, lampioni,
-  arredi dai tileset); (4) la risoluzione interna 2× c'è già (HD) —
-  aggiungere sprite ambiente disegnati a 2× nativo; (5) VFX: più frame,
-  scale maggiori, glow. Approccio incrementale UN MONDO ALLA VOLTA
-  (prima la Scuola con Hogwarts, poi Greendale, poi i biomi) così ogni
-  sessione consegna qualcosa di visibile.
+- **S-GRAFICA — OLTRE L'8-BIT, AVVIATA in v16** (cast Community resta
+  pixel-48 SACRO). FATTO: registro TILESETS + texture 'B' in drawTiles
+  (Scuola+Corridoio con muri/rombi Hogwarts); sfondi dipinti a doppio
+  strato (Konoha 1 layer, Sottosopra bgImg+bgImg2). RESTA, un mondo alla
+  volta: (1) texture per '#' e per i biomi 1-6 (cercare CC0: OGA/Kenney
+  zip via curl; oppure altri crop da hp_greathall/library/potions);
+  (2) sfondi dipinti sopra le colline dei mondi 1-5 (nrpg_battlebg ha
+  altre 8 celle pronte); (3) sprite ambiente hi-res (arredi dai tileset
+  Hogwarts, lampioni, alberi); (4) VFX con più frame e glow; (5) sprite
+  ambiente a 2× nativo per l'HD interno già attivo.
 - **S8 — Sistemi e polish**: combo super co-op (matrice COMBO_SUPERS,
   Troy+Abed="SPARANO LAVA"), livelli super (I→III ogni 5 usi), boss rush,
   pagina achievement al titolo, speedrun timer, transizioni a cerchio
@@ -356,6 +370,14 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
     giocatore esce dal mondo e rinasce allo spawn) e porta X alta 3 tile
     anche lì. Il taglio del salto variabile castra i `vy` iniettati nei
     bot: simulare il salto con justPressed['Space'] + keys tenuto.
+    Normalizzare le righe via script (ljust+bordi+X), mai contando spazi.
+26. `_hawk.mbkill()` è NO-OP mentre `mboss.hurtT > 0`: se il bot autofira,
+    il "kill" può essere un fantasma — chiamarlo in loop finché
+    `mboss.dead`, e verificare lo sblocco, non l'intenzione.
+27. IP senza rip su TSR (es. Netflix): cercare FAN-REPO su GitHub —
+    `gh api search/repositories` + `git/trees/HEAD?recursive=1` filtrato
+    su png, poi raw.githubusercontent. Qualità sorprendente (Undici,
+    Hopper, Vecna). Accreditare il repo in CREDITS.md.
 
 ## §FINE SESSIONE — rituale (obbligatorio)
 1. Verifica criteri accettazione; 2. commit+push (`vX.Y: sintesi`);
