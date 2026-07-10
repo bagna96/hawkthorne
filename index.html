@@ -1103,6 +1103,7 @@ function endlessRecord(){
 // Una riga = un potenziamento. Dopo ogni profondità: scegline 1 di 3.
 const PERKS = [
   { id:'homing',     nome:'MIRINO DI ANNIE',      icona:'🎯', desc:'I tuoi proiettili INSEGUONO i nemici. Lei lo fa gratis.', act(p){ boons.homing = true; } },
+  { id:'rateo',      nome:'CAFFÈ TRIPLO DELLA MENSA', icona:'☕', desc:'RATEO DI FUOCO +16%. Il barista è preoccupato per te.', ripetibile:true, act(p){ boons.rateo = (boons.rateo || 0) + 1; } },
   { id:'baseUp',     nome:'POTERE BASE +1',       icona:'✨', desc:'Il tuo ▢ sale di livello: più danno, più grosso.', ripetibile:true, act(p){ boons.baseUp = (boons.baseUp || 0) + 1; } },
   { id:'lancialava', nome:'LANCIA-LAVA',          icona:'🔥', desc:'Il capolavoro di Troy e Abed: arma che spara lava perforante.', act(p){ giveWeapon(p, 'lancialava'); } },
   { id:'spirito',    nome:'STATUA DI GUZMÁN',     icona:'🗿', desc:'Una statua orbitante schiaccia chi ti si avvicina.',      act(p){ boons.spirito = true; } },
@@ -1320,7 +1321,7 @@ function execVerb(p, s, tier){
     case 'storm': {
       const inR = e => e.hp > 0 && (s.all ? Math.abs(e.x - cam.x - W/2) < W : Math.hypot(e.x - cx, e.y - cy) < 280);
       const targ = enemies.filter(inR).sort((a,b) => Math.hypot(a.x-cx,a.y-cy) - Math.hypot(b.x-cx,b.y-cy)).slice(0, s.all ? 99 : (s.k || 2));
-      flashGrade([255, 235, 120], s.all ? 22 : 10);
+      if (tier === 'ult') flashGrade([255, 235, 120], 16); else flashLight(cx, cy - 40, 170, [255, 235, 120]);
       for (const e of targ){
         e.hp -= (s.dmg || 2); e.slowT = 60;
         e._boltT = 10; e._boltFrom = { x: cx, y: cy - 30 };
@@ -1332,7 +1333,7 @@ function execVerb(p, s, tier){
       hitstop = Math.max(hitstop, 4);
       break; }
     case 'freeze':
-      flashGrade([140, 220, 255], 18);
+      if (tier === 'ult') flashGrade([140, 220, 255], 14); else flashLight(cx, cy, 160, [140, 220, 255]);
       for (const e of enemies) if (e.hp > 0){
         e.slowT = Math.max(e.slowT || 0, s.t || 180);
         if (s.dmg){ e.hp -= s.dmg; if (e.hp <= 0) killEnemy(e, p); }
@@ -1364,15 +1365,16 @@ function execVerb(p, s, tier){
     case 'lava':
       for (let i = 0; i < 12; i++)
         shoot(dir * (3.5 + (i % 4)), -3 - (i % 3) * 1.4, { grav:true, fire:true, pierce:i % 3 === 0, t:150, dmg:2 });
-      flashGrade([255, 130, 40], 16);
+      if (tier === 'ult') flashGrade([255, 130, 40], 14); else flashLight(cx, cy, 170, [255, 130, 40]);
       sfx('fire');
       break;
   }
   if (s.extra) execVerb(p, s.extra, tier);
 }
+function rateoMul(){ return Math.pow(0.86, Math.min(6, boons.rateo || 0)); }   // ☕ alla Isaac: più caffè, più colpi
 function castBase(p){
   const k = kitOf(p).base;
-  p.atkCd = Math.max(8, 16 - baseLvl(p) * 2);   // "senza cooldown": solo il rateo di fuoco
+  p.atkCd = Math.max(4, Math.round((16 - baseLvl(p) * 2) * rateoMul()));   // "senza cooldown": solo il rateo di fuoco
   execVerb(p, k, 'base');
   sfx('atk');
   playFX('slash', p.x + p.w/2 + p.face*20, p.y + p.h/2 - 4, 0.4 + baseLvl(p)*0.08, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
@@ -2210,7 +2212,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v14.1';    // fix gin (galleggi!), banner obiettivi, casse generose, lettera di Hogw— di Greendale
+const GAME_VERSION = 'v14.2';    // autofire + rateo ☕, flash domati, più nemici e ASSALTI
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -2301,8 +2303,8 @@ function breakCrate(tx, ty, p){
   }
   burst(tx*TS+16, ty*TS+16, '#a8763e', 14, 2.5);
   soulGain(p, 4);
-  // v13: 8% — un PERK direttamente dalla cassa ("non ne trovo mai": ora sì)
-  if (Math.random() < 0.08){
+  // v13: 10% — un PERK direttamente dalla cassa ("non ne trovo mai": ora sì)
+  if (Math.random() < 0.10){
     const pool = PERKS.filter(pk => !pk.shop && (pk.ripetibile || !perkOwned(pk.id)));
     const pk = pool[Math.floor(Math.random() * pool.length)];
     if (pk){
@@ -2439,6 +2441,7 @@ function loadLevel(i){
   lvl = { def, rows, w: wMax, h: rows.length, name: def.name, markers: [] };
   enemies = []; projs = []; parts = []; babies = []; wdrops = []; fxShots = []; fuses = []; critters = []; boss = null; rival = null; monkey = null; mboss = null; nightWave = null;
   movers = []; crumbs = []; crumbBack = []; ambush = null;
+  raidT = (def.hub || def.boss) ? -1 : 2000 + Math.floor(Math.random() * 1600);
   if (!def.village) villageBurning = false;
   let sx = TS*2, sy = 0;
   for (let y = 0; y < lvl.h; y++) for (let x = 0; x < lvl.w; x++){
@@ -2464,10 +2467,18 @@ function loadLevel(i){
   if (def.fall) players.forEach((p, k) => { p.y = -60 - k*40; p.inv = 30; });
   if (def.givewpn) players.forEach(p => giveWeapon(p, def.givewpn));   // il paintball si gioca ARMATI
   if (def.boss){ boss = mkBoss(); babyEventDone = false; }
-  // scaling nemici: élite dal mondo 3, Incubo ovunque
+  // scaling nemici: élite dal mondo 2, Incubo ovunque
   for (const e of enemies){
-    if (lvlIdx >= 3 && e.type === 'walker' && Math.random() < 0.5){ e.hp = 2; e.elite = true; }
+    if (lvlIdx >= 2 && e.type === 'walker' && Math.random() < 0.55){ e.hp = 2; e.elite = true; }
     if (nightmare) e.hp++;
+  }
+  // v14.2: il cast è diventato potente — i mondi rispondono con PIÙ carne al fuoco
+  if (!def.hub && !def.boss && lvlIdx > 0){
+    const extra = [];
+    for (const e of enemies)
+      if (e.type === 'walker' && Math.random() < 0.4)
+        extra.push(mkEnemy(e.eid || (def.spawn || {}).e || 'acorn', e.x + 40 + Math.random() * 70, e.y - 8));
+    enemies.push(...extra);
   }
   // Linea Oscura: nemici potenziati a costo asset zero
   if (def.remix){
@@ -2641,7 +2652,8 @@ let fuses = [];   // barili innescati {tx, ty, t}
 let movers = [];      // {x0, y0, x, y, w, h, axis, range, spd, t, dx, dy}
 let crumbs = [];      // piattaforme 'q' che stanno cedendo {tx, ty, t}
 let crumbBack = [];   // rinascita delle 'q' {tx, ty, t}
-let ambush = null;    // ondata da trigger '&' {t, n, spawned, cx, cy}
+let ambush = null;    // ondata da trigger '&' {t, n, spawned, cx, cy} (raid:true = assalto casuale)
+let raidT = -1;       // v14.2: ASSALTI periodici — ogni tanto i servi di Cornelius ti vengono a cercare
 function mkMover(tx, ty, axis){
   return { x0: tx*TS, y0: ty*TS, x: tx*TS, y: ty*TS, w: TS*3, h: 10,
     axis, range: axis === 'x' ? TS*4 : TS*3.2, spd: 0.02 + Math.random()*0.006, t: Math.random()*7, dx: 0, dy: 0 };
@@ -2720,10 +2732,23 @@ function updateAmbush(){
     burst(ambush.cx + side * 220, ambush.cy - 60, '#e85a5a', 8, 3); sfx('atk');
   }
   if (ambush.spawned >= ambush.n && !enemies.some(e => e.hp > 0)){
+    const eraRaid = ambush.raid;
     addWallet(25); stinger('clear'); sfx('craft'); flashGrade([255, 215, 90], 14);
     if (Math.random() < 0.5) wdrops.push({ x: ambush.cx + 10, y: ambush.cy - 20, id: randomWeaponId() });
-    showToast('✅ Imboscata respinta: +25 monete. Il sacco d\'oro era ovviamente un\'esca. Lo sapevi. Ci sei cascato.');
+    showToast(eraRaid ? '✅ Assalto respinto: +25 monete. Cornelius prende nota. E si offende.'
+      : '✅ Imboscata respinta: +25 monete. Il sacco d\'oro era ovviamente un\'esca. Lo sapevi. Ci sei cascato.');
     ambush = null;
+  }
+}
+function updateRaid(){
+  if (raidT <= 0 || ambush || state !== 'play') return;
+  raidT--;
+  if (raidT === 0){
+    const p0r = players[0];
+    ambush = { t: 0, n: 3 + Math.min(5, Math.max(1, lvlIdx)), spawned: 0, cx: p0r.x, cy: p0r.y, raid: true };
+    stinger('bossIntro'); addShake(5); sfx('organ');
+    showToast('🚨 ASSALTO! I servi di Cornelius ti hanno trovato. Sfogati pure.');
+    raidT = 2600 + Math.floor(Math.random() * 1800);   // il prossimo arriverà. Arrivano sempre.
   }
 }
 // BESTIOLINE di sfondo: il mondo è abitato, e ha paura di te
@@ -3121,8 +3146,8 @@ function updateOnePlayer(p, atkBoxes){
   if (p.atkCd > 0) p.atkCd--;
   if (p.hvyCd > 0) p.hvyCd--;
   if (p.atkT > 0) p.atkT--;
-  // ▢ POTERE BASE del personaggio: a distanza, senza cooldown (solo rateo), livellabile
-  if (pJP(p,'atk') && p.atkCd <= 0 && p.slideT <= 0 && !p.pounding){
+  // ▢ POTERE BASE: TIENI PREMUTO per il fuoco continuo (v14.2) — il rateo sale coi perk ☕
+  if (pDown(p,'atk') && p.atkCd <= 0 && p.slideT <= 0 && !p.pounding){
     if (pDown(p,'down') && p.onGround){          // SCIVOLATA
       p.slideT = trait(p,'troy') ? 26 : 18;
       p.atkCd = 34; sfx('atk');
@@ -3131,32 +3156,32 @@ function updateOnePlayer(p, atkBoxes){
       p.pounding = true; p.atkCd = 30; sfx('fire');
     } else castBase(p);
   }
-  // △ ATTACCO PESANTE: l'arma equipaggiata (gittata aumentata, v13)
-  if (pJP(p,'heavy') && p.hvyCd <= 0 && p.slideT <= 0 && !p.pounding){
+  // △ ATTACCO PESANTE: l'arma equipaggiata (gittata aumentata, v13) — anche lui in fuoco continuo (v14.2)
+  if (pDown(p,'heavy') && p.hvyCd <= 0 && p.slideT <= 0 && !p.pounding){
     {
       const w = curWpn(p);
       if (w && w.tipo === 'proiettile'){
-        p.hvyCd = w.cd; wsfx(p.wpn[p.wsel]); rumble(p.slot, w.rumb[0], w.rumb[1]);
+        p.hvyCd = Math.max(4, Math.round(w.cd * rateoMul())); wsfx(p.wpn[p.wsel]); rumble(p.slot, w.rumb[0], w.rumb[1]);
         projs.push({ from:'player', owner:p, x:p.x + p.w/2 + p.face*8, y:p.y + 10, w:10, h:10,
           vx:p.face*w.vel, vy:0, t:110, fire:w.fire, pierce:w.pierce, paint:w.paint, freeze:w.freeze, dmg:w.dmg });
       } else if (w && w.tipo === 'rimbalzo'){
         if (!projs.some(pr => pr.ball)){
-          p.hvyCd = w.cd; wsfx('dodgeball'); rumble(p.slot, w.rumb[0], w.rumb[1]);
+          p.hvyCd = Math.max(4, Math.round(w.cd * rateoMul())); wsfx('dodgeball'); rumble(p.slot, w.rumb[0], w.rumb[1]);
           projs.push({ from:'player', owner:p, ball:true, d20:w.d20, bounces: synActive('MVP DI GREENDALE') ? 10 : 5,
             x:p.x + p.w/2, y:p.y + 6, w:14, h:14, vx:p.face*6.5, vy:-2.5, t:300, grav:true, dmg:w.dmg });
         } else p.hvyCd = 6;
       } else if (w && w.tipo === 'onda'){
-        p.hvyCd = w.cd; wsfx('keytar'); rumble(p.slot, w.rumb[0], w.rumb[1]);
+        p.hvyCd = Math.max(4, Math.round(w.cd * rateoMul())); wsfx('keytar'); rumble(p.slot, w.rumb[0], w.rumb[1]);
         projs.push({ from:'player', owner:p, wave:true, pierce:true, x:p.x + p.w/2, y:p.y - 4, w:18, h:40,
           vx:p.face*w.vel, vy:0, t:85, dmg:w.dmg });
       } else if (w){                                     // arco / smash
-        p.atkT = w.atkT; p.hvyCd = w.cd; p.wstrike = p.wpn[p.wsel];
+        p.atkT = w.atkT; p.hvyCd = Math.max(4, Math.round(w.cd * rateoMul())); p.wstrike = p.wpn[p.wsel];
         wsfx(p.wstrike); rumble(p.slot, w.rumb[0], w.rumb[1]);
         playFX('slash', p.x + p.w/2 + p.face*30, p.y + p.h/2 - 4, 0.85, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
       } else {                                           // a mani nude: pugno pesante
         const fast = p.cdef.ab === 'blade' || p.focusT > 0;
         p.atkT = fast ? 13 : 11;
-        p.hvyCd = p.focusT > 0 ? 10 : fast ? 20 : 28;
+        p.hvyCd = Math.max(5, Math.round((p.focusT > 0 ? 10 : fast ? 20 : 28) * rateoMul()));
         p.wstrike = null;
         sfx('atk');
         playFX('slash', p.x + p.w/2 + p.face*24, p.y + p.h/2 - 4, 0.62, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
@@ -3460,7 +3485,7 @@ function updatePlay(){
       if (frame % 16 === 0) sfx('coin');
     }
   }
-  updateMovers(); updateCrumbs(); updateAmbush();   // livelli vivi (v14)
+  updateMovers(); updateCrumbs(); updateAmbush(); updateRaid();   // livelli vivi (v14)
   // spiriti di Cornelius nelle zone buie
   if (lvl.def.dark && frame % 700 === 350 && enemies.filter(e => e.type === 'ghost').length < 3){
     const t = alive[Math.floor(Math.random()*alive.length)];
@@ -4802,7 +4827,9 @@ function drawGrading(){
   vg.addColorStop(1, 'rgba(0,0,20,0.32)');
   ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   if (gradeFlash){
-    ctx.fillStyle = 'rgba(' + gradeFlash.rgb + ',' + (0.22 * gradeFlash.t / gradeFlash.max) + ')';
+    // v14.2: lampo GENTILE (era 0.22 lineare: sui colori chiari leggeva come un flash bianco)
+    const kf = gradeFlash.t / gradeFlash.max;
+    ctx.fillStyle = 'rgba(' + gradeFlash.rgb + ',' + (0.12 * kf * kf) + ')';
     ctx.fillRect(0, 0, W, H);
     if (--gradeFlash.t <= 0) gradeFlash = null;
   }
@@ -4977,7 +5004,8 @@ function drawHUD(){
     const atkX = Math.round((1 + (baseLvl(p0) - 1) * 0.7) * (boons.furia && combo.n >= 5 ? 2 : 1) * 10) / 10;
     const gitt = wD ? (wD.aw ? Math.round(wD.aw * 1.4 * (boons.matite ? 1.6 : 1)) + 'px' : '∞') : Math.round(38 * (boons.matite ? 1.6 : 1)) + 'px';
     const velX = Math.round(p0.cdef.speed * (boons.stivali ? 1.15 : 1) * (mountDef(p0) ? mountDef(p0).spd : 1) * 10) / 10;
-    const rows = [['ATK', '×' + atkX], ['GIT', gitt], ['VEL', velX], ['❤', p0.maxhp]];
+    const cdB = Math.max(4, Math.round((16 - baseLvl(p0) * 2) * rateoMul()));
+    const rows = [['ATK', '×' + atkX], ['RATEO', (60 / cdB).toFixed(1) + '/s'], ['GIT', gitt], ['VEL', velX], ['❤', p0.maxhp]];
     ctx.font = '11px "Courier New", monospace';
     for (let k = 0; k < rows.length; k++){
       ctx.fillStyle = 'rgba(10,10,26,0.55)'; ctx.fillRect(14, 84 + k * 16, 78, 14);
