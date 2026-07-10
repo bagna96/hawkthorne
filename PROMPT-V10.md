@@ -132,6 +132,21 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   (tolleranza 2 righe sotto: il ▢ spara ad altezza petto/salto) e con
   GIÙ (croce=interagisci); porte X alte 3 tile A FILO del bordo destro
   (i giocatori le mancavano saltando).
+- **V14.1 (bug report + feedback "manca contesto, casse inutili, case
+  sospese, dov'è Harry Potter?")**: GIN = GALLEGGIAMENTO (la spinta -1.8
+  aiuta ma MAI frena una risalita più veloce; GIÙ per immergersi; bracciata
+  al pelo = balzo -9.5 con `p.ginLeapT` esente dal taglio del salto
+  variabile a -4 di riga ~3014 — quel taglio ammazzava qualsiasi lancio
+  verticale esterno: ricordalo per molle/cannoni futuri). ONBOARDING:
+  `lvlBanner` in loadLevel (nome mondo + OBIETTIVO dalla quest attiva,
+  disegnato in drawHUD per ~4s); GUIDE moneta/cristallo/sigillo/gindown
+  alla prima raccolta. Casse: pagano sempre (monete col popup), armi 5%
+  anche in campagna, cristalli 18%. HP presto: lettera di ammissione in
+  ACTS[1].end, SCOPA gratis alla quest sig_foresta (in questEvent),
+  bacchetta nel weaponPool base. Villaggio: facciate procedurali nel
+  case 'B' di drawTiles (def.village && ty<14: tetto coppi se sopra è
+  aria, porta a ty 13, finestre accese con addLight). Segreti S nuovi in
+  M2 (dietro tronco 2) e M5 (sotto la galleria).
 - Debug: `.goto .step .tp .soul(azzera anche i cd) .super(=castUlt) .pow
   .kill .dmg .beatRival .p2 .give .gems .boon .forge .incubo .next
   .fakeGuest .reset .info .quest .mbkill .gen .remix .arma .pom .maledici
