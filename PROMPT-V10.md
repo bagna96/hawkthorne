@@ -112,6 +112,26 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   MONETE A PIOGGIA (coinRainT 600), COOLDOWN AZZERATI (ex infSoul).
   Tutorial e stato 'help' = TABELLA Azione|Pad|Tastiera. Kit mostrato
   nella schermata select al posto della vecchia SUPER.
+- **V14.0 (feedback: "i livelli si assomigliano, la campagna non aggancia")**:
+  RIDISEGNO MONDI 1-5 con identità meccanica per mondo, generati da
+  `tools_build_maps.py` (griglia+primitive ground/pit/solid/plat/door,
+  riproducibile: modifica lo script, rilancialo). MECCANICHE NUOVE:
+  piattaforme MOBILI tile 'm'/'n' (orizz/vert → entità `movers[]`,
+  `mkMover/updateMovers/rideMovers` trasporta il player, `drawMovers`
+  con ingranaggio), assi SBRICIOLANTI 'q' (one-way come '-', `crumbleAt`
+  22f di tremolio → via, rinascita 300f via `crumbBack`), IMBOSCATA '&'
+  (sacco d'oro-esca → `ambush` ondata 4-8 spawn scaglionati → +25 monete
+  e arma 50%). Mondi: M1 apertura-aggancio (monete→molla→cassa in 10s,
+  alto ricco/basso coi nemici, torre Sigillo, segreto S), M2 verticale
+  (tronchi con archi, chiome, corrente, arena RE Ghianda con sponde),
+  M3 tetti vs strada (campanile+corrente, barili a domino, leva+cripta,
+  imboscata in piazza), M4 zattere mobili + isole A PELO di gin (montarle
+  nuotando dev'essere gratis) + tesoro sommerso, M5 ponti 'q' sulla lava,
+  leva+muro A SOFFITTO (walljump scala qualsiasi muro più basso!),
+  ascensore 'n', imboscata al buio. QoL: leve tirabili da PROIETTILI
+  (tolleranza 2 righe sotto: il ▢ spara ad altezza petto/salto) e con
+  GIÙ (croce=interagisci); porte X alte 3 tile A FILO del bordo destro
+  (i giocatori le mancavano saltando).
 - Debug: `.goto .step .tp .soul(azzera anche i cd) .super(=castUlt) .pow
   .kill .dmg .beatRival .p2 .give .gems .boon .forge .incubo .next
   .fakeGuest .reset .info .quest .mbkill .gen .remix .arma .pom .maledici
@@ -243,6 +263,19 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
 20. Contenuto nuovo di combattimento = riga in KITS (o verbo in execVerb
     se proprio serve un comportamento nuovo). Le vecchie vie activateSuper/
     castSpell/ability-'ab' sono ORFANE: non aggiungerci sopra.
+21. MAPPE: mai a mano — usa `tools_build_maps.py` (primitive su griglia,
+    assert sulle tile obbligatorie, iniezione idempotente). Dopo ogni
+    rigenerazione l'Edit su index.html va ri-armato (il file è cambiato).
+22. COLLAUDO livelli: bot di traversata in eval (destra + salti con
+    doppio-salto concatenato + spari + GIÙ periodico + fasi di sola
+    camminata quando è bloccato; nel gin: bracciate a spam ogni 7 frame).
+    Successo = state 'perk' O lvlIdx cambia. È STOCASTICO: 3 tentativi.
+    Il bot NON dimostra i percorsi opzionali (Z su torri): verificali a
+    mano con tp. `boons` NON si resetta con loadLevel: azzerala tra i run
+    o i perk-pool si svuotano e la porta salta il perk (nextLevel diretto).
+23. Muri-cancello: se non arrivano al SOFFITTO, il walljump (mossa base)
+    li scala e il puzzle sparisce. Aperture minime 2 tile. Le porte e le
+    leve devono essere generose (porte 3 tile, leve con tolleranza).
 
 ## §FINE SESSIONE — rituale (obbligatorio)
 1. Verifica criteri accettazione; 2. commit+push (`vX.Y: sintesi`);
