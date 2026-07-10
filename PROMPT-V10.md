@@ -147,6 +147,17 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   case 'B' di drawTiles (def.village && ty<14: tetto coppi se sopra è
   aria, porta a ty 13, finestre accese con addLight). Segreti S nuovi in
   M2 (dietro tronco 2) e M5 (sotto la galleria).
+- **V14.2 (feedback: flash bianco, "voglio l'autofire", "siamo OP")**:
+  flashGrade addolcito (0.12 quadratico; nei verbi storm/freeze/lava il
+  lampo fullscreen è SOLO da ult, da pow è flashLight locale — regola:
+  mai lampi a schermo intero su azioni frequenti); FUOCO CONTINUO su
+  ▢ e △ (pJP→pDown, i cd fanno da rate-limiter) + perk ripetibile
+  `rateo` ☕ (+16%/stack ×6, `rateoMul()` su castBase e su tutti i
+  `p.hvyCd = w.cd`), riga RATEO nelle stat HUD, perk dalle casse al 10%;
+  PRESSIONE: +40% rinforzi walker in campagna, élite dal mondo 2 (55%),
+  `raidT`/`updateRaid` = ASSALTI periodici ogni ~35-60s (riusano ambush
+  con flag raid, mai in hub/boss). GOTCHA: guardie su `cut` (l'oggetto)
+  sono fragili nei test (resta appeso se salti updateCut) — usa `state`.
 - Debug: `.goto .step .tp .soul(azzera anche i cd) .super(=castUlt) .pow
   .kill .dmg .beatRival .p2 .give .gems .boon .forge .incubo .next
   .fakeGuest .reset .info .quest .mbkill .gen .remix .arma .pom .maledici
