@@ -81,9 +81,41 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   · ENEMIES ora supportano `char:true` (sheet-personaggio 12×16: walk row
     1 cols 1-3, flip via scale) + `evil:true`; MBOSSES idem (`char`,
     `filter`, `goatee`, walk/attack rows 1/9). mkEnemy: y = y+(32-h).
-- Debug: `.goto .step .tp .soul .super .kill .dmg .beatRival .p2 .give
-  .gems .boon .forge .incubo .next .fakeGuest .reset .info .quest .mbkill
-  .gen .remix .arma .pom .maledici .syn .god .perk .shards .unlock .ui`.
+- **V13.0 (feedback utente: "combattimento statico, troppo Mario, armi
+  corte, potenziamenti invisibili")**: COMBATTIMENTO ALLA LoL — registro
+  `KITS` (20 campioni: base/pow/ult con nome+icona+col comici) + motore
+  `execVerb` a 16 verbi (bolt cone wave nova beam rain volley storm freeze
+  heal slow focus jail dashstrike quake lava, `extra` concatenabile);
+  ▢ = `castBase` POTERE BASE a distanza senza cd (rateo 8-14f, livelli:
+  `baseLvl` = 1 + pbase2/pbase3 shop + boons.baseUp perk; lv2 pierce,
+  lv3 doppio); △ = ATTACCO PESANTE con arma (`p.hvyCd`, gittata aw ×1.4);
+  L1/L2/Q = `castPow` (cd k.cd×60 frame); R2/R = `castUlt` (cd max 600f,
+  banner testo gigante + flashGrade + doppia mezzaluna + firework);
+  god/infSoul azzerano powCd/ultCd; barra Meraviglia SOSTITUITA da 2
+  barre cooldown con icone kit (drawSoul riscritta); aura DBZ quando
+  l'ult è pronta. SPELLS elementali assorbite nei kit (castSpell resta
+  ma orfana). PAD rimappato (scelta utente): ◯/R1 schivata, ✕ salto,
+  ▢ base, △ pesante, L1/L2 potere, R2 supremo, croce SU cavalcatura /
+  GIÙ interagisci / DESTRA cambia arma (la croce muove SOLO nei menu:
+  `state !== 'play'` nel pad-mapping); tastiera X/C/Q/R/E/Shift/Tab, P2
+  F/G/H/J/T/Y/U; NETBITS estesi (heavy/pow/roll/wswap/mount). CAVALCATURE:
+  registro `MOUNTS` (scopa glide ×1.5 / unicorno ram ×1.75 / drago fly
+  200f ×1.4), righe mount_* in ABILITIES, `cycleMount` su pJP('mount'),
+  `drawMount` procedurale (×1.6 sotto il player), assorbono un colpo
+  (hurtPlayer smonta). HUD ISAAC: colonna icone boons/perks a destra
+  (con livello pom), pannellino stat vive ATK/GIT/VEL/❤ sotto i cuori.
+  PERK IN CAMPAGNA: porta X (lvlIdx>0) → `openPerks(next)` con `perkNext`
+  callback (fallback endlessNext), pom/banco solo endless; 8% perk
+  diretto da breakCrate. HOMING: steering nei projs (rot max 0.22/f,
+  raggio 270), perk 'homing' (Mirino di Annie), Annie base homing di
+  default, trucco TUTTO-HOMING. Trucchi nuovi: VOLO LIBERO (flyMode),
+  MONETE A PIOGGIA (coinRainT 600), COOLDOWN AZZERATI (ex infSoul).
+  Tutorial e stato 'help' = TABELLA Azione|Pad|Tastiera. Kit mostrato
+  nella schermata select al posto della vecchia SUPER.
+- Debug: `.goto .step .tp .soul(azzera anche i cd) .super(=castUlt) .pow
+  .kill .dmg .beatRival .p2 .give .gems .boon .forge .incubo .next
+  .fakeGuest .reset .info .quest .mbkill .gen .remix .arma .pom .maledici
+  .syn .god .perk .shards .unlock .ui`.
 
 ## §RICERCA-GIOCHI — residuo utile
 - **Isaac**: pool drop che si espande ✅; restano stanze segrete nei chunk
@@ -202,6 +234,15 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
 17. Marker NPC: lettere in `'pbtaHLDGdsr'` in loadLevel + ramo in
     buildGroups; vengono AGGANCIATI al suolo con groundAt (solo tile
     isSolid, le piattaforme '-' non contano).
+18. Il renderer degli anelli (`parts` con ring) assume `t` che parte da
+    12: t maggiori = raggio NEGATIVO = crash `arc`. Il raggio ora è
+    clampato ≥1, ma spawna comunque anelli con t:12.
+19. `wipeT` (transizione PowerPoint) decrementa nel DRAW: nei test col
+    pannello (rAF throttlato) resta a mezz'aria — chiama draw() in loop
+    o azzera `wipeT = 0` dopo goto.
+20. Contenuto nuovo di combattimento = riga in KITS (o verbo in execVerb
+    se proprio serve un comportamento nuovo). Le vecchie vie activateSuper/
+    castSpell/ability-'ab' sono ORFANE: non aggiungerci sopra.
 
 ## §FINE SESSIONE — rituale (obbligatorio)
 1. Verifica criteri accettazione; 2. commit+push (`vX.Y: sintesi`);
