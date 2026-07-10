@@ -539,6 +539,8 @@ const ACTS = {
     end:[
       { who:'abed', text:'Fine dell\'Atto I. Sviluppo dei personaggi: presente. Bottino: accettabile.' },
       { who:'abed', text:'Cornelius non sarà contento. Il che, narrativamente, è sempre un buon segno.' },
+      { who:'narr', text:'Una scimmia ti consegna una LETTERA con ceralacca: "Lei è ammesso alla SCUOLA DI MAGIA E STREGONERIA DI GREENDALE. L\'ingresso è un armadietto. Porti una bacchetta. Cordiali saluti, Il Cappello (tecnicamente un costume)."' },
+      { who:'abed', text:'Una scuola di magia dentro un community college. Legalmente distinguibile da qualsiasi franchise noto. Ci andremo. Ovviamente.' },
       { who:'narr', text:'ATTO I COMPLETATO — "L\'Eredità". Ricompensa: +50 monete.' }] },
   2: { introMondo:4, flag:'atto2intro', premio:75,
     intro:[
@@ -648,6 +650,10 @@ function questEvent(tipo, target){
   SAVE.quests[q.id] = 1; saveGame();
   addWallet(15); sfx('craft'); addShake(6);
   showToast('❖ QUEST COMPLETATA: ' + q.nome + ' (+15 monete)');
+  if (q.id === 'sig_foresta' && !SAVE.meta.mount_scopa){   // v14.1: la SCOPA arriva presto (e gratis)
+    SAVE.meta.mount_scopa = 1; saveGame(); stinger('perk');
+    showToast('🧹 Dietro l\'albero del Re: la SCOPA DEL CUSTODE! Tua. Richiamala con SU sulla croce (o E). Vola bassa: lui non deve saperlo.');
+  }
   if (q.fineAtto && attoCompleto(q.fineAtto)){
     const act = ACTS[q.fineAtto];
     if (q.fineAtto === 1) award('testamento');
@@ -1435,7 +1441,7 @@ const WEAPON_UNLOCKS = [
   { id:'bazooka',     best:10, msg:'🚀 BAZOOKA DI CHANG nel pool! (profondità 10)' },
 ];
 function weaponPool(){
-  const base = ['penna', 'mazza', 'dodgeball', 'paintball', 'keytar', 'lancialava'];
+  const base = ['penna', 'mazza', 'dodgeball', 'paintball', 'keytar', 'lancialava', 'bacchetta'];
   const best = SAVE.endlessBest || 0;
   for (const u of WEAPON_UNLOCKS) if (best >= u.best) base.push(u.id);
   return base;
@@ -1975,8 +1981,8 @@ const LEVELS = [
 "                                            BB  o    qqq                  BB :          ---           f         h",
 "                  f                         BB ---                        BB :                     ---        ---",
 "             oo        o                    BB              f             BB :                                        X",
-"                                        ---                                  :               ---         Q            X",
-"   P   T   e   T     e   T    e  TL   C                                                   C T   T                 T   X",
+"                                        ---                                  : BBBBBB        ---         Q            X",
+"   P   T   e   T     e   T    e  TL   C                                        S oog      C T   T                 T   X",
 "############################################BB############################BB############################################",
 "############################################BB############################BB############################################",
 "############################################BB############################BB############################################",
@@ -2043,8 +2049,8 @@ const LEVELS = [
 "B                              f                    B           BBBBBBB       BBBBBBB                            f                              h   :      B",
 "B                                                   B                                 ---                                           ---       ---   :      B",
 "B                                                   B                                                                                               :    X B",
-"B  P         oo           qqqqqqqqqqq               9                                                          BB  BB                               :    X B",
-"B     i   e     i   e   i             i   C   =  i  9 ook         i                       e i C     &  i  i    BB  BB   i   i R     i  e         e    i  X B",
+"B  P         oo           qqqqqqqqqqq               9           BBBBB                                          BB  BB                               :    X B",
+"B     i   e     i   e   i             i   C   =  i  9 ook       S ohg                     e i C     &  i  i    BB  BB   i   i R     i  e         e    i  X B",
 "B#########################~~~~~~~~~~~#######################################################################~~~~~~~~~~~####################################B",
 "B#########################~~~~~~~~~~~#######################################################################~~~~~~~~~~~####################################B",
 "B#########################~~~~~~~~~~~#######################################################################~~~~~~~~~~~####################################B",
@@ -2204,7 +2210,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v14.0';    // RIDISEGNO LIVELLI: mondi 1-5 rifatti, piattaforme mobili/sbriciolanti, imboscate
+const GAME_VERSION = 'v14.1';    // fix gin (galleggi!), banner obiettivi, casse generose, lettera di Hogw— di Greendale
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -2232,6 +2238,7 @@ let boons = {};            // potenziamenti della run (stile Hades)
 let nightmare = false;     // Modalità Incubo (post-game)
 let hitstop = 0;           // fermo-immagine sui colpi (game feel)
 let wipeT = 0, wipeKind = 0;   // transizione "PowerPoint" kitsch (glitch voluto)
+let lvlBanner = null;          // banner d'ingresso col NOME e l'OBIETTIVO del mondo (v14.1: "non so lo scopo")
 let nightWave = null;          // TURNO DI NOTTE (rischio-ricompensa alla Kingdom): {total, spawned, t}
 let god = false, infSoul = false, cheatDirty = false;  // trucchi
 let flyMode = false, coinRainT = 0, homingAll = false;  // trucchi v13: volo, pioggia d'oro, tutto-homing
@@ -2288,7 +2295,7 @@ function setTile(tx, ty, c){
 function breakCrate(tx, ty, p){
   setTile(tx, ty, ' ');
   sfx('stomp'); addShake(3);
-  if (endless && !wdrops.length && Math.random() < 0.05){
+  if (!wdrops.length && Math.random() < 0.05){   // v14.1: le armi escono dalle casse ANCHE in campagna
     wdrops.push({ x: tx*TS + 16, y: ty*TS + 30, id: randomWeaponId() });
     showToast('💥 Un\'arma dalla cassa!'); sfx('gem');
   }
@@ -2306,9 +2313,17 @@ function breakCrate(tx, ty, p){
   }
   const lucky = (hasAbil('fortuna') ? 0.12 : 0) + (SAVE.house === 'corvonadir' ? 0.1 : 0);   // DADO NON TRUCCATO (+ intelletto di casa)
   const r = Math.random();
-  if (r < 0.15 + lucky){ cristalli++; sfx('gem'); showToast('+1 CRISTALLO (' + cristalli + ')'); }
-  else if (r < 0.4 + lucky && p && p.hp < p.maxhp){ p.hp++; sfx('heart'); }
-  else { addWallet(hasAbil('fortuna') ? 5 : 3); sfx('coin'); }
+  if (r < 0.18 + lucky){ cristalli++; sfx('gem'); showToast('+1 CRISTALLO (' + cristalli + ')'); showGuide('cristallo'); }
+  else if (r < 0.42 + lucky && p && p.hp < p.maxhp){
+    p.hp++; sfx('heart');
+    parts.push({ txt:'+❤', x:tx*TS+16, y:ty*TS - 6, vx:0, vy:-0.8, t:40, color:'#e85a7a' });
+  }
+  else {   // v14.1: la cassa PAGA sempre, e si vede ("casse vuote e inutili": mai più)
+    const n = (hasAbil('fortuna') ? 6 : 4) + Math.floor(Math.random() * 4);
+    addWallet(n); sfx('coin');
+    burst(tx*TS+16, ty*TS+10, '#f5d442', 10, 2.5);
+    parts.push({ txt:'+' + n, x:tx*TS+16, y:ty*TS - 6, vx:0, vy:-0.8, t:40, color:'#f5d442' });
+  }
 }
 
 // ---------------- SUPER-POTERI (carica MERAVIGLIA al 100%) ----------------
@@ -2496,6 +2511,14 @@ function loadLevel(i){
   spawnCritters();
   // 15%: transizione "PowerPoint" volutamente kitsch (estetica, non tocca il gameplay)
   if (!def.hub && Math.random() < 0.15){ wipeT = 44; wipeKind = Math.floor(Math.random() * 3); }
+  // banner d'ingresso: dove sei, e SOPRATTUTTO cosa devi fare
+  {
+    const qHere = lvlIdx > 0 ? QUESTS.find(q => q.mondo === lvlIdx && !questDone(q.id)) : null;
+    const ob = def.hub ? '🚪 Parla col cast, poi entra nella PORTA: inizia la campagna'
+      : def.boss ? '👑 OBIETTIVO: detronizza CORNELIUS' :
+        qHere ? '❖ OBIETTIVO: ' + qHere.nome : '🚪 OBIETTIVO: raggiungi la porta in fondo (e saccheggia tutto)';
+    lvlBanner = { t: 260, nome: def.name, ob };
+  }
   setSong(def.song);
 }
 function mkWalker(x, y){ return { type:'walker', x:x+3, y:y+8, w:26, h:24, vx:-0.8, vy:0, hp:1, anim:Math.random()*99 }; }
@@ -2808,6 +2831,10 @@ const GUIDE = {
   mbrest: 'ABED: dopo tre salti riprende fiato. Quello è il momento. Funziona anche coi cattivi del cinema.',
   locker: 'ABED: l\'armadietto 9¾. Premi GIÙ. Se sbatti il muso, riprova: è una questione di fede. E di copyright.',
   mount:  'ABED: le cavalcature si comprano al NEGOZIO ABILITÀ dal titolo. Sì, c\'è un unicorno. Sì, è di Pierce.',
+  moneta: 'ABED: le MONETE restano per sempre — al titolo comprano personaggi, poteri e cavalcature. Raccogli.',
+  cristallo:'ABED: i CRISTALLI servono alla forgia (3 = lancia-lava, nel villaggio) e agli scambi all\'altare.',
+  sigillo:'ABED: un SIGILLO DEL TESTAMENTO. È la trama principale: seguili col segnalino ❖ in alto a destra.',
+  gindown:'ABED: nel gin GALLEGGI. GIÙ per immergerti, salto al pelo per BALZARE fuori. Sotto ci sono tesori.',
   scuola: 'ABED: scuola di magia. I punti-casa pagano in monete vere. Il capitalismo è arrivato anche qui.',
   tigre:  'ABED: carica in linea retta. Salta e lascia che il muro faccia il lavoro. Fisica newtoniana applicata ai bulli.',
   dreama: 'ABED: il Dreamatorium è corrotto. Le versioni malvagie hanno il pizzetto. Le riconosci dal pizzetto.',
@@ -3011,7 +3038,8 @@ function updateOnePlayer(p, atkBoxes){
     p.vy = 2;
     if (frame % 4 === 0) parts.push({ x: p.x + (p.wallDir > 0 ? p.w : 0), y: p.y + p.h/2, vx: 0, vy: 0.5, t: 12, color: 'rgba(184,232,240,0.6)' });
   }
-  if (!pDown(p,'jump') && p.vy < -4) p.vy = -4;
+  if (p.ginLeapT > 0) p.ginLeapT--;
+  if (!pDown(p,'jump') && p.vy < -4 && !(p.ginLeapT > 0)) p.vy = -4;   // v14.1: il balzo dal gin non si tronca
   if (p.pounding) p.vy = 13;
   if (p.dashT > 0) p.vy = 0;   // lo scatto è orizzontale: annulla la gravità
   if (trait(p,'vaughn') && p.vy > 4 && !pDown(p,'down')) p.vy = 4;   // Zen: cade piano
@@ -3027,12 +3055,23 @@ function updateOnePlayer(p, atkBoxes){
   p.airT = p.onGround ? 0 : p.airT + 1;   // isteresi: niente strobo idle/salto
   // nuoto nel gin: galleggi, bracciata con salto, e se esageri... cheers
   if (inGin){
-    p.pounding = false; p.jumps = 0;
-    p.vy = Math.min(p.vy * 0.9, 2.2);
-    if (pJP(p,'jump')){ p.vy = -5.4; sfx('jump'); burst(p.x + p.w/2, p.y + p.h, '#f0ead0', 4, 1.2); }
+    p.pounding = false; p.jumps = 0; p.airDashes = 0;
+    p.vy = Math.min(p.vy * 0.9, pDown(p,'down') ? 2.6 : 2.2);
+    // v14.1 (fix softlock): GALLEGGI — il gin ti riporta sempre al pelo da solo. GIÙ per immergerti (tesori).
+    // (la spinta AIUTA solo: mai frenare una risalita già più veloce, tipo il balzo)
+    if (!pDown(p,'down') && p.vy > -1.8) p.vy = Math.max(p.vy - 0.8, -1.8);
+    if (pDown(p,'jump')) p.vy = Math.max(p.vy - 0.75, -3.2);
+    const ginCx = Math.floor((p.x + p.w/2) / TS);
+    const alPelo = tileAt(ginCx, Math.floor(p.y / TS) - 1) !== '~' && tileAt(ginCx, Math.floor(p.y / TS)) !== '~';
+    if (pJP(p,'jump')){
+      p.vy = alPelo ? -9.5 : -5.4;
+      sfx('jump'); burst(p.x + p.w/2, p.y + p.h, '#f0ead0', alPelo ? 8 : 4, 1.5);
+      if (alPelo){ p.jumps = 1; p.ginLeapT = 18; }   // balzo VERO: niente taglio del salto, e puoi concatenare il doppio
+    }
     if (p.y > (lvl.h - 1) * TS - 24){ p.y = (lvl.h - 1) * TS - 24; p.vy = 0; }
     if (frame % 7 === 0) parts.push({ x: p.x + p.w/2, y: p.y - 2, vx: 0, vy: -0.8, t: 20, color: '#f0ead0' });
     p.ginT = (p.ginT || 0) + 1;
+    if (p.ginT === 2) showGuide('gindown');
     if (p.ginT > 320 && p.drunkT <= 0){
       p.drunkT = 480; p.ginT = 0; sfx('organ');
       showToast('🍸 TROPPO GIN: comandi invertiti. Duncan sarebbe fiero.');
@@ -3154,10 +3193,10 @@ function updateOnePlayer(p, atkBoxes){
   const cy0 = Math.floor(p.y / TS), cy1 = Math.floor((p.y + p.h - 1) / TS);
   for (let ty = cy0; ty <= cy1; ty++) for (let tx = cx0; tx <= cx1; tx++){
     const c = tileAt(tx, ty);
-    if (c === 'o'){ setTile(tx, ty, ' '); addWallet(1); sfx('coin'); burst(tx*TS+16, ty*TS+16, '#f5d442', 5, 1.5); }
-    else if (c === 'g'){ setTile(tx, ty, ' '); cristalli++; sfx('gem'); burst(tx*TS+16, ty*TS+16, '#5ae8e8', 10, 2); showToast('+1 CRISTALLO DI HAWKTHORNE (' + cristalli + ')'); }
+    if (c === 'o'){ setTile(tx, ty, ' '); addWallet(1); sfx('coin'); burst(tx*TS+16, ty*TS+16, '#f5d442', 5, 1.5); showGuide('moneta'); }
+    else if (c === 'g'){ setTile(tx, ty, ' '); cristalli++; sfx('gem'); burst(tx*TS+16, ty*TS+16, '#5ae8e8', 10, 2); showToast('+1 CRISTALLO DI HAWKTHORNE (' + cristalli + ')'); showGuide('cristallo'); }
     else if (c === 'h'){ if (p.hp < p.maxhp){ setTile(tx, ty, ' '); p.hp = Math.min(p.maxhp, p.hp + (trait(p,'shirley') || trait(p,'duncan') ? 2 : 1)); sfx('heart'); burst(tx*TS+16, ty*TS+16, '#e85a7a', 8, 2); } }
-    else if (c === 'Z'){ setTile(tx, ty, ' '); burst(tx*TS+16, ty*TS+16, '#f5d442', 20, 3); questEvent('collect','Z'); }
+    else if (c === 'Z'){ setTile(tx, ty, ' '); burst(tx*TS+16, ty*TS+16, '#f5d442', 20, 3); questEvent('collect','Z'); showGuide('sigillo'); }
     else if (c === 'C'){ setTile(tx, ty, 'c'); players.forEach(q => { q.cpx = tx*TS + 4; q.cpy = ty*TS - q.h - 2; }); sfx('check'); showToast('CONSOLE — CHECKPOINT'); }
     else if (c === 'J'){ if (p.vy >= -2){ p.vy = -16; p.jumps = 0; p.airDashes = 0; p.pounding = false; sfx('jump'); addShake(3); burst(tx*TS+16, ty*TS+30, '#5ae8e8', 12, 3); showGuide('bounce'); } }
     else if (c === ':'){ p.vy = Math.max(p.vy - 1.3, -7.5); p.jumps = 0; p.airDashes = 0; showGuide('corrente'); }
@@ -4404,6 +4443,23 @@ function drawTiles(){
         ctx.fillStyle = '#585862';
         ctx.fillRect(x, y + 15, TS, 2);
         ctx.fillRect(x + (ty % 2 ? 8 : 20), y, 2, 15); ctx.fillRect(x + (ty % 2 ? 22 : 10), y + 17, 2, 15);
+        // v14.1: nel VILLAGGIO i blocchi in superficie diventano CASE — tetto, finestre accese, porta
+        if (lvl.def.village && ty < 14){
+          if (!isSolid(tileAt(tx, ty - 1))){          // colmo del tetto: coppi rossi
+            ctx.fillStyle = '#8a3a2e'; ctx.fillRect(x - 2, y - 5, TS + 4, 8);
+            ctx.fillStyle = '#a84a38'; ctx.fillRect(x - 2, y - 5, TS + 4, 3);
+          } else if (ty === 13 && isSolid(tileAt(tx, ty + 1)) && ((tx * 53) >>> 0) % 9 === 4){
+            ctx.fillStyle = '#5a3a20'; ctx.fillRect(x + 8, y + 6, 16, 26);   // porta al piano terra
+            ctx.fillStyle = '#3a2412'; ctx.fillRect(x + 10, y + 8, 12, 24);
+            ctx.fillStyle = '#c9a227'; ctx.fillRect(x + 19, y + 19, 3, 3);
+          } else if (((tx * 53 + ty * 31) >>> 0) % 7 < 2 && isSolid(tileAt(tx - 1, ty)) && isSolid(tileAt(tx + 1, ty))){
+            const lit = ((tx * 7 + ty * 13) % 3) !== 0;                      // finestra (a volte accesa)
+            ctx.fillStyle = lit ? '#f5d76a' : '#22222e'; ctx.fillRect(x + 9, y + 8, 14, 16);
+            ctx.strokeStyle = '#4a3020'; ctx.lineWidth = 2; ctx.strokeRect(x + 9, y + 8, 14, 16);
+            ctx.beginPath(); ctx.moveTo(x + 16, y + 8); ctx.lineTo(x + 16, y + 24); ctx.stroke();
+            if (lit) addLight(x + 16, y + 16, 32, [245, 210, 100], 0.14);
+          }
+        }
         break;
       case 'F':
         ctx.fillStyle = '#4a66c8'; ctx.fillRect(x, y, TS, TS);
@@ -4860,6 +4916,16 @@ function drawHUD(){
   }
   if (combo.n >= 2){
     text('COMBO x' + combo.n, W/2, 52, 18 + Math.min(10, combo.n), '#f5822a', 'center');
+  }
+  if (lvlBanner){   // v14.1: entri in un mondo e SAI cosa fare
+    lvlBanner.t--;
+    const aB = Math.min(1, lvlBanner.t / 40);
+    ctx.globalAlpha = aB;
+    panel(W/2 - 340, 64, 680, 68, 'rgba(5,5,16,0.85)', 'rgba(245,212,66,0.35)');
+    text(lvlBanner.nome, W/2, 92, 20, '#f5d442', 'center');
+    text(lvlBanner.ob, W/2, 118, 15, '#fff', 'center');
+    ctx.globalAlpha = 1;
+    if (lvlBanner.t <= 0) lvlBanner = null;
   }
   const aq = activeQuest();
   if (aq && !endless) text('❖ ' + aq.nome + (lvlIdx === aq.mondo ? '' : '  (Mondo ' + aq.mondo + ')'), W - 14, players[1] ? 66 : 36, 12, '#f5d442', 'right');
