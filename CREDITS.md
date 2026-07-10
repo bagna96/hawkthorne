@@ -29,5 +29,19 @@ Tutti gli asset sono incorporati in base64 dentro `index.html` (vincolo single-f
   ninja/tigre/corvo, mini-boss Fuffi e Zabuza, NPC Piton/Gazza/Silente, sfondo dipinto
   di Konoha (nrpg_nar_battlebg, cella singola) per il mondo bonus.
 
+## Stranger Things (v16.0, fan-sprite da repository GitHub pubblici)
+- **Sunairaa/StrangerThingsGame** (GitHub) — sprite fan di Undici (posa telecinetica),
+  demodog e demogorgone grande. → `st_eleven`, `st_demodog`, `st_demogorgon`.
+- **Gonzalo6282/Stranger_Things_Game** (GitHub) — ciclo camminata di Hopper (6 frame,
+  con morte "cappello che rotola") e demogorgone grigio animato. → `st_hopper`, `st_demogrey`.
+- **elen-c-sales/dino-run-vecna-edition** (GitHub) — corsa di Vecna (4 frame), demobat
+  (4 frame) e sfondi a strati del Sottosopra. → `st_vecna`, `st_demobat`, `st_upside_far/near`.
+- ⚠ Opere di fan senza licenza esplicita, su IP Netflix: stesso regime fan-game non
+  commerciale del resto del progetto. Nessuna rivendicazione; credito agli autori dei repo.
+
+## S-GRAFICA (v16.0)
+- Atlante `g_hogtiles` (muro in mattoni + pavimento a rombi ×2) ritagliato da
+  `hp_hallways` (rip GBA già accreditato sopra): tile texturizzate di Scuola e Corridoio.
+
 ## Musica e suoni
 - Interamente procedurali (WebAudio), nessun asset esterno.

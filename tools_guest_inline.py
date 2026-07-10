@@ -10,7 +10,10 @@ IDX = os.path.join(ROOT, 'index.html')
 
 KEYS = ['g_naruto','g_sasuke','g_rocklee','g_kakashi','g_harry',
         'g_doxy','g_gnome','g_tentacula','g_snape','g_filch','g_dumbledore',
-        'g_fluffy','g_zabuza','g_tigre','g_corvo','g_ninja','g_konoha_bg']
+        'g_fluffy','g_zabuza','g_tigre','g_corvo','g_ninja','g_konoha_bg',
+        # v16 — Stranger Things + atlante Hogwarts (S-GRAFICA)
+        'st_eleven','st_hopper','st_demodog','st_demobat','st_demogrey',
+        'st_demogorgon','st_vecna','st_upside_far','st_upside_near','g_hogtiles']
 
 lines = open(IDX, encoding='utf-8').read().split('\n')
 hi = next(i for i, l in enumerate(lines) if l.startswith('window.HAWK_ASSETS'))
