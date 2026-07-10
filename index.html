@@ -231,9 +231,11 @@ window.addEventListener('keyup', e => { keys[e.code] = false; });
 function jp(code){ return !!justPressed[code]; }
 function anyDown(list){ return list.some(k => keys[k]); }
 function anyJP(list){ return list.some(k => justPressed[k]); }
+// v13 (kit alla LoL): atk=▢ potere base · heavy=△ arma · pow=L1/L2+Q potere · sup=R2+R supremo ·
+// roll=◯/R1+Shift schivata · mount=dpad-su+E cavalcatura · wswap=dpad-destra+Tab cambio arma
 const SCHEMES = [
-  { left:['ArrowLeft'], right:['ArrowRight'], jump:['ArrowUp','Space','KeyZ'], atk:['KeyX','KeyK'], ab:['KeyC','KeyL'], down:['ArrowDown'], sup:['KeyV'], roll:['ShiftLeft','ShiftRight'], spell:['KeyQ'], spnext:['KeyE'] },
-  { left:['KeyA'], right:['KeyD'], jump:['KeyW'], atk:['KeyF'], ab:['KeyG'], down:['KeyS'], sup:['KeyH'], roll:['KeyR'], spell:['KeyT'], spnext:['KeyY'] },
+  { left:['ArrowLeft'], right:['ArrowRight'], jump:['ArrowUp','Space','KeyZ'], atk:['KeyX','KeyK'], heavy:['KeyC','KeyL'], down:['ArrowDown'], pow:['KeyQ'], sup:['KeyR','KeyV'], roll:['ShiftLeft','ShiftRight'], mount:['KeyE'], wswap:['Tab'] },
+  { left:['KeyA'], right:['KeyD'], jump:['KeyW'], atk:['KeyF'], heavy:['KeyG'], down:['KeyS'], pow:['KeyH'], sup:['KeyJ'], roll:['KeyT'], mount:['KeyY'], wswap:['KeyU'] },
 ];
 
 // ---------------- GAMEPAD (2 pad = 2 giocatori) ----------------
@@ -247,21 +249,22 @@ function pollGamepads(){
     if (!gp){ g.cur = {}; continue; }
     const b = n => !!(gp.buttons[n] && gp.buttons[n].pressed);
     const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
-    // mappatura standard (Chrome: DualSense PS5, DualShock, Xbox)
-    // PS5: ✕=0 salto · ▢=2 attacco · ◯=1 abilità · △=3 super · R1/L1 alt · R2 super · Options=9
+    // mappatura PS5 scelta dall'utente: ✕=0 salto · ◯=1 schivata · ▢=2 potere base · △=3 attacco
+    // pesante · L1(4)/L2(6)=potere · R1(5)=schivata alt · R2(7)=SUPREMO · dpad: giù(13)=interagisci,
+    // destra(15)=cambia arma, su(12)=cavalcatura · Options(9)=pausa. La croce muove solo nei menu.
     g.cur = {
-      left:  ax < -0.4 || b(14),
-      right: ax >  0.4 || b(15),
+      left:  ax < -0.4 || (state !== 'play' && b(14)),
+      right: ax >  0.4 || (state !== 'play' && b(15)),
       down:  ay >  0.5 || b(13),
       jump:  b(0),
       atk:   b(2),
-      ab:    b(1),
-      sup:   b(3) || b(7),
+      heavy: b(3),
+      pow:   b(4) || b(6),
+      sup:   b(7),
       ok:    b(9) || b(0),
-      l1:    b(4),
-      roll:  b(5),
-      spell: b(6),
-      spnext:b(12),
+      roll:  b(1) || b(5),
+      wswap: b(15),
+      mount: b(12),
       start: b(9),
     };
     if (gp.buttons.some(x => x && x.pressed)) initAudio();
@@ -608,15 +611,17 @@ function padPresent(){
 }
 function tutorialPages(){
   if (padPresent()) return [
-    { who:'abed', text:'Hai un controller. Scelta canonica: il gioco della puntata si giocava con dei joystick del 1979.' },
-    { who:'narr', text:'🎮 Levetta/croce: MUOVITI · ✕ SALTA · ▢ ATTACCA · ◯ ABILITÀ · △ SUPER (a Meraviglia piena)' },
-    { who:'narr', text:'🎮 GIÙ+▢: scivolata a terra, schianto in aria · GIÙ vicino a Hilda/forgia: NEGOZIO · Options: menù' },
-    { who:'abed', text:'Il secondo giocatore attacca il pad e preme ✕. O premete F sulla tastiera. Le regole le fa il gioco, non io.' }];
+    { who:'abed', text:'Hai un controller. Scelta canonica. Ogni tasto è un potere: come in un MOBA, ma con più cuore.' },
+    { who:'narr', text:'🎮 Levetta: MUOVITI · ✕ SALTA · ◯ SCHIVATA · ▢ POTERE BASE (spara!) · △ ATTACCO PESANTE (l\'arma)' },
+    { who:'narr', text:'🎮 L1 POTERE (si ricarica in secondi) · R2 SUPREMO (max 10s) · le barre in alto ti dicono quando' },
+    { who:'narr', text:'🎮 CROCE: GIÙ interagisci/negozia · DESTRA cambia arma · SU cavalcatura · Options: pausa' },
+    { who:'abed', text:'Il secondo giocatore attacca il pad e preme ✕. Le regole le fa il gioco, non io.' }];
   return [
-    { who:'abed', text:'Tastiera. Classico. Come i veri beta tester del 1979, ma con meno posacenere.' },
-    { who:'narr', text:'⌨ FRECCE: muoviti · Z/SPAZIO: salta · X: attacca · C: abilità · V: SUPER (a Meraviglia piena)' },
-    { who:'narr', text:'⌨ GIÙ+X: scivolata a terra, schianto in aria · GIÙ vicino a Hilda/forgia: NEGOZIO · P: pausa e riepilogo tasti' },
-    { who:'abed', text:'Giocatore 2: premi F per entrare (WASD + F/G/H). Se colleghi un controller PS5, lo riconosco. Cool.' }];
+    { who:'abed', text:'Tastiera. Classico. Ogni tasto è un potere: come in un MOBA, ma con più cuore.' },
+    { who:'narr', text:'⌨ FRECCE muoviti · Z/SPAZIO salta · SHIFT schivata · X POTERE BASE (spara!) · C ATTACCO PESANTE' },
+    { who:'narr', text:'⌨ Q POTERE (ricarica in secondi) · R SUPREMO (max 10s) · E cavalcatura · TAB cambia arma' },
+    { who:'narr', text:'⌨ GIÙ interagisci coi negozi/altari · GIÙ+X scivolata (schianto in aria) · P: pausa e comandi' },
+    { who:'abed', text:'Giocatore 2: premi F per entrare (WASD + F/G/H/J). Se colleghi un pad PS5, lo riconosco. Cool.' }];
 }
 function maybeTutorial(){
   if ((SAVE.flags || {}).tut || cut) return;
@@ -1091,7 +1096,9 @@ function endlessRecord(){
 // ------------------------------------------------ PERK (V10 S3.5, stile Gungeon/Hades)
 // Una riga = un potenziamento. Dopo ogni profondità: scegline 1 di 3.
 const PERKS = [
-  { id:'lancialava', nome:'LANCIA-LAVA',          icona:'🔥', desc:'Il capolavoro di Troy e Abed: [C] spara lava perforante.', act(p){ lavagun = true; } },
+  { id:'homing',     nome:'MIRINO DI ANNIE',      icona:'🎯', desc:'I tuoi proiettili INSEGUONO i nemici. Lei lo fa gratis.', act(p){ boons.homing = true; } },
+  { id:'baseUp',     nome:'POTERE BASE +1',       icona:'✨', desc:'Il tuo ▢ sale di livello: più danno, più grosso.', ripetibile:true, act(p){ boons.baseUp = (boons.baseUp || 0) + 1; } },
+  { id:'lancialava', nome:'LANCIA-LAVA',          icona:'🔥', desc:'Il capolavoro di Troy e Abed: arma che spara lava perforante.', act(p){ giveWeapon(p, 'lancialava'); } },
   { id:'spirito',    nome:'STATUA DI GUZMÁN',     icona:'🗿', desc:'Una statua orbitante schiaccia chi ti si avvicina.',      act(p){ boons.spirito = true; } },
   { id:'matite',     nome:'MATITE DI VICKI',      icona:'✏️', desc:'Portata dell\'attacco +60%. Non ridargliele mai.',        act(p){ boons.matite = true; } },
   { id:'vampiro',    nome:'MORSO DEL BETA TESTER',icona:'🧛', desc:'20%: le uccisioni ti restituiscono un cuore.',            act(p){ boons.vampiro = true; } },
@@ -1125,6 +1132,276 @@ function ambientFX(){
 }
 // ------------------------------------------------ ARSENALE (V10 S4, stile Gungeon/Dead Cells)
 // Una riga = un'arma. OGNI arma cambia lo stile di gioco: tipo, ritmo, suono e rumble propri.
+// ------------------------------------------------ KIT ALLA LoL (v13)
+// Ogni personaggio è un campione: ▢ POTERE BASE (a distanza, senza cooldown, livellabile),
+// △ ATTACCO PESANTE (l'arma), L1/Q POTERE (cd a secondi), R2/R SUPREMO (cd max 10s, scenografico).
+// verbi: bolt cone wave nova beam rain volley storm freeze heal slow focus jail dashstrike quake lava
+const KITS = {
+  jeff:    { base:{ verb:'bolt', vel:8.5, dmg:1, col:'#f5d442', icona:'⚖️', nome:'Obiezione!' },
+             pow: { verb:'slow', t:180, cd:7, col:'#f5d442', icona:'🗣️', nome:'Discorso Winger (tascabile)' },
+             ult: { verb:'nova', r:290, dmg:4, slow:240, cd:10, col:'#f5d442', icona:'⚖️', nome:'ARRINGA FINALE' } },
+  britta:  { base:{ verb:'bolt', vel:8, dmg:1, fire:true, col:'#f5822a', icona:'🔥', nome:'Fiammella di protesta' },
+             pow: { verb:'cone', n:3, vel:7, dmg:1, fire:true, cd:5, col:'#f5822a', icona:'🍾', nome:'Molotov (accidentale)' },
+             ult: { verb:'rain', t:120, cd:10, col:'#f5822a', icona:'🔥', nome:'BRITTAPOCALISSE' } },
+  abed:    { base:{ verb:'bolt', vel:9, dmg:1, pierce:true, col:'#8ae8e8', icona:'🎬', nome:'Colpo di scena' },
+             pow: { verb:'dashstrike', t:45, cd:4, col:'#8ae8e8', icona:'✂️', nome:'Taglio di montaggio' },
+             ult: { verb:'jail', cd:10, col:'#8ae8e8', icona:'🃏', nome:'JAILBREAK' } },
+  troy:    { base:{ verb:'bolt', vel:8, dmg:1, lob:true, col:'#5ae87a', icona:'🏈', nome:'Lancio da ricevitore' },
+             pow: { verb:'dashstrike', t:60, cd:5, col:'#5ae87a', icona:'🏈', nome:'Placcaggio' },
+             ult: { verb:'lava', cd:10, col:'#f5822a', icona:'🌋', nome:'T-BONE SPARA LAVA' } },
+  annie:   { base:{ verb:'bolt', vel:10, dmg:1, homing:true, col:'#e85a7a', icona:'🎯', nome:'Freccetta a ricerca' },
+             pow: { verb:'cone', n:4, vel:9, dmg:1, cd:4, col:'#e85a7a', icona:'📌', nome:'Raffica precisina' },
+             ult: { verb:'focus', t:480, cd:10, col:'#e85a7a', icona:'💊', nome:'FOCUS ADDERALL' } },
+  shirley: { base:{ verb:'wave', vel:5, dmg:1, col:'#d883d8', icona:'😇', nome:'"Oh, che carino."' },
+             pow: { verb:'heal', n:1, cd:9, col:'#d883d8', icona:'🙏', nome:'Perdono (con riserva)' },
+             ult: { verb:'nova', r:9999, dmg:99, heal:2, cd:10, col:'#d883d8', icona:'⛪', nome:'IRA SANTA' } },
+  pierce:  { base:{ verb:'wave', vel:4.5, dmg:1, col:'#b8e0f5', icona:'🧻', nome:'Salvietta Umida™' },
+             pow: { verb:'nova', r:130, dmg:1, kb:9, cd:6, col:'#b8e0f5', icona:'🚽', nome:'Sciacquone di classe' },
+             ult: { verb:'beam', t:130, cd:10, col:'#e85ae8', icona:'🔮', nome:'LASER LOTUS LIV.7' } },
+  gilbert: { base:{ verb:'bolt', vel:9, dmg:1, col:'#8a6ae8', icona:'🕹', nome:'Colpo del beta tester' },
+             pow: { verb:'storm', k:2, dmg:3, cd:6, col:'#f5d442', icona:'⚡', nome:'Fulmine collaudato' },
+             ult: { verb:'volley', n:12, dmg:1, cd:10, col:'#8a6ae8', icona:'🕹', nome:'RAFFICA DEL 1979' } },
+  chang:   { base:{ verb:'bolt', vel:8.5, dmg:1, col:'#f5d442', icona:'⚡', nome:'CHA-CHANG!' },
+             pow: { verb:'storm', k:3, dmg:2, cd:5, col:'#f5d442', icona:'⚡', nome:'Ha-FULMINE!' },
+             ult: { verb:'dashstrike', t:90, cd:10, col:'#f5822a', icona:'🐯', nome:'EL TIGRE CHINO',
+                    extra:{ verb:'storm', all:true, dmg:2, col:'#f5d442' } } },
+  dean:    { base:{ verb:'wave', vel:5, dmg:1, col:'#e8d05a', icona:'📣', nome:'Annuncio del Decano' },
+             pow: { verb:'slow', t:150, cd:6, col:'#e8d05a', icona:'👗', nome:'Salve salvino (ipnotico)' },
+             ult: { verb:'nova', r:300, dmg:3, freeze:300, cd:10, col:'#e8d05a', icona:'🕺', nome:'SFILATA FINALE' } },
+  leonard: { base:{ verb:'bolt', vel:7, dmg:1, lob:true, fire:true, col:'#f5822a', icona:'🍖', nome:'Polpetta bollente' },
+             pow: { verb:'nova', r:140, dmg:1, kb:8, cd:6, col:'#c9c9d0', icona:'🤫', nome:'ZITTI TUTTI' },
+             ult: { verb:'rain', t:110, cd:10, col:'#f5822a', icona:'⭐', nome:'RECENSIONE DA UNA STELLA' } },
+  fatneil: { base:{ verb:'bolt', vel:8, dmg:1, d20:true, col:'#5a8ae8', icona:'🎲', nome:'d20 da battaglia' },
+             pow: { verb:'quake', dmg:2, cd:6, col:'#5a8ae8', icona:'💥', nome:'Critico (immaginario)' },
+             ult: { verb:'volley', n:14, dmg:1, cd:10, col:'#5a8ae8', icona:'📖', nome:'MANUALE DEL DM' } },
+  duncan:  { base:{ verb:'wave', vel:5, dmg:1, col:'#8ae8b8', icona:'🛋', nome:'Seduta breve' },
+             pow: { verb:'freeze', t:180, cd:7, col:'#8ae8f0', icona:'🫖', nome:'Gelo britannico' },
+             ult: { verb:'slow', t:360, cd:10, col:'#8ae8b8', icona:'🫖', nome:'L\'ORA DEL TÈ',
+                    extra:{ verb:'heal', n:2, col:'#8ae8b8' } } },
+  vaughn:  { base:{ verb:'bolt', vel:7.5, dmg:1, lob:true, col:'#a8e85a', icona:'🥏', nome:'Hacky sack' },
+             pow: { verb:'nova', r:150, dmg:1, kb:9, lift:true, cd:5, col:'#a8e85a', icona:'🌬', nome:'Raffica zen' },
+             ult: { verb:'rain', t:100, cd:10, col:'#a8e85a', icona:'🎸', nome:'JAM PER PIERCE' } },
+  vicki:   { base:{ verb:'bolt', vel:11, dmg:1, col:'#e8a8d0', icona:'✏️', nome:'Punta di matita' },
+             pow: { verb:'dashstrike', t:45, cd:4, col:'#e8a8d0', icona:'✏️', nome:'Tratto rapido' },
+             ult: { verb:'volley', n:12, dmg:1, cd:10, col:'#e8a8d0', icona:'✏️', nome:'LA MATITA (QUELLA VERA)' } },
+  buddy:   { base:{ verb:'bolt', vel:8, dmg:1, fire:true, col:'#f5a25a', icona:'🔥', nome:'Entusiasmo ardente' },
+             pow: { verb:'cone', n:3, vel:7.5, dmg:1, fire:true, cd:5, col:'#f5a25a', icona:'🔥', nome:'Fan number one' },
+             ult: { verb:'nova', r:260, dmg:4, cd:10, col:'#f5a25a', icona:'🚪', nome:'FATEMI ENTRAREEE' } },
+  garrett: { base:{ verb:'cone', n:2, vel:7, dmg:1, rng:36, col:'#e8e85a', icona:'😱', nome:'Urletto' },
+             pow: { verb:'nova', r:160, dmg:1, kb:10, cd:5, col:'#e8e85a', icona:'😱', nome:'CRISI!' },
+             ult: { verb:'storm', all:true, dmg:3, cd:10, col:'#e8e85a', icona:'🚨', nome:'CRISI DI GARRETT GLOBALE' } },
+  guzman:  { base:{ verb:'bolt', vel:7, dmg:2, col:'#c8b89a', icona:'🗿', nome:'Scheggia di statua' },
+             pow: { verb:'quake', dmg:2, cd:6, col:'#c8b89a', icona:'🦶', nome:'Zoccolata di bronzo' },
+             ult: { verb:'nova', r:240, dmg:4, inv:240, cd:10, col:'#c8b89a', icona:'🗿', nome:'STATUA VIVENTE' } },
+  rich:    { base:{ verb:'bolt', vel:9, dmg:1, crit:true, col:'#5ae8c8', icona:'🍌', nome:'Colpo perfetto' },
+             pow: { verb:'heal', n:1, cd:8, col:'#5ae8c8', icona:'🩺', nome:'Kit del medico perfetto' },
+             ult: { verb:'focus', t:420, cd:10, col:'#5ae8c8', icona:'✨', nome:'PERFEZIONE IRRITANTE' } },
+  vicedean:{ base:{ verb:'bolt', vel:8.5, dmg:1, freeze:true, col:'#8ae8f0', icona:'❄️', nome:'Getto d\'aria condizionata' },
+             pow: { verb:'freeze', t:200, cd:6, col:'#8ae8f0', icona:'❄️', nome:'Clima a 16 gradi' },
+             ult: { verb:'freeze', t:420, dmg:2, cd:10, col:'#8ae8f0', icona:'🧊', nome:'INVERNO PROGRAMMATO',
+                    extra:{ verb:'nova', r:280, dmg:2, col:'#8ae8f0' } } },
+};
+// ------------------------------------------------ CAVALCATURE (v13, dpad-su / E)
+const MOUNTS = [
+  { id:'scopa',    nome:'SCOPA DEL CUSTODE',  icona:'🧹', cost:250, spd:1.5,  glide:true,
+    desc:'"È per pulire." Plana e corre. Il custode non deve saperlo.' },
+  { id:'unicorno', nome:'UNICORNO DI PIERCE', icona:'🦄', cost:450, spd:1.75, ram:true,
+    desc:'Rosa, offeso di esistere, velocissimo. In corsa travolge chiunque.' },
+  { id:'drago',    nome:'DRAGO DI FELTRO',    icona:'🐉', cost:700, spd:1.4,  fly:200,
+    desc:'Cugino del serpente di Chang. Vola per 3 secondi veri. Poi si vergogna.' },
+];
+function ownedMounts(){ return MOUNTS.filter(m => SAVE.meta['mount_' + m.id]); }
+function mountDef(p){ return p.mount ? MOUNTS.find(m => m.id === p.mount) : null; }
+function cycleMount(p){
+  const own = ownedMounts();
+  if (!own.length){ showGuide('mount'); return; }
+  const i = p.mount ? own.findIndex(m => m.id === p.mount) : -1;
+  const nx = i + 1 < own.length ? own[i + 1] : null;
+  p.mount = nx ? nx.id : null;
+  p.mountFuel = nx && nx.fly ? nx.fly : 0;
+  burst(p.x + p.w/2, p.y + p.h, nx ? '#f5d442' : '#9a9ac0', 16, 3);
+  playFX('sparkle', p.x + p.w/2, p.y + p.h - 8, 1.6);
+  sfx(nx ? 'join' : 'text');
+  showToast(nx ? (nx.icona + ' In sella: ' + nx.nome) : '🚶 A piedi. Come i poveri.');
+}
+function drawMount(p){
+  const m = mountDef(p); if (!m || p.hp <= 0) return;
+  const x = p.x + p.w/2 - cam.x, y = p.y + p.h - cam.y;
+  const bob = Math.sin(frame * 0.15) * 1.5;
+  ctx.save(); ctx.translate(x, y + bob - 5); ctx.scale(p.face * 1.6, 1.6);   // grande abbastanza da CAVALCARLA
+  if (m.id === 'scopa'){
+    ctx.strokeStyle = '#8a5a2e'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(-20, 2); ctx.lineTo(16, -2); ctx.stroke();
+    ctx.fillStyle = '#c9a227';
+    for (let k = -2; k <= 2; k++){ ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(-31, 4 + k*3); ctx.lineTo(-27, 6 + k*3); ctx.fill(); }
+  } else if (m.id === 'unicorno'){
+    ctx.fillStyle = '#f5b8d8'; rrect(-16, -6, 30, 14, 6); ctx.fill();
+    ctx.fillRect(10, -14, 10, 10);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(18, -14); ctx.lineTo(27, -21); ctx.lineTo(20, -11); ctx.fill();
+    const lg = Math.floor(frame / 6) % 2 ? 2 : -2;
+    ctx.fillStyle = '#e88ac0'; ctx.fillRect(-12 + lg, 6, 4, 8); ctx.fillRect(6 - lg, 6, 4, 8);
+    ctx.fillStyle = '#8a6ae8'; ctx.fillRect(-20, -4, 5, 10);
+    if (frame % 5 === 0) parts.push({ x:p.x + p.w/2 - p.face*18, y:p.y + p.h - 4, vx:0, vy:-0.4, t:14, txt:'✦', sz:8, color:'#f5b8d8' });
+  } else if (m.id === 'drago'){
+    ctx.fillStyle = '#4aa85a'; rrect(-18, -8, 34, 16, 7); ctx.fill();
+    ctx.fillRect(12, -16, 12, 12);
+    const wy = Math.sin(frame * 0.3) * 6;
+    ctx.fillStyle = '#2e7a3e'; ctx.beginPath(); ctx.moveTo(-4, -6); ctx.lineTo(-14, -20 - wy); ctx.lineTo(3, -8); ctx.fill();
+    ctx.fillStyle = '#e85a5a'; ctx.fillRect(22, -12, 4, 3);
+    ctx.fillStyle = '#f5d442';
+    for (let k = 0; k < 3; k++) ctx.fillRect(-14 + k*9, -10, 3, 3);   // bottoni cuciti: È di feltro
+  }
+  ctx.restore();
+}
+function kitOf(p){ return KITS[p.cdef.id] || KITS.jeff; }
+function baseLvl(p){ return 1 + (SAVE.meta.pbase2 ? 1 : 0) + (SAVE.meta.pbase3 ? 1 : 0) + Math.min(3, boons.baseUp || 0); }
+function execVerb(p, s, tier){
+  const lv = tier === 'base' ? baseLvl(p) : 1;
+  const mul = tier === 'base' ? 1 + (lv - 1) * 0.7 : 1;
+  const col = s.col || '#fff';
+  const dir = p.face;
+  const cx = p.x + p.w/2, cy = p.y + p.h/2 - 2;
+  const shoot = (vx, vy, o) => projs.push(Object.assign({ from:'player', owner:p, x:cx + dir*10, y:cy,
+    w:9 + lv*2, h:9 + lv*2, vx, vy, t:s.rng || 85, grav:!!s.lob, fire:!!s.fire, freeze:!!s.freeze,
+    pierce:!!s.pierce || lv >= 2, homing:!!s.homing, dmg:Math.max(1, Math.round((s.dmg || 1) * mul)) }, o || {}));
+  switch(s.verb){
+    case 'bolt': {
+      const n = 1 + (lv >= 3 && tier === 'base' ? 1 : 0);
+      for (let k = 0; k < n; k++){
+        let d = (s.dmg || 1);
+        if (s.d20) d = 1 + Math.floor(Math.random() * 4);
+        if (s.crit && Math.random() < 0.25){ d *= 2; }
+        shoot(dir*(s.vel || 8), s.lob ? -3 - k : k * 2.2, { dmg: Math.max(1, Math.round(d * mul)) });
+      }
+      break; }
+    case 'cone':
+      for (let k = 0; k < (s.n || 3); k++){
+        const ang = (k - ((s.n || 3) - 1)/2) * 0.22;
+        shoot(Math.cos(ang)*(s.vel || 7)*dir, Math.sin(ang)*(s.vel || 7), { t: s.rng || 60 });
+      }
+      break;
+    case 'wave':
+      shoot(dir*(s.vel || 5), 0, { wave:true, pierce:true, w:18, h:40 + lv*10, t:75 });
+      break;
+    case 'nova': {
+      const r = s.r || 150;
+      parts.push({ ring:true, x:cx, y:cy, r:18, vx:0, vy:0, t:12, color:col });
+      parts.push({ ring:true, x:cx, y:cy, r:8,  vx:0, vy:0, t:10, color:'#fff' });
+      burst(cx, cy, col, tier === 'ult' ? 46 : 20, tier === 'ult' ? 6 : 4);
+      addShake(tier === 'ult' ? 10 : 5);
+      for (const e of enemies) if (e.hp > 0 && Math.hypot(e.x - cx, e.y - cy) < r){
+        e.hp -= (s.dmg || 1);
+        if (s.kb){ e.vx = Math.sign(e.x - cx || dir) * s.kb; e.vy = -4; }
+        if (s.freeze) e.slowT = s.freeze;
+        burst(e.x + e.w/2, e.y + e.h/2, col, 8, 3);
+        if (e.hp <= 0) killEnemy(e, p);
+      }
+      if (mboss && !mboss.dead && Math.hypot(mboss.x - cx, mboss.y - cy) < r + 40) hitMboss(Math.min(4, s.dmg || 1), p);
+      if (boss && !boss.dead && Math.hypot(boss.x + 48 - cx, boss.y + 48 - cy) < r + 60) hitBoss(Math.min(3, s.dmg || 1));
+      if (rival && !rival.defeated && Math.hypot(rival.x - cx, rival.y - cy) < r + 40) hitRival(Math.min(3, s.dmg || 1));
+      if (s.slow) slowT = Math.max(slowT, s.slow);
+      if (s.inv) p.inv = Math.max(p.inv, s.inv);
+      if (s.heal) for (const q of players) if (q.hp > 0) q.hp = Math.min(q.maxhp, q.hp + s.heal);
+      if (s.lift && !p.onGround) p.vy = Math.min(p.vy, -9);
+      break; }
+    case 'beam': p.laserT = s.t || 120; break;
+    case 'rain': superRain = { t: s.t || 100, owner: p }; break;
+    case 'volley':
+      for (let i = 0; i < (s.n || 10); i++)
+        shoot(dir * (4 + (i % 3) * 1.6), -2 - (i % 4), { grav:true, fire:true, t:130 });
+      sfx('fire');
+      break;
+    case 'storm': {
+      const inR = e => e.hp > 0 && (s.all ? Math.abs(e.x - cam.x - W/2) < W : Math.hypot(e.x - cx, e.y - cy) < 280);
+      const targ = enemies.filter(inR).sort((a,b) => Math.hypot(a.x-cx,a.y-cy) - Math.hypot(b.x-cx,b.y-cy)).slice(0, s.all ? 99 : (s.k || 2));
+      flashGrade([255, 235, 120], s.all ? 22 : 10);
+      for (const e of targ){
+        e.hp -= (s.dmg || 2); e.slowT = 60;
+        e._boltT = 10; e._boltFrom = { x: cx, y: cy - 30 };
+        burst(e.x + e.w/2, e.y + e.h/2, '#f5d442', 12, 3);
+        playFX('slash_p', e.x + e.w/2, e.y + e.h/2, 0.5, { rot: Math.random()*6.28 });
+        if (e.hp <= 0) killEnemy(e, p);
+      }
+      if (!targ.length && mboss && !mboss.dead && Math.hypot(mboss.x-cx, mboss.y-cy) < 300) hitMboss(s.dmg || 2, p);
+      hitstop = Math.max(hitstop, 4);
+      break; }
+    case 'freeze':
+      flashGrade([140, 220, 255], 18);
+      for (const e of enemies) if (e.hp > 0){
+        e.slowT = Math.max(e.slowT || 0, s.t || 180);
+        if (s.dmg){ e.hp -= s.dmg; if (e.hp <= 0) killEnemy(e, p); }
+        parts.push({ txt:'❄', x:e.x + e.w/2, y:e.y - 8, vx:0, vy:-0.5, t:30, color:'#bfe8ff' });
+      }
+      sfx('gem');
+      break;
+    case 'heal':
+      for (const q of players) if (q.hp > 0){ q.hp = Math.min(q.maxhp, q.hp + (s.n || 1)); }
+      sfx('heart'); burst(cx, cy, '#e85a7a', 14, 3);
+      break;
+    case 'slow': slowT = Math.max(slowT, s.t || 180); sfx('organ'); break;
+    case 'focus': p.focusT = s.t || 420; break;
+    case 'jail': {
+      const pool = CHARS.filter(c => c.id !== p.cdef.id && isUnlocked(c));
+      const nc = pool[Math.floor(Math.random() * pool.length)];
+      if (nc){ p.jail = { base: p.cdef, t: 900 }; p.cdef = nc; p.costume = null; showToast('JAILBREAK: sei diventato ' + nc.name + '!'); }
+      break; }
+    case 'dashstrike':
+      p.sprintT = s.t || 50; p.inv = Math.max(p.inv, s.t || 50); p.face = dir;
+      playFX('streak', cx + dir*14, cy, 0.6, { flip: dir < 0, rot: dir < 0 ? 0.8 : -0.8 });
+      break;
+    case 'quake':
+      addShake(8); sfx('stomp');
+      for (const d2 of [-1, 1])
+        shoot(d2 * 6, 0, { y: p.y + p.h - 8, pierce:true, t:50, w:16, h:12 });
+      parts.push({ ring:true, x:cx, y:p.y + p.h, r:10, vx:0, vy:0, t:12, color:col });
+      break;
+    case 'lava':
+      for (let i = 0; i < 12; i++)
+        shoot(dir * (3.5 + (i % 4)), -3 - (i % 3) * 1.4, { grav:true, fire:true, pierce:i % 3 === 0, t:150, dmg:2 });
+      flashGrade([255, 130, 40], 16);
+      sfx('fire');
+      break;
+  }
+  if (s.extra) execVerb(p, s.extra, tier);
+}
+function castBase(p){
+  const k = kitOf(p).base;
+  p.atkCd = Math.max(8, 16 - baseLvl(p) * 2);   // "senza cooldown": solo il rateo di fuoco
+  execVerb(p, k, 'base');
+  sfx('atk');
+  playFX('slash', p.x + p.w/2 + p.face*20, p.y + p.h/2 - 4, 0.4 + baseLvl(p)*0.08, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
+}
+function castPow(p){
+  const k = kitOf(p).pow;
+  p.powCd = (god || infSoul) ? 0 : Math.round(k.cd * 60);
+  sfx('fire'); rumble(p.slot, 150, 0.6);
+  burst(p.x + p.w/2, p.y + p.h/2, k.col, 16, 3);
+  const rgbP = hexRgb(k.col);
+  flashLight(p.x + p.w/2, p.y + p.h/2, 140, rgbP);
+  playFX('slash_b', p.x + p.w/2 + p.face*22, p.y + p.h/2 - 6, 0.7, { flip: p.face < 0, rot:(Math.random()-0.5)*0.6 });
+  execVerb(p, k, 'pow');
+  showToast(k.icona + ' ' + k.nome, 60);
+}
+function castUlt(p){
+  const k = kitOf(p).ult;
+  p.ultCd = (god || infSoul) ? 0 : Math.min(600, Math.round(k.cd * 60));
+  sfx('craft'); addShake(10); rumble(p.slot, 450, 1);
+  stinger('bossIntro');
+  const rgbU = hexRgb(k.col);
+  flashGrade(rgbU, 20);
+  flashLight(p.x + p.w/2, p.y + p.h/2, 260, rgbU);
+  burst(p.x + p.w/2, p.y + p.h/2, k.col, 34, 5);
+  playFX('firework', p.x + p.w/2, p.y - 6, 0.5);
+  playFX('slash',   p.x + p.w/2, p.y + 2, 1.25, { rot:-0.4 });
+  playFX('slash_p', p.x + p.w/2, p.y + 2, 1.25, { rot: 0.5, flip:true });
+  // titolo a schermo: il supremo si ANNUNCIA
+  parts.push({ txt:'★ ' + k.nome + ' ★', x:cam.x + W/2, y:cam.y + H/2 - 90, vx:0, vy:-0.35, t:75, sz:30, color:k.col });
+  execVerb(p, k, 'ult');
+}
+function hexRgb(c){
+  try { return [parseInt(c.slice(1,3),16), parseInt(c.slice(3,5),16), parseInt(c.slice(5,7),16)]; }
+  catch(e){ return [255,255,255]; }
+}
 const WEAPONS = {
   penna:     { nome:'PENNA DI ANNIE',    icona:'🖊', tipo:'arco',       cd:11, atkT:9,  aw:26, dmg:1, backstab:true, kb:1, hs:1, rumb:[50,0.25] },
   mazza:     { nome:'MAZZA DEL BIDELLO', icona:'🔨', tipo:'smash',      cd:46, atkT:14, aw:46, dmg:3, launch:true,   kb:7, hs:7, rumb:[240,0.9] },
@@ -1251,11 +1528,14 @@ function perkOwned(id){
   if (id === 'scimmia') return !!pet;
   return !!boons[id];
 }
-function openPerks(){
-  const bonus = 5 + endless.depth * 5;
+let perkNext = null;   // v13: le carte-perk escono anche in CAMPAGNA (a fine livello)
+function openPerks(next){
+  perkNext = next || (() => endlessNext());
+  const depth = endless ? endless.depth : Math.max(1, lvlIdx);
+  const bonus = 5 + depth * 5;
   addWallet(bonus);
   stinger('clear'); flashGrade([255,215,90], 16);   // oro sul level-clear
-  const rng = mulberry(endless.seed * 31 + endless.depth * 977);
+  const rng = mulberry((endless ? endless.seed : 4242 + frame % 997) * 31 + depth * 977);
   const owned = ownedIds(players[0]);
   const pool = [];
   for (const pk of PERKS){
@@ -1270,10 +1550,10 @@ function openPerks(){
     for (let k = pool.length - 1; k >= 0; k--) if (pool[k].id === pk.id) pool.splice(k, 1);
     items.push(pk);
   }
-  // ogni 2 profondità: 4ª carta economica — POM (potenzia) o BANCO DI HILDA, alternati
-  if (endless.depth >= 2 && endless.depth % 2 === 0){
+  // ogni 2 profondità (solo endless): 4ª carta economica — POM (potenzia) o BANCO DI HILDA, alternati
+  if (endless && depth >= 2 && depth % 2 === 0){
     const up = Object.keys(boons).filter(k => ['stivali','caffe','dado','matite','vampiro','furia','spirito'].includes(k));
-    if (endless.depth % 4 === 0 || !up.length)
+    if (depth % 4 === 0 || !up.length)
       items.push({ id:'_shop', nome:'BANCO DI HILDA', icona:'🛒', desc:'Compra prima di scendere: cure, boon, un\'arma.', shop:true, act(){} });
     else {
       const tid = up[Math.floor(rng() * up.length)];
@@ -1281,7 +1561,7 @@ function openPerks(){
       items.push({ id:'_pom', nome:'POM DI CORNELIUS', icona:'🍎', desc:'Potenzia ' + tpk.nome + ' al livello ' + (bl(tid) + 1) + '.', act(){ boons[tid] = bl(tid) + 1; } });
     }
   }
-  if (!items.length){ endlessNext(); return; }
+  if (!items.length){ const go = perkNext || (() => endlessNext()); perkNext = null; go(); return; }
   perkChoice = { items, sel: Math.min(1, items.length - 1), bonus, t: 0 };
   state = 'perk';
   setSong('title');
@@ -1295,12 +1575,14 @@ function updatePerk(){
   if (pc.t > 12 && (jp('Enter') || jp('Space') || jp('KeyZ') || gpJP(0,'ok'))){
     const pk = pc.items[pc.sel];
     perkChoice = null;
-    if (pk.shop){ endlessNext(); openShop(players[0]); return; }
+    const go = perkNext || (() => endlessNext());
+    perkNext = null;
+    if (pk.shop){ go(); openShop(players[0]); return; }
     pk.act(players[0]);
     showToast(pk.icona + ' ' + pk.nome + ' ottenuto!');
     stinger('perk');
     checkSynergies(players[0]);
-    endlessNext();
+    go();
   }
 }
 function drawPerk(){
@@ -1313,7 +1595,7 @@ function drawPerk(){
     ctx.fillStyle = 'rgba(245,212,66,' + (0.1 + (i % 3) * 0.08) + ')';
     ctx.fillRect(sx, sy, 3, 3);
   }
-  text('PROFONDITÀ ' + endless.depth + ' COMPLETATA', W/2, 66, 30, '#f5d442', 'center');
+  text(endless ? ('PROFONDITÀ ' + endless.depth + ' COMPLETATA') : 'MONDO COMPLETATO', W/2, 66, 30, '#f5d442', 'center');
   text('Bottino: +' + pc.bonus + ' monete · Scegli il tuo potenziamento', W/2, 96, 15, '#9a9ac0', 'center');
   const n = pc.items.length;
   const gap = n > 3 ? 20 : 40;
@@ -1364,9 +1646,12 @@ function optionsItems(){
 function cheatsItems(){
   return [
     { label:'GODMODE: ' + (god ? 'SÌ 😇' : 'no'),                 act(){ god = !god; cheatDirty = true; } },
-    { label:'MERAVIGLIA INFINITA: ' + (infSoul ? 'SÌ ★' : 'no'),  act(){ infSoul = !infSoul; cheatDirty = true; } },
+    { label:'COOLDOWN AZZERATI: ' + (infSoul ? 'SÌ ⚡' : 'no'),    act(){ infSoul = !infSoul; cheatDirty = true; } },
+    { label:'VOLO LIBERO: ' + (flyMode ? 'SÌ 🕊' : 'no'),          act(){ flyMode = !flyMode; cheatDirty = true; sfx('jump'); } },
+    { label:'MONETE A PIOGGIA (10 secondi d\'oro)',                act(){ coinRainT = 600; cheatDirty = true; sfx('gem'); } },
+    { label:'TUTTO-HOMING: ' + (homingAll ? 'SÌ 🎯' : 'no'),       act(){ homingAll = !homingAll; cheatDirty = true; } },
     { label:'MONETE +500',                                         act(){ SAVE.wallet += 500; saveGame(); cheatDirty = true; sfx('coin'); } },
-    { label:'LANCIA-LAVA SUBITO',                                  act(){ lavagun = true; cheatDirty = true; } },
+    { label:'LANCIA-LAVA SUBITO',                                  act(){ if (players[0]) giveWeapon(players[0], 'lancialava'); lavagun = true; cheatDirty = true; } },
     { label:'SBLOCCA TUTTI I PERSONAGGI',                          act(){ for (const c of CHARS) SAVE.chars[c.id] = true; saveGame(); cheatDirty = true; sfx('buy'); } },
     { label:'SBLOCCA POST-GAME: ' + (SAVE.finished ? 'GIÀ FATTO' : 'no'), act(){ SAVE.finished = true; saveGame(); cheatDirty = true; sfx('organ'); } },
     { label:'MONETE +1000',                        act(){ SAVE.wallet += 1000; saveGame(); cheatDirty = true; sfx('gem'); } },
@@ -1430,14 +1715,37 @@ function drawPause(){
 }
 function drawHelp(){
   drawPlay();
-  ctx.fillStyle = 'rgba(4,4,12,0.85)'; ctx.fillRect(0, 0, W, H);
-  text('COMANDI', W/2, 200, 40, '#f5d442', 'center');
-  text('P1: frecce + Z salto · X attacco · C abilità · V super · Shift/R1 SCATTO · Q/L2 incantesimo', W/2, 268, 15, '#fff', 'center');
-  text('P2: WASD + F attacco · G abilità · H super · R scatto  (joystick supportati)', W/2, 292, 15, '#fff', 'center');
-  text('Doppio salto: premi salto in aria · Muro: tieni la direzione e salti · TAB/L1 cambia arma', W/2, 316, 13, '#8ae8e8', 'center');
-  text('GIÙ vicino a Hilda = negozio · GIÙ alla forgia = lancia-lava · GIÙ all\'altare = scambi', W/2, 340, 14, '#9a9ac0', 'center');
-  text('M audio · F2 CRT · ⬡ NEGOZIO ABILITÀ dal titolo (Monete)', W/2, 372, 13, '#5ae87a', 'center');
-  text('INVIO/✕ o ESC: torna alla pausa', W/2, H - 20, 12, 'rgba(255,255,255,0.5)', 'center');
+  ctx.fillStyle = 'rgba(4,4,12,0.88)'; ctx.fillRect(0, 0, W, H);
+  text('COMANDI', W/2, 130, 36, '#f5d442', 'center');
+  // v13: tabella vera — Azione | Pad PS5 | Tastiera (chiara, non un muro di testo)
+  const rows = [
+    ['AZIONE',            'PAD PS5',        'TASTIERA'],
+    ['Muoviti / Salta',   'levetta · ✕',    'frecce · Z/SPAZIO'],
+    ['Schivata (i-frame)','◯ o R1',         'SHIFT'],
+    ['Potere base (spara)','▢',             'X'],
+    ['Attacco pesante',   '△',              'C'],
+    ['Potere  (ricarica in s.)','L1 o L2',  'Q'],
+    ['SUPREMO (max 10s)', 'R2',             'R'],
+    ['Cavalcatura',       'croce SU',       'E'],
+    ['Cambia arma',       'croce DESTRA',   'TAB'],
+    ['Interagisci/negozia','croce GIÙ',     'freccia GIÙ'],
+    ['Scivolata / Schianto','GIÙ+▢ (aria: GIÙ+▢)','GIÙ+X'],
+    ['Pausa',             'Options',        'P'],
+  ];
+  const ty0 = 164, rh = 25, cw2 = [300, 190, 210], x0 = W/2 - (cw2[0] + cw2[1] + cw2[2])/2;
+  panel(x0 - 16, ty0 - 22, cw2[0] + cw2[1] + cw2[2] + 32, rows.length * rh + 34, 'rgba(8,8,20,0.85)', 'rgba(138,232,232,0.25)');
+  for (let r = 0; r < rows.length; r++){
+    const yy = ty0 + r * rh;
+    if (r === 0){ ctx.fillStyle = 'rgba(245,212,66,0.12)'; ctx.fillRect(x0 - 8, yy - 17, cw2[0] + cw2[1] + cw2[2] + 16, 24); }
+    else if (r % 2 === 0){ ctx.fillStyle = 'rgba(255,255,255,0.04)'; ctx.fillRect(x0 - 8, yy - 17, cw2[0] + cw2[1] + cw2[2] + 16, 24); }
+    let cx2 = x0;
+    for (let c = 0; c < 3; c++){
+      text(rows[r][c], cx2, yy, r === 0 ? 14 : 14, r === 0 ? '#f5d442' : c === 0 ? '#fff' : 'rgba(255,255,255,0.85)');
+      cx2 += cw2[c];
+    }
+  }
+  text('Il tuo ▢ e i poteri sono DEL PERSONAGGIO: cambiano campione per campione (guarda le barre in alto).', W/2, ty0 + rows.length * rh + 22, 13, '#8ae8e8', 'center');
+  text('INVIO/✕ o ESC: torna alla pausa · M audio · F2 CRT', W/2, H - 20, 12, 'rgba(255,255,255,0.5)', 'center');
 }
 // pannello ad angoli morbidi con ombra (HD-2D)
 function rrect(x, y, w2, h2, r){
@@ -1509,11 +1817,13 @@ const ABILITIES = [
   { id:'mutande',    nome:'MUTANDE-PARACADUTE',         icona:'🪂', cost:90,  desc:'Cadere nelle fosse non toglie cuori. Ti giudica e basta.' },
   { id:'karma',      nome:'IL KARMA DI SHIRLEY',        icona:'🙏', cost:280, desc:'Una resurrezione gratis a run. "Oh, che carino."' },
   { id:'coinmagnet', nome:'CALAMITA ETERNA',            icona:'🧲', cost:100, desc:'Pop pop! Le monete ti inseguono. Per sempre.' },
-  // — incantesimi elementali (cast Q/L2 · cambia con E/dpad-su) —
-  { id:'sp_fuoco',    nome:'FIAMMA DEL FALÒ DI PROTESTA', icona:'🔥', cost:60,  desc:'Incantesimo: proiettile perforante. Scioglie il ghiaccio (anche le barriere).' },
-  { id:'sp_ghiaccio', nome:'GELO BUROCRATICO',            icona:'❄️', cost:150, desc:'Incantesimo: ventaglio che congela. Rallenta tutto, come la segreteria.' },
-  { id:'sp_fulmine',  nome:'FULMINE DI CHANG (USO CIVILE)',icona:'⚡', cost:200, desc:'Incantesimo: folgora i 2 nemici più vicini. Omologato. Più o meno.' },
-  { id:'sp_vento',    nome:'VENTO DI FINE SEMESTRE',      icona:'🌪️', cost:180, desc:'Incantesimo: raffica che spazza nemici, proiettili e responsabilità.' },
+  // — potere base (il tuo ▢, per sempre) —
+  { id:'pbase2', nome:'POTERE BASE LIV. II',  icona:'✨', cost:220, desc:'Il ▢ del tuo campione: +70% danno e proiettili PERFORANTI. Per sempre.' },
+  { id:'pbase3', nome:'POTERE BASE LIV. III', icona:'🌟', cost:480, desc:'Il ▢ definitivo: colpo DOPPIO e ancora più danno. Legalmente un incantesimo.' },
+  // — cavalcature (richiamale con E / dpad-su) —
+  { id:'mount_scopa',    nome:'SCOPA DEL CUSTODE',  icona:'🧹', cost:250, desc:'"È per pulire." Corre +50% e PLANA. Il custode non deve saperlo.' },
+  { id:'mount_unicorno', nome:'UNICORNO DI PIERCE', icona:'🦄', cost:450, desc:'Rosa, offeso, velocissimo (+75%). In corsa TRAVOLGE i nemici.' },
+  { id:'mount_drago',    nome:'DRAGO DI FELTRO',    icona:'🐉', cost:700, desc:'Cugino del serpente di Chang. VOLA per 3 secondi veri. Di feltro.' },
 ];
 let abilSel = 0;
 // i boss ora lasciano un bel gruzzolo di Monete (la valuta del negozio)
@@ -1894,7 +2204,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v12.0';    // S7: Greendale + Scuola di Magia + Atto III/IV
+const GAME_VERSION = 'v13.0';    // KIT alla LoL, pad rimappato, HUD Isaac, cavalcature, trucchi nuovi
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -1924,6 +2234,7 @@ let hitstop = 0;           // fermo-immagine sui colpi (game feel)
 let wipeT = 0, wipeKind = 0;   // transizione "PowerPoint" kitsch (glitch voluto)
 let nightWave = null;          // TURNO DI NOTTE (rischio-ricompensa alla Kingdom): {total, spawned, t}
 let god = false, infSoul = false, cheatDirty = false;  // trucchi
+let flyMode = false, coinRainT = 0, homingAll = false;  // trucchi v13: volo, pioggia d'oro, tutto-homing
 let slowT = 0;             // Discorso Winger: rallenta il mondo
 let superRain = null;      // Brittapocalisse
 let shake = 0;
@@ -1983,6 +2294,16 @@ function breakCrate(tx, ty, p){
   }
   burst(tx*TS+16, ty*TS+16, '#a8763e', 14, 2.5);
   soulGain(p, 4);
+  // v13: 8% — un PERK direttamente dalla cassa ("non ne trovo mai": ora sì)
+  if (Math.random() < 0.08){
+    const pool = PERKS.filter(pk => !pk.shop && (pk.ripetibile || !perkOwned(pk.id)));
+    const pk = pool[Math.floor(Math.random() * pool.length)];
+    if (pk){
+      pk.act(p); checkSynergies(p);
+      stinger('perk'); flashGrade([180, 240, 160], 12);
+      showToast('📦→' + pk.icona + ' ' + pk.nome + ' dalla cassa!');
+    }
+  }
   const lucky = (hasAbil('fortuna') ? 0.12 : 0) + (SAVE.house === 'corvonadir' ? 0.1 : 0);   // DADO NON TRUCCATO (+ intelletto di casa)
   const r = Math.random();
   if (r < 0.15 + lucky){ cristalli++; sfx('gem'); showToast('+1 CRISTALLO (' + cristalli + ')'); }
@@ -2038,7 +2359,7 @@ function activateSuper(p){
   }
 }
 function updateSupers(p){
-  if (p.soul >= 100 && frame % 5 === 0)   // aura da carica DBZ: la Meraviglia trabocca
+  if (p.ultCd <= 0 && state === 'play' && frame % 5 === 0)   // aura da carica DBZ: il SUPREMO è pronto
     parts.push({ x:p.x + p.w/2 + (Math.random()-0.5)*22, y:p.y + p.h - 4, vx:(Math.random()-0.5)*0.4, vy:-1.2 - Math.random(), t:22, ng:1, sz:3, color: Math.random() < 0.5 ? '#f5d442' : '#fff' });
   if (p.boltT > 0) p.boltT--;
   if (p.jail){ p.jail.t--; if (p.jail.t <= 0){ p.cdef = p.jail.base; p.jail = null; showToast('Jailbreak terminato.'); } }
@@ -2076,7 +2397,8 @@ function mkPlayer(cdef, costume, x, y, slot){
     cpx:x, cpy:y, anim:0, downT:0,
     soul:0, shield:0, jail:null, sprintT:0, focusT:0, laserT:0, net:false,
     slideT:0, pounding:false, warpT:42, idleT:0, airT:0,
-    dashT:0, dashCd:0, dashDir:1, airDashes:0, wallDir:0, coyote:0, jbuf:0, squashT:0, spellCd:0 };
+    dashT:0, dashCd:0, dashDir:1, airDashes:0, wallDir:0, coyote:0, jbuf:0, squashT:0, spellCd:0,
+    hvyCd:0, powCd:0, ultCd:0, mount:null, mountFuel:0 };
 }
 function sheetOf(p){ return p.costume ? p.cdef.id + '__' + p.costume : p.cdef.id; }
 function alivePlayers(){ return players.filter(p => p.hp > 0); }
@@ -2393,6 +2715,7 @@ const GUIDE = {
   corrente:'ABED: corrente ascensionale. Buttati dentro e vola. La termodinamica qui è più gentile.',
   mbrest: 'ABED: dopo tre salti riprende fiato. Quello è il momento. Funziona anche coi cattivi del cinema.',
   locker: 'ABED: l\'armadietto 9¾. Premi GIÙ. Se sbatti il muso, riprova: è una questione di fede. E di copyright.',
+  mount:  'ABED: le cavalcature si comprano al NEGOZIO ABILITÀ dal titolo. Sì, c\'è un unicorno. Sì, è di Pierce.',
   scuola: 'ABED: scuola di magia. I punti-casa pagano in monete vere. Il capitalismo è arrivato anche qui.',
   tigre:  'ABED: carica in linea retta. Salta e lascia che il muro faccia il lavoro. Fisica newtoniana applicata ai bulli.',
   dreama: 'ABED: il Dreamatorium è corrotto. Le versioni malvagie hanno il pizzetto. Le riconosci dal pizzetto.',
@@ -2451,6 +2774,13 @@ function burst(x, y, color, n, spd){
 function hurtPlayer(p, n, fromX){
   if (god || p.inv > 0 || p.hp <= 0 || state !== 'play') return;
   if (p.sprintT > 0) return;
+  if (p.mount){   // la cavalcatura assorbe il colpo e se ne va, offesa
+    const md = mountDef(p);
+    p.mount = null; p.mountFuel = 0; p.inv = 70; sfx('hurt'); addShake(4);
+    burst(p.x + p.w/2, p.y + p.h, '#f5b8d8', 18, 4);
+    showToast((md ? md.icona + ' ' : '') + 'La cavalcatura ti scarica qui. Comprensibile.');
+    return;
+  }
   if (p.shield > 0){
     p.shield--; p.inv = 60; sfx('check'); addShake(3);
     burst(p.x + p.w/2, p.y + p.h/2, '#8ae8e8', 14, 3);
@@ -2519,7 +2849,7 @@ function updateOnePlayer(p, atkBoxes){
   const inGin = lvl.def.gin && tileAt(Math.floor((p.x + p.w/2) / TS), Math.floor((p.y + p.h/2) / TS)) === '~';
   const drunk = p.drunkT > 0;
   if (drunk) p.drunkT--;
-  let spdMul = (boons.stivali ? 1.09 + 0.06 * Math.min(4, bl('stivali')) : 1) * (p.sprintT > 0 ? 2.6 : 1);
+  let spdMul = (boons.stivali ? 1.09 + 0.06 * Math.min(4, bl('stivali')) : 1) * (p.sprintT > 0 ? 2.6 : 1) * (mountDef(p) ? mountDef(p).spd : 1);
   if (trait(p,'garrett') && p.hp < p.maxhp) spdMul *= 1.25;   // CRISI!
   if (trait(p,'rich')) spdMul *= 1.05;
   const acc = p.onGround ? 0.9 : 0.55;
@@ -2610,7 +2940,14 @@ function updateOnePlayer(p, atkBoxes){
       showToast('🍸 TROPPO GIN: comandi invertiti. Duncan sarebbe fiero.');
     }
   } else p.ginT = 0;
-  if ((hasAbil('glide') || p.cdef.ab === 'glide') && pDown(p,'jump') && p.vy > 1.4 && !p.onGround){ p.vy = 1.4; if (frame % 6 === 0) parts.push({ x:p.x + p.w/2, y:p.y + p.h, vx:0, vy:0.3, t:10, ng:1, sz:3, color:'rgba(230,230,255,0.5)' }); }
+  const mdf = mountDef(p);
+  if (flyMode){ p.vy = pDown(p,'jump') ? -4.5 : pDown(p,'down') ? 4.5 : 0; p.jumps = 0; p.airDashes = 0; }
+  else if (mdf && mdf.fly && !p.onGround && pDown(p,'jump') && p.mountFuel > 0){
+    p.vy = Math.max(p.vy - 1.2, -3.4); p.mountFuel--;   // il drago di feltro vola. Per poco. Con dignità.
+    if (frame % 4 === 0) parts.push({ x:p.x + p.w/2 - p.face*16, y:p.y + p.h, vx:-p.face, vy:0.8, t:12, ng:1, sz:2, color:'rgba(90,232,122,0.6)' });
+  }
+  if (mdf && mdf.fly && p.onGround) p.mountFuel = mdf.fly;
+  if ((hasAbil('glide') || p.cdef.ab === 'glide' || (mdf && mdf.glide)) && pDown(p,'jump') && p.vy > 1.4 && !p.onGround){ p.vy = 1.4; if (frame % 6 === 0) parts.push({ x:p.x + p.w/2, y:p.y + p.h, vx:0, vy:0.3, t:10, ng:1, sz:3, color:'rgba(230,230,255,0.5)' }); }
   // atterraggio: polvere + SCHIANTO (onda d'urto)
   if (wasAir && p.onGround){
     if (p.pounding){
@@ -2633,18 +2970,21 @@ function updateOnePlayer(p, atkBoxes){
   }
 
   // super al 100% di Meraviglia
-  if (pJP(p,'sup') && p.soul >= 100) activateSuper(p);
+  // POTERE (L1/Q) e SUPREMO (R2/R): cooldown A SECONDI, alla LoL. God/cheat = zero attese.
+  if (p.powCd > 0) p.powCd--;
+  if (p.ultCd > 0) p.ultCd--;
+  if (god || infSoul){ p.powCd = 0; p.ultCd = 0; }
+  if (pJP(p,'pow') && p.powCd <= 0) castPow(p);
+  if (pJP(p,'sup') && p.ultCd <= 0) castUlt(p);
 
   // INCANTESIMI: cast con Q/L2, cambio con E/dpad-su
-  if (p.spellCd > 0) p.spellCd--;
-  if (pJP(p,'spell')) { castSpell(p); if (!curSpell()) showGuide('spell'); }
-  if (pJP(p,'spnext')){
-    const os = ownedSpells();
-    if (os.length > 1){ spellSel = (spellSel + 1) % os.length; const S = SPELLS[curSpell()]; showToast(S.icona + ' ' + S.nome); sfx('text'); }
-  }
+  // CAVALCATURA (dpad-su / E): evoca, cicla tra le possedute, congeda
+  if (pJP(p,'mount')) cycleMount(p);
 
   if (p.atkCd > 0) p.atkCd--;
+  if (p.hvyCd > 0) p.hvyCd--;
   if (p.atkT > 0) p.atkT--;
+  // ▢ POTERE BASE del personaggio: a distanza, senza cooldown (solo rateo), livellabile
   if (pJP(p,'atk') && p.atkCd <= 0 && p.slideT <= 0 && !p.pounding){
     if (pDown(p,'down') && p.onGround){          // SCIVOLATA
       p.slideT = trait(p,'troy') ? 26 : 18;
@@ -2652,38 +2992,42 @@ function updateOnePlayer(p, atkBoxes){
       playFX('streak', p.x + p.w/2 + p.face*16, p.y + p.h - 12, 0.5, { flip: p.face < 0, rot: p.face < 0 ? 0.8 : -0.8 });
     } else if (pDown(p,'down') && !p.onGround){  // SCHIANTO
       p.pounding = true; p.atkCd = 30; sfx('fire');
-    } else {
+    } else castBase(p);
+  }
+  // △ ATTACCO PESANTE: l'arma equipaggiata (gittata aumentata, v13)
+  if (pJP(p,'heavy') && p.hvyCd <= 0 && p.slideT <= 0 && !p.pounding){
+    {
       const w = curWpn(p);
       if (w && w.tipo === 'proiettile'){
-        p.atkCd = w.cd; wsfx(p.wpn[p.wsel]); rumble(p.slot, w.rumb[0], w.rumb[1]);
+        p.hvyCd = w.cd; wsfx(p.wpn[p.wsel]); rumble(p.slot, w.rumb[0], w.rumb[1]);
         projs.push({ from:'player', owner:p, x:p.x + p.w/2 + p.face*8, y:p.y + 10, w:10, h:10,
-          vx:p.face*w.vel, vy:0, t:90, fire:w.fire, pierce:w.pierce, paint:w.paint, freeze:w.freeze, dmg:w.dmg });
+          vx:p.face*w.vel, vy:0, t:110, fire:w.fire, pierce:w.pierce, paint:w.paint, freeze:w.freeze, dmg:w.dmg });
       } else if (w && w.tipo === 'rimbalzo'){
         if (!projs.some(pr => pr.ball)){
-          p.atkCd = w.cd; wsfx('dodgeball'); rumble(p.slot, w.rumb[0], w.rumb[1]);
+          p.hvyCd = w.cd; wsfx('dodgeball'); rumble(p.slot, w.rumb[0], w.rumb[1]);
           projs.push({ from:'player', owner:p, ball:true, d20:w.d20, bounces: synActive('MVP DI GREENDALE') ? 10 : 5,
             x:p.x + p.w/2, y:p.y + 6, w:14, h:14, vx:p.face*6.5, vy:-2.5, t:300, grav:true, dmg:w.dmg });
-        } else p.atkCd = 6;
+        } else p.hvyCd = 6;
       } else if (w && w.tipo === 'onda'){
-        p.atkCd = w.cd; wsfx('keytar'); rumble(p.slot, w.rumb[0], w.rumb[1]);
+        p.hvyCd = w.cd; wsfx('keytar'); rumble(p.slot, w.rumb[0], w.rumb[1]);
         projs.push({ from:'player', owner:p, wave:true, pierce:true, x:p.x + p.w/2, y:p.y - 4, w:18, h:40,
-          vx:p.face*w.vel, vy:0, t:70, dmg:w.dmg });
+          vx:p.face*w.vel, vy:0, t:85, dmg:w.dmg });
       } else if (w){                                     // arco / smash
-        p.atkT = w.atkT; p.atkCd = w.cd; p.wstrike = p.wpn[p.wsel];
+        p.atkT = w.atkT; p.hvyCd = w.cd; p.wstrike = p.wpn[p.wsel];
         wsfx(p.wstrike); rumble(p.slot, w.rumb[0], w.rumb[1]);
-        playFX('slash', p.x + p.w/2 + p.face*26, p.y + p.h/2 - 4, 0.72, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
-      } else {
+        playFX('slash', p.x + p.w/2 + p.face*30, p.y + p.h/2 - 4, 0.85, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
+      } else {                                           // a mani nude: pugno pesante
         const fast = p.cdef.ab === 'blade' || p.focusT > 0;
-        p.atkT = fast ? 12 : 10;
-        p.atkCd = p.focusT > 0 ? 8 : fast ? 16 : 24;
+        p.atkT = fast ? 13 : 11;
+        p.hvyCd = p.focusT > 0 ? 10 : fast ? 20 : 28;
         p.wstrike = null;
         sfx('atk');
-        playFX('slash', p.x + p.w/2 + p.face*22, p.y + p.h/2 - 4, 0.52, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
+        playFX('slash', p.x + p.w/2 + p.face*24, p.y + p.h/2 - 4, 0.62, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
       }
     }
   }
-  // cambio arma (TAB o L1)
-  if (((p.slot === 0 && jp('Tab')) || gpJP(p.slot,'l1')) && p.wpn && p.wpn[1 - p.wsel]){
+  // cambio arma (TAB o dpad-destra)
+  if (pJP(p,'wswap') && p.wpn && p.wpn[1 - p.wsel]){
     p.wsel = 1 - p.wsel; sfx('text');
     showToast(curWpn(p).icona + ' ' + curWpn(p).nome);
   }
@@ -2705,21 +3049,7 @@ function updateOnePlayer(p, atkBoxes){
         if (tileAt(atx + dx, aty + dy) === 'A'){ openAltare(p); break; }
     }
   }
-  if (p.abCd > 0) p.abCd--;
-  if (pJP(p,'ab') && p.abCd <= 0){
-    if (p.cdef.ab === 'fire'){ firePlayerShot(p, false); p.abCd = trait(p,'chang') ? 30 : 40; }
-    else if (lavagun && p.cdef.ab !== 'wave'){ firePlayerShot(p, true); p.abCd = 55; }
-    else if (p.cdef.ab === 'wave'){
-      p.abCd = 300; sfx('boss');
-      burst(p.x + p.w/2, p.y + p.h/2, '#d883d8', 26, 4);
-      for (const e of enemies){
-        if (Math.hypot(e.x - p.x, e.y - p.y) < 130){ e.hp = 0; burst(e.x + e.w/2, e.y + e.h/2, '#d883d8', 10); }
-      }
-      if (boss && !boss.dead && Math.hypot(boss.x + 48 - p.x, boss.y + 48 - p.y) < 170) hitBoss(2);
-      if (rival && !rival.defeated && Math.hypot(rival.x - p.x, rival.y - p.y) < 130) hitRival(2);
-      showToast('Onda di perdono!');
-    }
-  }
+  // (la vecchia abilità ◯ è stata assorbita nei KIT: ▢ base + L1 potere + R2 supremo)
 
   // tile speciali
   const cx0 = Math.floor(p.x / TS), cx1 = Math.floor((p.x + p.w - 1) / TS);
@@ -2764,7 +3094,8 @@ function updateOnePlayer(p, atkBoxes){
           sfx('door');
           if (endless) openPerks();
           else if (lvl.def.exitTo != null){ loadLevel(lvl.def.exitTo); state = 'play'; showToast(lvl.name); }
-          else if (lvlIdx >= 0 && lvlIdx < LEVELS.length - 1) nextLevel();
+          else if (lvlIdx === 0) nextLevel();
+          else if (lvlIdx > 0 && lvlIdx < LEVELS.length - 1) openPerks(() => nextLevel());   // v13: cresci ANCHE in campagna
         }
       }
     }
@@ -2789,7 +3120,7 @@ function updateOnePlayer(p, atkBoxes){
   if (p.atkT > 0){
     const big = p.cdef.ab === 'blade' || p.focusT > 0;
     const w = p.wstrike ? WEAPONS[p.wstrike] : null;
-    let aw = w ? w.aw : p.focusT > 0 ? 48 : big ? 40 : 30;
+    let aw = w ? Math.round(w.aw * 1.4) : p.focusT > 0 ? 56 : big ? 48 : 38;   // v13: gittata +40% ("bisogna andare troppo vicini")
     if (trait(p,'vicki')) aw += 8;
     if (boons.matite) aw = Math.round(aw * (1.45 + 0.15 * Math.min(3, bl('matite'))));
     const crit = (trait(p,'annie') || trait(p,'rich')) && Math.random() < 0.2;
@@ -2975,6 +3306,14 @@ function updatePlay(){
     }
   }
   if (infSoul) for (const p of alive) p.soul = 100;
+  if (coinRainT > 0){   // TRUCCO: piove oro. Letteralmente.
+    coinRainT--;
+    if (frame % 4 === 0){
+      addWallet(2);
+      parts.push({ x: cam.x + Math.random()*W, y: cam.y - 10, vx: (Math.random()-0.5)*0.6, vy: 3.5 + Math.random()*2, t: 70, ng:1, sz:4, color:'#f5d442' });
+      if (frame % 16 === 0) sfx('coin');
+    }
+  }
   // spiriti di Cornelius nelle zone buie
   if (lvl.def.dark && frame % 700 === 350 && enemies.filter(e => e.type === 'ghost').length < 3){
     const t = alive[Math.floor(Math.random()*alive.length)];
@@ -3058,7 +3397,7 @@ function updatePlay(){
     }
     for (const p of alive){
       if (e.hp > 0 && overlap(p, e)){
-        if (p.sprintT > 0){ killEnemy(e, p); }
+        if (p.sprintT > 0 || (mountDef(p) && mountDef(p).ram && Math.abs(p.vx) > 2.6)){ killEnemy(e, p); }
         else if (e.type !== 'ghost' && p.preVy > 2 && p.y + p.h < e.y + e.h * 0.6){
           e.hp--; p.vy = -8;
           if (e.hp <= 0) killEnemy(e, p); else sfx('stomp');
@@ -3074,6 +3413,24 @@ function updatePlay(){
     if (!hostile || worldTick){
       pr.x += pr.vx; pr.y += pr.vy; pr.t--;
       if (pr.grav) pr.vy += 0.25;
+    }
+    // HOMING (v13): i proiettili a ricerca curvano verso il nemico più vicino
+    if (!hostile && !pr.ball && (pr.homing || homingAll || boons.homing)){
+      let best = null, bd = 270;
+      for (const e of enemies){ if (e.hp <= 0) continue; const d = Math.hypot(e.x + e.w/2 - pr.x, e.y + e.h/2 - pr.y); if (d < bd){ bd = d; best = e; } }
+      if (!best && mboss && !mboss.dead && Math.hypot(mboss.x - pr.x, mboss.y - pr.y) < 320) best = mboss;
+      if (best){
+        const sp = Math.max(4.5, Math.hypot(pr.vx, pr.vy));
+        const want = Math.atan2(best.y + best.h/2 - pr.y, best.x + best.w/2 - pr.x);
+        const cur = Math.atan2(pr.vy, pr.vx);
+        let dA = want - cur;
+        while (dA > Math.PI) dA -= Math.PI * 2;
+        while (dA < -Math.PI) dA += Math.PI * 2;
+        const nd = cur + Math.max(-0.22, Math.min(0.22, dA));
+        pr.vx = Math.cos(nd) * sp; pr.vy = Math.sin(nd) * sp;
+        pr.grav = false;
+        if (frame % 3 === 0) parts.push({ x:pr.x, y:pr.y, vx:0, vy:0, t:9, ng:1, sz:2, color:'rgba(138,232,232,0.6)' });
+      }
     }
     const ptx = Math.floor((pr.x + pr.w/2) / TS), pty = Math.floor((pr.y + pr.h/2) / TS);
     const tc = tileAt(ptx, pty);
@@ -3309,7 +3666,7 @@ function updateMboss(atkBoxes){
     if (wasAir && m.onGround){
       addShake(4); sfx('thud');
       burst(m.x + 33, m.y + m.h, '#a8763e', 12, 2.5);
-      parts.push({ x:m.x + 33, y:m.y + m.h - 4, vx:0, vy:0, t:16, ring:1, color:'rgba(232,168,74,0.7)' });
+      parts.push({ x:m.x + 33, y:m.y + m.h - 4, vx:0, vy:0, t:12, ring:1, color:'rgba(232,168,74,0.7)' });
       for (const q of alivePlayers())
         if (q.onGround && Math.abs(q.x - m.x) < 120 && Math.abs(q.y - m.y) < 60) hurtPlayer(q, 1, m.x + 33);
       if (enraged && !m.boss2 && Math.random() < 0.35) enemies.push(mkEnemy('acorn', m.x + 20, m.y));
@@ -4337,11 +4694,24 @@ function drawHearts(p, x, right){
   }
 }
 function drawSoul(p, x, right){
-  const w = 90, filled = w * p.soul / 100;
-  ctx.fillStyle = '#26263a'; ctx.fillRect(right ? x - w : x, 32, w, 7);
-  ctx.fillStyle = p.soul >= 100 ? (Math.floor(frame/8)%2 ? '#f5d442' : '#fff') : '#8a6ae8';
-  ctx.fillRect(right ? x - filled : x, 32, filled, 7);
-  if (p.soul >= 100) text(right ? '★PRONTO [H]' : '★PRONTO [V]', right ? x - w - 6 : x + w + 6, 39, 10, '#f5d442', right ? 'right' : 'left');
+  // v13: barre di COOLDOWN alla LoL — potere (L1/Q) e supremo (R2/R)
+  const kit = kitOf(p);
+  const slots = [
+    { ic: kit.pow.icona, cd: p.powCd, max: Math.max(1, Math.round(kit.pow.cd * 60)), key: right ? 'H' : 'Q·L1', col: kit.pow.col },
+    { ic: kit.ult.icona, cd: p.ultCd, max: Math.max(1, Math.min(600, Math.round(kit.ult.cd * 60))), key: right ? 'J' : 'R·R2', col: kit.ult.col },
+  ];
+  for (let i = 0; i < 2; i++){
+    const s = slots[i];
+    const sx = right ? x - 64 - i * 68 : x + i * 68, sy = 30;
+    const ready = s.cd <= 0;
+    ctx.fillStyle = 'rgba(16,16,34,0.75)'; ctx.fillRect(sx, sy, 64, 16);
+    ctx.fillStyle = ready ? s.col : 'rgba(90,90,130,0.8)';
+    ctx.fillRect(sx, sy, 64 * (1 - Math.min(1, s.cd / s.max)), 16);
+    if (ready && Math.floor(frame / 9) % 2){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.strokeRect(sx - 1, sy - 1, 66, 18); }
+    ctx.font = '12px "Courier New", monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff'; ctx.fillText(s.ic, sx + 3, sy + 13);
+    text(ready ? s.key : Math.ceil(s.cd / 60) + 's', sx + 24, sy + 12, 10, '#fff');
+  }
 }
 function drawHUD(){
   drawHearts(players[0], 14, false);
@@ -4361,12 +4731,7 @@ function drawHUD(){
   if (aq && !endless) text('❖ ' + aq.nome + (lvlIdx === aq.mondo ? '' : '  (Mondo ' + aq.mondo + ')'), W - 14, players[1] ? 66 : 36, 12, '#f5d442', 'right');
   if (nightmare) text('☠ INCUBO', W/2, H - 12, 13, '#e84a4a', 'center');
   if (endless) text('∞ PROFONDITÀ ' + endless.depth + ' · seme ' + endless.seed + (endless.daily ? ' · SFIDA DEL GIORNO' : ''), W/2, H - (nightmare ? 28 : 12), 13, '#8a6ae8', 'center');
-  const icone = Object.keys(boons).filter(k => boons[k] && k[0] !== '_')
-    .map(k => { const pk = PERKS.find(q => q.id === k); const lv = bl(k); return ((pk && pk.icona) || '✦') + (lv > 1 ? lv : ''); });
-  if (icone.length){
-    ctx.font = '17px "Courier New", monospace';
-    ctx.fillStyle = '#fff'; ctx.fillText(icone.join(' '), 14, H - 10);
-  }
+  // (le icone dei boon vivono nella colonna alla Isaac, a destra)
   // slot armi (TAB/L1 per cambiare)
   const p0 = players[0];
   if (p0.wpn && (p0.wpn[0] || p0.wpn[1])){
@@ -4386,23 +4751,39 @@ function drawHUD(){
   }
   if (curse > 0) text('☠ MALEDETTO: ancora ' + curse + ' uccisioni', W/2, H - 44, 13, '#e85ae8', 'center');
   if (nightWave) text('🌙 TURNO DI NOTTE: ' + (nightWave.total - nightWave.spawned + enemies.filter(e => e.hp > 0).length) + ' ospiti rimasti', W/2, 70, 14, '#aac6ff', 'center');
-  // slot incantesimi (Q/L2 casta · E/su cambia)
-  const osp = ownedSpells();
-  if (osp.length){
-    for (let k = 0; k < osp.length; k++){
-      const S = SPELLS[osp[k]];
-      const selS = (spellSel % osp.length) === k;
-      const sx2 = 14 + k * 34, sy2 = H - 104;
-      ctx.fillStyle = selS ? 'rgba(122,216,245,0.25)' : 'rgba(20,20,40,0.6)';
-      ctx.fillRect(sx2, sy2, 30, 26);
-      ctx.strokeStyle = selS ? S.col : '#3a3a55'; ctx.lineWidth = 2;
-      ctx.strokeRect(sx2, sy2, 30, 26);
-      ctx.font = '15px "Courier New", monospace'; ctx.textAlign = 'center';
-      ctx.fillStyle = '#fff'; ctx.fillText(S.icona, sx2 + 15, sy2 + 19);
-      ctx.textAlign = 'left';
-      if (selS && p0.spellCd > 0){ ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(sx2, sy2, 30, 26 * (p0.spellCd / S.cd)); }
+  // v13: COLONNA DEI POTENZIAMENTI raccolti (stile Binding of Isaac) — a destra, sotto la minimappa
+  {
+    const icons = [];
+    for (const id in boons){
+      if (!boons[id] || id[0] === '_') continue;
+      const src = PERKS.find(q => q.id === id) || BOONS.find(q => q.id === id);
+      const lv = bl(id);
+      icons.push((src && src.icona ? src.icona : '◆') + (lv > 1 ? lv : ''));
     }
-    text('Q/L2', 14 + osp.length * 34 + 4, H - 86, 10, 'rgba(255,255,255,0.4)');
+    if (SAVE.house){ const cs = CASE.find(c => c.id === SAVE.house); if (cs) icons.push('🏠'); }
+    if (icons.length){
+      ctx.font = '15px "Courier New", monospace'; ctx.textAlign = 'center';
+      for (let k = 0; k < Math.min(14, icons.length); k++){
+        const iy = 150 + k * 26;
+        ctx.fillStyle = 'rgba(10,10,26,0.6)'; ctx.fillRect(W - 34, iy - 14, 26, 22);
+        ctx.fillStyle = '#fff'; ctx.fillText(icons[k], W - 21, iy + 3);
+      }
+      ctx.textAlign = 'left';
+    }
+  }
+  // v13: STATISTICHE VIVE — le vedi crescere quando prendi perk e potenziamenti
+  {
+    const wD = curWpn(p0);
+    const atkX = Math.round((1 + (baseLvl(p0) - 1) * 0.7) * (boons.furia && combo.n >= 5 ? 2 : 1) * 10) / 10;
+    const gitt = wD ? (wD.aw ? Math.round(wD.aw * 1.4 * (boons.matite ? 1.6 : 1)) + 'px' : '∞') : Math.round(38 * (boons.matite ? 1.6 : 1)) + 'px';
+    const velX = Math.round(p0.cdef.speed * (boons.stivali ? 1.15 : 1) * (mountDef(p0) ? mountDef(p0).spd : 1) * 10) / 10;
+    const rows = [['ATK', '×' + atkX], ['GIT', gitt], ['VEL', velX], ['❤', p0.maxhp]];
+    ctx.font = '11px "Courier New", monospace';
+    for (let k = 0; k < rows.length; k++){
+      ctx.fillStyle = 'rgba(10,10,26,0.55)'; ctx.fillRect(14, 84 + k * 16, 78, 14);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillText(rows[k][0], 18, 95 + k * 16);
+      ctx.fillStyle = '#fff'; ctx.fillText('' + rows[k][1], 48, 95 + k * 16);
+    }
   }
   // monete + cristalli
   ctx.fillStyle = '#f5d442'; ctx.fillRect(16, 62, 12, 14);
@@ -4701,7 +5082,9 @@ function drawSelect(){
   if (unlocked && costumes) hint += ' · [C/◯] costume';
   if (SAVE.finished) hint += ' · [N/△] Incubo: ' + (nightmare ? 'SÌ ☠' : 'no');
   text(hint, W/2, H - 38, 12, unlocked || SAVE.wallet >= c.cost ? '#5ae87a' : '#e84a4a', 'center');
-  text('SUPER: ' + SUPER_NAME[SUPER_OF[c.id] || 'slow'] + ' (V/H a Meraviglia piena) · TRATTO: ' + (TRAITS[c.id] || '—'), W/2, H - 24, 11, '#8a6ae8', 'center');
+  { const kk = KITS[c.id] || KITS.jeff;
+    text('KIT — ▢ ' + kk.base.nome + ' · L1 ' + kk.pow.icona + ' ' + kk.pow.nome + ' (' + kk.pow.cd + 's) · R2 ' + kk.ult.icona + ' ' + kk.ult.nome + ' (' + kk.ult.cd + 's)', W/2, H - 24, 11, '#8a6ae8', 'center');
+    text('TRATTO: ' + (TRAITS[c.id] || '—'), W/2, H - 52, 11, 'rgba(255,255,255,0.55)', 'center'); }
   if (selCostume) text('COSTUME: ' + selCostume.toUpperCase(), W/2, H - 8, 13, '#5ae8e8', 'center');
   if (selMsg) text(selMsg, W/2, H - 8, 13, '#e84a4a', 'center');
 }
@@ -4748,6 +5131,7 @@ function drawPlayer(p){
     drawActor(sheetOf(p), 'dead', 0, p.x + p.w/2 - 24 - cam.x, p.y + p.h - 46 - cam.y, p.face, 1);
     return;
   }
+  drawMount(p);   // la cavalcatura sta sotto il cavaliere: è il suo lavoro
   // teletrasporto in stile puntata (beam colonna di luce)
   if (p.warpT > 0){
     const bimg = IMGS[p.cdef.id + '__beam'];
@@ -4909,12 +5293,12 @@ function drawPlay(){
   for (const q of parts){
     if (q.ring){
       ctx.strokeStyle = q.color; ctx.lineWidth = 2;
-      ctx.globalAlpha = Math.max(0, q.t / 12);
-      ctx.beginPath(); ctx.arc(q.x - cam.x, q.y - cam.y, q.r + (12 - q.t) * 2.6, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = Math.max(0, Math.min(1, q.t / 12));
+      ctx.beginPath(); ctx.arc(q.x - cam.x, q.y - cam.y, Math.max(1, (q.r || 6) + (12 - q.t) * 2.6), 0, Math.PI * 2); ctx.stroke();
       ctx.globalAlpha = 1;
     } else if (q.txt){
       ctx.globalAlpha = Math.min(1, q.t / 14);
-      text(q.txt, q.x - cam.x, q.y - cam.y, 13, q.color, 'center');
+      text(q.txt, q.x - cam.x, q.y - cam.y, q.sz || 13, q.color, 'center');
       ctx.globalAlpha = 1;
     } else {
       ctx.fillStyle = q.color;
@@ -4966,7 +5350,7 @@ function drawPlay(){
 }
 
 // ------------------------------------------------ ONLINE (WebRTC P2P, senza server)
-const NETBITS = { left:1, right:2, down:4, jump:8, atk:16, ab:32, sup:64, ok:128 };
+const NETBITS = { left:1, right:2, down:4, jump:8, atk:16, heavy:32, sup:64, ok:128, pow:256, roll:512, wswap:1024, mount:2048 };
 let net = { role:null, pc:null, ch:null, open:false, tileLog:[], tileSent:0, hello:null, snap:null, sendT:0, prevOk:false };
 let netIn = { cur:0, prev:0 };
 function netEncodeInput(){
@@ -5252,7 +5636,7 @@ function update(){
       if (jp('ArrowLeft')  || jp('KeyA') || gpJP(0,'left'))  { selIdx = (selIdx + CHARS.length - 1) % CHARS.length; selCostume = null; sfx('text'); }
       if (jp('ArrowDown')  || jp('KeyS') || gpJP(0,'down'))  { selIdx = Math.min(CHARS.length - 1, selIdx + cols); selCostume = null; sfx('text'); }
       if (jp('ArrowUp')    || jp('KeyW')) { selIdx = Math.max(0, selIdx - cols); selCostume = null; sfx('text'); }
-      if (jp('KeyC') || gpJP(0,'ab')){
+      if (jp('KeyC') || gpJP(0,'heavy')){
         const c = CHARS[selIdx];
         if (isUnlocked(c) && COSTUMES[c.id]){
           const list = [null, ...COSTUMES[c.id]];
@@ -5348,8 +5732,9 @@ window._hawk = {
   give(n){ SAVE.wallet += n||100; saveGame(); },
   gems(n){ cristalli += n||3; },
   forge(){ tryForge(); },
-  soul(){ players.forEach(p => p.soul = 100); },
-  super(){ if (players[0]) activateSuper(players[0]); },
+  soul(){ players.forEach(p => { p.soul = 100; p.powCd = 0; p.ultCd = 0; }); },
+  super(){ if (players[0]) castUlt(players[0]); },
+  pow(){ if (players[0]) castPow(players[0]); },
   boon(id){ const b = BOONS.find(x => x.id === id); if (b){ b.act(players[0]); boons[id] = true; } },
   incubo(){ SAVE.finished = true; nightmare = !nightmare; },
   quest(){ return { attiva: activeQuest() && activeQuest().id, fatte: SAVE.quests, ach: SAVE.ach, cnt: SAVE.cnt }; },
