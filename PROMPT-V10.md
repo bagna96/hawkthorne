@@ -4,7 +4,8 @@
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
 > `game-feel-expectations` (gusti dell'utente: juice + roguelite, PS5).
 
-## CONTESTO (stato v12.0 — Sessioni 1-7 completate)
+## CONTESTO (stato v14.2 — Sessioni 1-7 + kit LoL + ridisegno livelli;
+## asset ospiti HP/Naruto già scaricati in assets/guest/, da integrare)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -237,6 +238,65 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
   = mini-stanze a sfida (Trasfigurazione con Troy); pozioni di Shirley;
   sale comuni nell'hub; chunk campus/scuola per l'endless; minimappa
   "Malandrino" (rinominarla quando sei a scuola); daydream-cutaway Scrubs.
+- **S-OSPITI (PROSSIMA, richiesta esplicita dell'utente) — HARRY POTTER
+  e NARUTO giocabili + nemici + ambientazioni**. Gli asset sono GIÀ NEL
+  REPO in `assets/guest/` (28 png, rippati e verificati — vedi CREDITS.md):
+  · **HP (GBA PoA + Pietra Filosofale)**: `hp_harry` 1361×1400 (sezioni
+    etichettate: Movement 4-dir, Lumos, Spell Casting, e BATTLE side-view
+    con Idle/Attack-con-scia/Special/Damage/Death = pronto per il
+    platformer), `hp_dumbledore` 881×234, `hp_snape` 646×184, `hp_filch`
+    260×318, creature `hp_doxy/gnome/tentacula` e `hp_fluffy` 2487×376
+    (mini-boss a tre teste!), tileset `hp_greathall/hallways(1952×6864!)/
+    library/potions/commonroom`.
+  · **Naruto (GBA "Naruto RPG")**: template di battaglia IDENTICO per
+    tutto il cast (`nrpg_naruto` 248×392 con sezioni IDLE/CRITICAL/ATTACK/
+    JUTSU CHARGE/USE/SWAP/HIT/DEAD/SHADOW → UNA mappatura li sblocca
+    tutti): naruto, sasuke, sakura, kakashi, rocklee, gaara(+beast),
+    itachi, orochimaru, zabuza, haku, hinata, jiraiya + `nrpg_nar_enemies`
+    656×904 e `nrpg_nar_battlebg` (sfondi dipinti, ottimi per parallax).
+  · **PIPELINE per altri sheet** (Ron/Hermione/Voldemort, Ninja Council
+    con sprite azione side-scroller): pagina spriters-resource del gioco →
+    asset id (regex su title) → l'immagine VERA è in
+    `/media/assets/<bucket>/<id>.png` dentro la pagina dell'asset
+    (`/download/<id>/` è dietro Cloudflare: non usarlo). Slug noti:
+    game_boy_advance/harrypotterthephilosopherssorcerersstone, .../
+    harrypotter3, .../narutorpg, .../narutoninjacouncil(2), ds_dsi/
+    narutopathoftheninja. Con curl -A Mozilla + sleep 1.
+  · **INTEGRAZIONE**: (1) chroma-key: gli sheet hanno sfondo pieno —
+    rimuovilo via python (colore = pixel(0,0)) PRIMA dell'inline;
+    (2) registro `GUESTS` {sheet, anims:{idle/walk/jump/atk/hurt/dead:
+    [x,y,w,h,frames]}, scale} + `drawGuest` (drawActor è hardcoded sul
+    layout hawkthorne 12×16: NON forzarlo); (3) giocabili = righe CHARS
+    con flag `guest:id` (sheetOf/drawPlayer deviano su drawGuest), kit
+    già progettati: HARRY base Expelliarmus (bolt bianco), pow Lumos
+    (stordisce, cd 5), ult EXPECTO PATRONUM (cervo olografico = beam +
+    nova luce); NARUTO base kunai (bolt), pow Rasengan (dashstrike),
+    ult KAGE BUNSHIN (volley di cloni); SASUKE base shuriken, pow Chidori
+    (dashstrike fulmine), ult Katon (lava cone); KAKASHI/ROCK LEE/GAARA
+    a piacere; (4) NEMICI: doxy/gnomo/tentacula spawn della SCUOLA,
+    Fluffy mini-boss nuova lettera MBOSSES, ninja del suono nel
+    Dreamatorium; Filch/Snape/Dumbledore NPC groups a scuola (battute
+    lente-comiche, Piton=Severus Piagnataccia ha finalmente la faccia);
+    (5) AMBIENTI: rifare il MONDO 7 coi tileset Hogwarts veri (drawTiles:
+    supporto a tile TEXTURED da tileset — vedi S-GRAFICA) e aggiungere
+    il mondo bonus KONOHA (portale crossover dalla scuola, sfida ninja,
+    sfondi nrpg_battlebg, Abed che commenta il crossover: "due franchise
+    in un fan-game di un terzo franchise. Inception legale").
+    I giocabili ospiti si SBLOCCANO giocando (Harry: finisci la scuola;
+    Naruto: batti la sfida di Konoha) — sono premi, non default.
+- **S-GRAFICA — OLTRE L'8-BIT (richiesta utente: "definizione più
+  complessa che segua gli aggiornamenti")**: il cast Community resta
+  pixel-48 SACRO; tutto il resto sale di definizione: (1) `drawTiles`
+  impara le TEXTURE — atlanti tileset (Hogwarts già in guest/, cercarne
+  CC0 per radura/villaggio/caverne: OGA/Kenney) al posto dei fillRect,
+  con registro TILESETS {mondo → atlas, mapping tile→(sx,sy)}; (2) sfondi
+  DIPINTI multilivello (nrpg_battlebg + OGA parallax packs) sopra le
+  colline procedurali; (3) sprite ambiente hi-res (alberi, lampioni,
+  arredi dai tileset); (4) la risoluzione interna 2× c'è già (HD) —
+  aggiungere sprite ambiente disegnati a 2× nativo; (5) VFX: più frame,
+  scale maggiori, glow. Approccio incrementale UN MONDO ALLA VOLTA
+  (prima la Scuola con Hogwarts, poi Greendale, poi i biomi) così ogni
+  sessione consegna qualcosa di visibile.
 - **S8 — Sistemi e polish**: combo super co-op (matrice COMBO_SUPERS,
   Troy+Abed="SPARANO LAVA"), livelli super (I→III ogni 5 usi), boss rush,
   pagina achievement al titolo, speedrun timer, transizioni a cerchio
