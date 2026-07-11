@@ -263,6 +263,18 @@ sagome procedurali. RISCHIO LOGGATO: il volo sorvola torri/cancelli nei livelli
 aperti in alto — tenere d'occhio i puzzle leva (M3/M5); se rompe, tetto di volo
 o soffitti nei punti-puzzle. Misure col taglio del salto: presa LUNGA nei test.
 
+## ☑ REVIEW-FIX v21.8 (11 lug sera — fase fix della review ostile, vedi PROMPT-REVIEWER.md)
+5 MAJOR chiusi: ambush si completa sui SUOI spawn (_amb) + élite/tiratori nelle ondate;
+tetto-di-volo cavalcature (thrust solo sotto riga 1 — ERRATA: M5 era già sigillato, il
+buco era la cripta M3); quest 'trono' per il finale (questEvent kill/boss in hitBoss);
+EL TIGRE col costume (d.tigre in drawMboss); linguaggio visivo unificato (tools_build_tiles.py:
+texture m1-m6+trn per '#'/'B', alberi tondi, bg_m6 parco dipinto). Più: 3 firme nuove
+gale/fang/burst (nessuna sig >8 kit, il case wind/blade era LO STESSO disegno), HUD
+right-align/banner/cartelli clampati, dead code potato, GROTTA DI OSSIDIANA sotto M5
+(cave 58-146, molle collaudate), fav touch = NON-BUG (◯ emette ShiftLeft dal v18.1).
+Perf con texture: 0.4ms/frame. LEZIONE (verify-before-flag): il claim M5-scavalcabile
+era sbagliato — leggere TUTTA la funzione prima di flaggare, il soffitto era alla riga sopra.
+
 ## §RESIDUI-EXTRA (non-review, quando capita o su richiesta)
 S-GRAFICA: sfondi dipinti mondi 1-5 ✅ v21.7 (celle nrpg_battlebg 3×3, inset
 2px + taglio 16px barre a mezza larghezza, quantizzate 160 col, ~12KB l'una;

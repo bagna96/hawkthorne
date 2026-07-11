@@ -29,29 +29,39 @@ In questa chat esiste già una review precedente. La SOSTITUISCI aggiornando il 
 Formato dello stato (compatto, aggiornalo sempre, è la tua memoria di lavoro):
 
 <STATO_REVIEW>
-BUILD: v21.7 (12 lug 2026, commit 2e43a69 — seminato dal ciclo R1-R11 della chat precedente)
+BUILD: v21.7 (review indipendente 11 lug 2026 sera, HEAD 8377bf8, gioco 2e43a69 — indagine: codice + run live su :8777 via _hawk, M1/M5/M6/M7 giocati, perf misurata)
 GENERE: action-platformer roguelite 2D, single-file HTML5 canvas (~2.35MB, tetto 3MB), 44 giocabili, campagna 10 mondi in 4 atti + endless + boss rush + co-op WebRTC + touch iOS + PWA
 BENCHMARK_ATTIVI: Celeste (movement), Dead Cells (juice/VFX), Hades (economia run), Isaac (feedback item), Hollow Knight (atmosfera)
 
-SCORECARD (0-10):
-  code: 7 | feel: 8 | visual: 7 | design: 7.5 | narr: 7
+SCORECARD (0-10): (misurata su v21.7 — DA RIMISURARE sulla v21.8 alla prossima review ostile)
+  code: 7.5 | feel: 8 | visual: 6.5 | design: 7 | narr: 6.5
 
 APERTI:
-  [MAJOR][visual][drawTiles] tile '#'/'B' dei biomi 1-6 senza texture (solo il tileset 'hog' esiste) e VFX senza glow/scia — vs Dead Cells
-  [MINOR][visual][KIT_VFX] firme sig 'wind'×11 e 'blade'×11 ancora condivise (target ≤8: servono firme NUOVE, non riciclo)
-  [MINOR][design][updateRaid/ambush] assalti e imboscate non assegnano mod élite/tiratori (solo loadLevel+notte)
-  [MINOR][design][MOUNTS] il volo (scopa fly 260 / drago 380) può sorvolare torri e cancelli nei livelli aperti in alto — rischio puzzle leva M3/M5
-  [MINOR][ux][touch] preferito ☆ in select non raggiungibile da touch (manca long-press sulla card)
-  [MINOR][level][mondo5] M5 senza strato verticale extra (lava: serve idea diversa, "grotta di ossidiana"?)
-  [MINOR][verify] ventaglio El Tigre e lampeggio ghost verificati a codice, MAI visti giocando (mondo 6 / livelli dark)
-  [MINOR][verify] test onboarding "un novellino capisce i 4 tasti in 2 minuti?" mai fatto con un umano nuovo
-  [MINOR][narr][QUESTS] side-quest atto 0 dichiarate e mai chiuse (Annie's Boobs 5 oggetti, statua Guzmán, consegne Dean)
+  [MINOR][visual][drawGhost] il ghost resta fillRect procedurale (blob bianco) — unico nemico senza sheet.
+  [MINOR][visual][drawTiles] tile '=' (piattaforme), '9' (cancelli) e arredi ancora flat-color; glow/scia sui PROIETTILI base ancora assente (fx/sig/luci hanno già 'lighter').
+  [MINOR][design][mounts] il tetto-di-volo engine (batch 1 v21.8) azzera vy<0 sotto la riga 1 ANCHE sui salti normali in sella a scopa/drago: irrilevante nelle mappe attuali (lassù non c'è nulla), ma da ricordare se mai si costruirà in cima.
+  [MINOR][verify] leggibilità VISIVA del ventaglio del Tigre non confermata (spara, misurato; i 10px a schermo restano da vedere su Safari vero); lampeggio ghost corretto a codice, mai osservato in gioco.
+  [MINOR][verify] test onboarding "un novellino capisce i 4 tasti in 2 minuti?" mai fatto con un umano nuovo.
+  [MINOR][narr][QUESTS] side-quest atto 0 dichiarate e mai chiuse (Annie's Boobs 5 oggetti, statua Guzmán, consegne Dean).
 STILL_BROKEN: —
 REGRESSED: —
-FIXED: (ciclo R1-R11 + extra, v20.5→v21.7) verbo jail che mentiva su 5 kit (→trap con gabbia visibile); contabilità ultUses da jailed; camera hard-lock (→lerp+lookahead 38px+deadzone+bias caduta, jitter 0); tasti fantasma su blur; cap particelle 600; OSPITE ONLINE rotto dal v13 (drawSoul senza kit nella tupla → crash ogni frame); fakeGuest riparato; window.prompt morto su PWA iOS (→codeBox DOM con fallback clipboard); ctx.filter ignorato da Safari<17.4 (→tinted() pre-render, 0 occorrenze); caos 82%→35%; élite stat-inflation (→mod scudo/vendetta/campo con glifi); mob solo-contatto (→tiratori 22%, ghost wind-up, Re Ghianda 2 ghiande ad arco con cd anti-oscillazione, El Tigre ventaglio 3); wayfinding assente (→mappa mondo SMW + cartelli porte + portale + minimappa ricca); mondo piatto (→cantine M1/M3, molla -17.5+ginLeapT); sagome uguali (→runt/brute hitbox+sprite, mboss +20%); pesante banale (→slam/360°/combo per tipo, e crashava con atkT>12 dal v13); onboarding zero (→GUIDE contestuali + card COSA FA + obiettivo in pausa); cavalcature finte (→scopa VOLA 453px, drago+fuoco, rospo/carrello/scimmia); 4 evocazioni finte (→verbo clone: bunshin/cani/marionette veri); Hinata/Neji orbitano; Dean pull; Jeff mark; combo super 6→17; select elenco telefonico (→gruppi+preferiti+salto Q/R+icone kit, e TRATTO/desc sovrapposti dal v13); Ron/Hermione/Voldemort giocabili (fan-sheet mudkat101 approvato); 103 righe di codice morto potate; dieta asset 2.58→2.27MB; sfondi dipinti mondi 1-5.
+ERRATA DELLA REVIEW: il claim "il volo scavalca il cancello M5" era SBAGLIATO — mondo5 ha il soffitto pieno (hrun riga 0 'B') e il cancello era già sigillato; l'esposizione reale era solo la cripta-tesoro di M3 (righe 0-10 aperte sopra il tetto della cripta). Lezione verify-before-flag: letto `solid(52,52,1,11)`, non letto il rigo sopra. Il tetto-di-volo engine resta comunque (difesa in profondità + chiude la cripta M3).
+FIXED (questa sessione fix, v21.7→v21.8, commit 72dafe4..a697ed7):
+  ambush/raid si chiudono sui SOLI spawn taggati _amb (reward verificata live con 18 nemici vivi altrove) + gli spawn pescano élite 35%/tiratori 22%;
+  tetto-di-volo per le cavalcature volanti (thrust solo sotto la riga 1, vy azzerata al confine);
+  quest 'trono' (kill Cornelius, Mondo 8) prima del Dreamatorium + questEvent('kill','boss') in hitBoss — la bussola ❖ ora accompagna il finale (banner verificato: "👑 detronizza CORNELIUS");
+  EL TIGRE col costume (orecchie+fascia+strisce+coda procedurali via d.tigre, verificato a schermo);
+  linguaggio visivo unificato: texture-tile per bioma m1-m6+trono (tools_build_tiles.py, celle wall/fill/fillVar/dirt/dirtVar), '#' e 'B' texturizzati (decorazioni erba intatte, case villaggio preservate), alberi 'T' a chioma tonda 3 toni, bg_m6 DIPINTO (cella parco nrpg — il campus non è più il mondo povero);
+  3 firme VFX nuove (gale/fang/burst) + riassegnazione tematica: nessuna sig >8 kit (era wind×12/blade×11 sullo STESSO disegno — il case era condiviso), AVADA da 'holy' a 'burst';
+  HUD: valori stat right-aligned (RATEO6.0/s addio), via LANCIA-LAVA [C] stantio, minimappa cede al banner, cartelli porte clampati;
+  dead code: mkWalker/mkFlyer/firePlayerShot potate;
+  GROTTA DI OSSIDIANA sotto M5 (righe 18-20, oltre il cancello: arricchisce senza scavalcare; molle collaudate, minY 345);
+  fav touch: NON-BUG — il tasto ◯ del rombo touch emette già ShiftLeft (v18.1) e il ☆ scatta su jp('ShiftLeft'): il residuo R6 era stantio.
+VERIFICATO_V21.8: sintassi node OK; 117/117 asset; zero errori console; fakeGuest ok; perf 0.4ms/frame mediana (p95 0.7) CON texture; index.html 2.38/3MB.
+VERIFICATO_QUESTA_REVIEW: ventaglio El Tigre SPARA (3 proj post-stun, misurato live); charge/stun/telegraph del Tigre funzionano; co-op fakeGuest renderizza senza errori console; perf ECCELLENTE (update+draw mediana 0.3ms, p95 0.7ms, worst 3.3ms su 300 frame con 15 nemici; churn heap ~3KB/frame, tintCache ok, cap parts ok); assets 109/109 senza fail; sw.js CACHE bumpato a v21.7; juice cablato (hitstop su kill/dash/slam, 37 siti addShake, blend 'lighter' su fx/sigs/luci); build mappe deterministico (rigenerazione = zero diff).
 
-VERDETTO: da "platformer che mente al giocatore" a action-roguelite onesto e leggibile in 13 sessioni — ora il gap è ESTETICO (texture+glow) e di VERIFICA UMANA, non strutturale.
-PRIORITÀ_PROSSIMA_BUILD: 1) pass visual texture-tile+glow VFX (vs Dead Cells); 2) verifica a mano Tigre/ghost/co-op su Safari vero; 3) test onboarding con giocatore nuovo.
+VERDETTO (post-fix v21.8): i 5 MAJOR della review v21.7 sono chiusi e collaudati nella stessa giornata; restano i due verify UMANI (onboarding, occhio su Safari vero), le side-quest dell'atto 0 e rifiniture flat ('='/'9', ghost, glow proiettili). La prossima review ostile riparte da qui e RIMISURA la scorecard — i voti non si regalano, si guadagnano a schermo.
+PRIORITÀ_PROSSIMA_BUILD: 1) test onboarding con un umano nuovo + partita vera su Safari/iPhone (Tigre, ghost, co-op); 2) side-quest atto 0 (Annie's Boobs, statua Guzmán, consegne Dean); 3) rifiniture flat residue ('='/'9', sprite ghost, glow proiettili base); 4) eventuale bg dipinto per Trono/Dreamatorium se non rompe l'identità dark.
 </STATO_REVIEW>
 
 ## REGOLE
