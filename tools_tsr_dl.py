@@ -57,6 +57,19 @@ MANIFEST = {
     (15370,'sound4_kimimaro'),(79186,'enemies'),
   ],
  },
+ 'naruto3': {   # Ninja Council 3 DS: il cast che mancava (Hinata, Ino, Kiba, Shino, Temari...)
+  'ds_dsi/narutoshippudenninjacouncil3': [
+    (66532,'naruto'),(98843,'naruto_9code'),(66530,'sasuke'),(98842,'sasuke_cm'),(66531,'sakura'),
+    (66529,'kakashi'),(66619,'hinata'),(66544,'ino'),(66618,'kiba'),(66617,'shino'),(66600,'choji'),
+    (66543,'shikamaru'),(66620,'temari'),(98837,'tenten'),(66621,'gaara'),(98825,'kankuro'),
+    (98833,'rocklee'),(98831,'neji'),(98819,'guy'),(98838,'tsunade'),(98821,'jiraiya'),(98818,'hokage3'),
+    (98820,'itachi'),(98830,'kisame'),(98832,'orochimaru'),(98824,'kabuto'),(98828,'kimimaro'),
+    (98826,'kidomaru'),(98822,'jirobo'),(98835,'tayuya'),(98834,'sakon'),
+    (98844,'en_bat'),(98845,'en_claw'),(98846,'en_dart'),(98847,'en_bigsound'),(98848,'en_flail'),
+    (98849,'en_spider_g'),(98850,'en_bird'),(98851,'en_mirror'),(98852,'en_pole'),(98853,'en_scythe'),
+    (98854,'en_snake'),(98855,'en_sound'),(98856,'en_spider'),(98857,'en_wolf'),(98840,'items'),
+  ],
+ },
  'hp': {
   'game_boy_gbc/harrypotterthechamberofsecrets': [
     (27356,'harry'),(16455,'weasleys'),(16438,'fantasmi'),(16427,'npc_diagon'),
