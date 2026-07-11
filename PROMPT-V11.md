@@ -41,20 +41,20 @@ se: un testo mente, c'è un errore console, o un criterio §CRITERI è saltato.
 Ogni sessione: implementa → pass del Recensore → commit+push → spunta qui +
 integra i finding nuovi. Le sessioni sono INDIPENDENTI (ordine consigliato R1→R7).
 
-### ☐ R1 — ONESTÀ (il verbo che mente + contabilità dei supremi)
-Problema: `case 'jail'` in execVerb trasforma IL GIOCATORE in un char casuale;
-è giusto solo per Abed (ult "JAILBREAK"). Gaara/Ino/Kankuro/Eleven (pow) e
-Sasori (ult) promettono di intrappolare il NEMICO.
-- Nuovo verbo `trap`: bersaglio = nemico più vicino entro ~260px (fallback
-  mboss: freeze 120): e.slowT lungo (240), e.trapT con GABBIA visibile
-  (nuova sig 'cage' tinta col kit, o riusa 'sand' per Gaara), dmg 1 all'ingresso.
-  KITS: gaara.pow, ino.pow, kankuro.pow, eleven.pow, sasori.ult → verb:'trap'.
-  Testi invariati (ora dicono il vero). jail resta SOLO abed.ult.
-- FIX contabilità: grep `SAVE.ultUses[p.cdef.id]` in castUlt → attribuire a
-  `(p.jail ? p.jail.base : p.cdef).id` (oggi il jailed accredita al char sbagliato).
-- ESAME: audit COMPLETO nome-vs-verbo dei 41 kit (script: estrai tabella
-  id/slot/verb/nome, leggila con gli occhi del recensore); trap testato su
-  walker + mboss + in co-op (fakeGuest).
+### ☑ R1 — ONESTÀ ✅ FATTA (v20.5, commit b757559)
+Verbo 'trap' consegnato (gabbia visibile tinta kit, nemico fermo+INNOCUO+
+picchiabile, dmg 0 = controllo puro, s.n multipli, fallback mboss restT 120);
+jail solo abed.ult; ultLv/ultUses al personaggio BASE quando jailed; tupla
+netcode estesa (gabbia anche per l'ospite). Audit 41 kit: nessuna bugia di
+classe jail residua. PASS RECENSORE: #1 trap-che-uccide fixato (dmg 0),
+#2 gabbia invisibile online fixata, #3 vedi FINDING sotto.
+FINDING APERTI (da R1):
+- `_hawk.fakeGuest()` è ROTTO ("reading 'id'") anche su v20.4 live: PRE-esistente,
+  il collaudo netcode della regola 2 è azzoppato. RIPARARLO (in R2 o appena serve):
+  probabilmente drawGuest/drawHUD assume campi che il fake non setta.
+- 4 mezze-bugie "volley spacciato per evocazione": naruto.ult KAGE BUNSHIN,
+  kakashi.ult OTTO CANI, sasori.pow cento marionette, kankuro.ult TUTTO IL
+  TEATRO → risolte in R5(b) col verbo 'clone'/'summon'.
 
 ### ☐ R2 — FEEL (camera 2026 + igiene input)
 - CAMERA (il singolo fix col miglior rapporto resa/ore): oggi
