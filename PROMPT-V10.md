@@ -4,8 +4,8 @@
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
 > `game-feel-expectations` (gusti dell'utente: juice + roguelite, PS5).
 
-## CONTESTO (stato v18.0 — TUTTE le sessioni S1-S9 completate:
-## campagna 4 atti, ospiti HP/Naruto/ST, caos, S8 sistemi, S9 mobile/rete)
+## CONTESTO (stato v19.0 — S1-S9 complete + 41 GIOCABILI; prossima:
+## §S-VFX con scelte utente già prese — vedi sezione dedicata)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -223,9 +223,53 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   test: TouchEvent veri con new Touch({target: cv, ...}).
 - Debug: `.goto(n | 'konoha'|'cane'|'paint'|'sotto'|'vecna') .char(id) .step .tp .soul
   (azzera anche i cd) .super(=castUlt) .pow .kill .dmg .beatRival .p2
+- **V18.1-18.3 (feedback telefono + co-op)**: STICK virtuale (registro
+  STICK, soglie L/R 32% giù 45% SU 60%) + rombo PS generato da TB_C
+  (mai coordinate a mano); ✕/Space conferma OVUNQUE (select, updateMenu,
+  over, win, netbit ok); grantShards→coinsRun e sblocchi guest* inviati
+  all'ospite online (subito alla kill + fine livello) e salvati sul SUO
+  profilo. Bump cache sw.js a OGNI release.
+- **V19.0 — +14 GIOCABILI Konoha (41 totali)**: gaara hinata neji guy
+  tenten temari ino kiba choji shino itachi tsunade sasori kankuro
+  (tutti needs:'guestKonoha', kit dedicati — vedi commit e8c3b69).
+  Pipeline `nc_char` in tools_guest_build.py: sheet NC etichettati →
+  split su barre nere, ordine sezioni FISSO (0 Idle · 2 Running · 5 Jump
+  · 7 Throw=cast · 11 Combo1=atk · 15 Hit · 18 OnGround); non etichettati
+  → chroma + rimozione globale delle 2 tinte-riquadro; key_trim ITERATO;
+  personaggio nuovo = 1 riga in NC_CAST. Deidara = sheet rotto, rimandato.
+  SELECT A SCORRIMENTO (finestra 3 file segue selIdx). LIBRERIA: ~180
+  sheet in assets/guest/src_tsr/ (tools_tsr_dl.py manifest; catalogo
+  visivo: tools_tsr_catalog.py → jpg in scratchpad).
+- Debug: `.goto(n | 'konoha'|'cane'|'paint'|'sotto'|'vecna') .char(id)` +
   .give .gems .boon .forge .incubo .next .fakeGuest .reset .info(+mboss/
   nEnemies/nGroups/guests/fail) .quest .mbkill .gen .remix .arma .pom
   .maledici .syn .god .perk .shards .unlock .ui`.
+
+## §S-VFX — PROSSIMA SESSIONE (scelte utente GIÀ PRESE, vincolanti)
+Richiesta: ogni personaggio con effetti PROPRI, mondi distinti. Artifact
+proposte: claude.ai/code/artifact/c0f88173-43a8-4682-91ca-d0c6a05b4a90
+1. NARUTO ✅approvato: N3 = jutsu autentici dai fx_* di src_tsr/
+   narutoshippudennarutovssasuke (double_rasengan, fireball_rasengan,
+   rasenbomb, otto_porte, beast_hammer... — riquadri-cella da togliere
+   col key iterato) + upgrade animazioni dai loro sheet personaggi;
+   Dairansen fx_effects per gli impatti. ❌ NIENTE draghi ("pochi draghi
+   in Naruto, controsenso"). Meccanica: registro VFX per-kit (es. campo
+   fx nei KITS: proiettili sprite per kunai/shuriken, cast/ult dedicati)
+   al posto delle mezzelune uguali per tutti.
+2. HP ✅approvato H1+H2: pose bacchetta dallo sheet hp_harry (sezioni
+   Lumos/Spell Casting) + pack CC0 'Pixelart Spells' ricolorato canone
+   (hue: Chidori/Patronus +192, Rasengan +0, Lumos +64, Avada +128 —
+   già calibrato). Bestiario GBC (src_tsr/harrypotterthechamberofsecrets)
+   per Scuola/caos: Basilisco, folletti, mandragole, Weasley NPC.
+3. RON/HERMIONE/VOLDEMORT: ROM GBA = VICOLO CIECO (Griptonite,
+   compressione custom, zero LZ77 BIOS: sweep 0 blob su 16MB — NON
+   insistere; PSP idem: ' 3;1' CC2 e FX1? EA mai craccati). Strade vive:
+   (a) fan-sheet DeviantArt (the-super-spriters per Naruto esiste già;
+   per HP cercare) → PROPORRE IMMAGINI prima; (b) l'utente cattura da
+   emulatore (screenshot/gif) e li ricompongo io. Deidara: riprovare
+   con lo sheet Shinobi Rumble (73406).
+4. GIOCABILI EXTRA possibili gratis: Pain/Sai/Karin/Suigetsu/Jugo da
+   src_tsr/narutoshinrumble (layout DIVERSO da NC: mapper da adattare).
 
 ## §RICERCA-GIOCHI — residuo utile
 - **Isaac**: pool drop che si espande ✅; restano stanze segrete nei chunk
@@ -408,6 +452,14 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
     `gh api search/repositories` + `git/trees/HEAD?recursive=1` filtrato
     su png, poi raw.githubusercontent. Qualità sorprendente (Undici,
     Hopper, Vecna). Accreditare il repo in CREDITS.md.
+28. ROM commerciali: GBA/DS di Tomy, Griptonite ed EA usano compressioni
+    e archivi CUSTOM (zero LZ77 BIOS, zero NCGR): lo sweep dice subito
+    se c'è trippa — se no, NON insistere: TSR/fan-sheet battono il
+    reverse engineering 9 volte su 10. MAI `git add -A` con ROM nel
+    repo: iso/ è in .gitignore per sempre (incidente 8GB sfiorato).
+29. La cartella `iso/` è SOLO locale (copyright + dimensioni): niente
+    GitHub. Il backup del gioco è il repo remoto; le ROM se le tiene
+    l'utente. Cache PWA (sw.js): bump del nome a ogni release.
 
 ## §FINE SESSIONE — rituale (obbligatorio)
 1. Verifica criteri accettazione; 2. commit+push (`vX.Y: sintesi`);
