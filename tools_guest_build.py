@@ -277,6 +277,138 @@ def st_backgrounds():
     META['st_upside_near'] = dict(w=near.size[0], h=near.size[1])
     STRIPS['st_upside_near'] = near
 
+# ============ NC3/NC4 (DS): sheet ETICHETTATI — sezioni divise dalle barre nere ============
+# Ordine sezioni (costante nel motore Ninja Council): 0 Idle · 1 Walking · 2 Running ·
+# 3 Ducking · 4 Guard · 5 Jump · 6 Fall · 7 Throw · 8 Get Back · 9 Throw Weapon ·
+# 10 Fast Get Up · 11 Combo1 · 12 Combo2 · 13 Combo3 · 14 Up Attack · 15 Hit(?) ...
+NC3_DIR = os.path.join(GUEST, 'src_tsr', 'narutoshippudenninjacouncil3')
+NC4_DIR = os.path.join(GUEST, 'src_tsr', 'narutoshippudenninjacouncil4')
+
+def nc_sezioni(im):
+    """righe-etichetta = fasce quasi nere a tutta larghezza → sezioni [y0,y1)."""
+    im = im.convert('RGB')
+    px = im.load()
+    w, h = im.size
+    bar = []
+    for y in range(h):
+        scuri = sum(1 for x in range(0, w, 4) if sum(px[x, y]) < 150)
+        bar.append(scuri > (w // 4) * 0.7)
+    sez = []
+    y = 0
+    while y < h:
+        if bar[y]:
+            while y < h and bar[y]: y += 1
+            y0 = y
+            while y < h and not bar[y]: y += 1
+            if y - y0 > 20: sez.append((y0, y))
+        else:
+            y += 1
+    return sez
+
+def nc_char(fname, key, ncdir=None, scale_h=46):
+    """personaggio Ninja Council → strip anims per il registro GUESTS."""
+    from tools_guest_extract import key_trim
+    src = os.path.join(ncdir or NC3_DIR, fname)
+    im = Image.open(src).convert('RGBA')
+    sez = nc_sezioni(im)
+    if len(sez) < 16:
+        # sheet SENZA etichette: chroma esterno + rimozione GLOBALE delle 2 tinte
+        # più comuni (riempimento e bordo dei riquadri), poi bande pulite
+        from tools_guest_extract import chroma as _chroma, bands as _bands
+        import collections
+        im = _chroma(im, tol=12)
+        px = im.load()
+        w, h = im.size
+        for _ in range(2):
+            conta = collections.Counter()
+            for y in range(0, h, 7):
+                for x in range(0, w, 7):
+                    p = px[x, y]
+                    if p[3] > 8: conta[p[:3]] += 1
+            if not conta: break
+            (cr, cg, cb), n = conta.most_common(1)[0]
+            if n < (w // 7) * (h // 7) * 0.04: break   # niente più tinte dominanti
+            for y in range(h):
+                for x in range(w):
+                    p = px[x, y]
+                    if p[3] > 8 and abs(p[0]-cr) <= 14 and abs(p[1]-cg) <= 14 and abs(p[2]-cb) <= 14:
+                        px[x, y] = (0, 0, 0, 0)
+        sez = [b for b in _bands(im) if b[1]-b[0] >= 24]
+        if len(sez) < 16:
+            print('!! %s: solo %d sezioni, salto' % (key, len(sez))); return False
+    def frames(si, quanti, salta=0):
+        # i riquadri-cella si toccano: prima tolgo il colore-cella (key_trim
+        # sull'intera riga), POI divido i frame sulle colonne trasparenti
+        y0, y1 = sez[si]
+        riga = im.crop((0, y0, im.size[0], y1))
+        for _ in range(4):   # riquadri: prima il riempimento, poi il BORDO (key iterato)
+            riga = key_trim(riga)
+            if riga.size[0] < 2 or riga.load()[0, 0][3] == 0: break
+        w, h = riga.size
+        if w < 8 or h < 16: return []
+        px = riga.load()
+        cols = [any(px[x, y][3] > 8 for y in range(h)) for x in range(w)]
+        out, x = [], 0
+        while x < w and len(out) < salta + quanti:
+            if cols[x]:
+                x0 = x
+                gap = 0
+                while x < w and gap < 3:
+                    gap = gap + 1 if not cols[x] else 0
+                    x += 1
+                fr = riga.crop((x0, 0, x - gap, h))
+                bb = fr.getbbox()
+                if bb: fr = fr.crop(bb)
+                if fr.size[0] >= 8 and fr.size[1] >= 16: out.append(fr)
+            else:
+                x += 1
+        return out[salta:salta + quanti]
+    picks = {
+        'idle': frames(0, 3),   # Idle
+        'walk': frames(2, 5),   # Running (più dinamica per il platformer)
+        'jump': frames(5, 1),   # Jump
+        'atk':  frames(11, 5),  # Combo 1
+        'cast': frames(7, 4),   # Throw (kunai): il gesto del potere
+        'hurt': frames(15, 2),  # Hit
+        'dead': frames(18, 2),  # On Ground
+    }
+    picks = {k: v for k, v in picks.items() if v}
+    if 'idle' not in picks or 'atk' not in picks:
+        print('!! %s: sezioni chiave vuote' % key); return False
+    # riscala tutto a ~scale_h di altezza sul frame idle
+    h0 = picks['idle'][0].size[1]
+    r = scale_h / h0
+    for k in picks:
+        picks[k] = [f.resize((max(1, round(f.size[0]*r)), max(1, round(f.size[1]*r))), Image.LANCZOS) for f in picks[k]]
+    strip, anims = _strip_from(sum(picks.values(), []), {  # riusa il compositore ST
+        k: list(range(sum(len(picks[j]) for j in list(picks)[:i]), sum(len(picks[j]) for j in list(picks)[:i]) + len(picks[k])))
+        for i, k in enumerate(picks)
+    })
+    # quantizza (stesso trucco anti-peso delle strip ST)
+    strip.putalpha(strip.getchannel('A').point(lambda v: 255 if v > 100 else 0))
+    q = strip.quantize(64, method=Image.FASTOCTREE, dither=Image.NONE)
+    q.save(os.path.join(OUT, key + '.png'), optimize=True)
+    META[key] = dict(anims=anims, w=strip.size[0], h=strip.size[1])
+    STRIPS[key] = strip
+    return True
+
+NC_CAST = [
+    # (file, chiave, cartella)
+    ('gaara_66621.png',  'g2_gaara',  None), ('hinata_66619.png', 'g2_hinata', None),
+    ('neji_98831.png',   'g2_neji',   None), ('guy_98819.png',    'g2_guy',    None),
+    ('tenten_98837.png', 'g2_tenten', None), ('temari_66620.png', 'g2_temari', None),
+    ('ino_66544.png',    'g2_ino',    None), ('kiba_66618.png',   'g2_kiba',   None),
+    ('choji_66600.png',  'g2_choji',  None), ('shino_66617.png',  'g2_shino',  None),
+    ('itachi_98820.png', 'g2_itachi', None), ('tsunade_98838.png','g2_tsunade',None),
+    ('deidara_89536.png','g2_deidara','NC4'), ('sasori_98869.png', 'g2_sasori', 'NC4'),
+    ('kankuro_98864.png','g2_kankuro','NC4'),
+]
+def nc_tutti():
+    ok = 0
+    for fn, key, d in NC_CAST:
+        if nc_char(fn, key, NC4_DIR if d == 'NC4' else NC3_DIR): ok += 1
+    print('NC cast:', ok, '/', len(NC_CAST))
+
 # ============ S-GRAFICA: atlante tile Hogwarts (da hp_hallways, mappa GBA 16px) ============
 def hog_tiles():
     im = Image.open(os.path.join(GUEST, 'hp_hallways.png')).convert('RGBA')

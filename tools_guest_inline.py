@@ -13,7 +13,10 @@ KEYS = ['g_naruto','g_sasuke','g_rocklee','g_kakashi','g_harry',
         'g_fluffy','g_zabuza','g_tigre','g_corvo','g_ninja','g_konoha_bg',
         # v16 — Stranger Things + atlante Hogwarts (S-GRAFICA)
         'st_eleven','st_hopper','st_demodog','st_demobat','st_demogrey',
-        'st_demogorgon','st_vecna','st_upside_far','st_upside_near','g_hogtiles']
+        'st_demogorgon','st_vecna','st_upside_far','st_upside_near','g_hogtiles',
+        # v19 — cast Ninja Council 3/4 giocabile
+        'g2_gaara','g2_hinata','g2_neji','g2_guy','g2_tenten','g2_temari','g2_ino',
+        'g2_kiba','g2_choji','g2_shino','g2_itachi','g2_tsunade','g2_sasori','g2_kankuro']
 
 lines = open(IDX, encoding='utf-8').read().split('\n')
 hi = next(i for i, l in enumerate(lines) if l.startswith('window.HAWK_ASSETS'))
