@@ -1299,7 +1299,7 @@ const MBOSSES = {
   Y: { sheet:'en_icebat', fw:30, fh:22, cols:5, rowCalm:0, rowRage:0, scale:2.4, offY:0, w:64, h:44, hp:12,
        ai:'swooper', nome:'REGINA DEI PIPISTRELLI', taunt:'REGINA DEI PIPISTRELLI: "I MIEI SUDDITI TI PRENDERANNO A MORSI PICCOLISSIMI."' },
   E: { sheet:'chang', char:true, fw:48, fh:48, cols:3, rowCalm:1, rowRage:9, scale:1.5, offY:-16, w:34, h:56, hp:14,
-       ai:'tigre', nome:'EL TIGRE CHINO', taunt:'CHANG: "Io sono EL TIGRE CHINO! Il campus è MIO: ho cambiato tutte le serrature. CHA-CHANG!"' },
+       ai:'tigre', tigre:true, nome:'EL TIGRE CHINO', taunt:'CHANG: "Io sono EL TIGRE CHINO! Il campus è MIO: ho cambiato tutte le serrature. CHA-CHANG!"' },
   K: { sheet:'chang', char:true, fw:48, fh:48, cols:3, rowCalm:1, rowRage:9, scale:1.5, offY:-16, w:34, h:56, hp:16,
        ai:'mago', minion:'hippy', pcol:'#5ae87a', filter:'hue-rotate(100deg) saturate(1.3)',
        sblocco:'guestHP', sbloccoMsg:'🪄 SCUOLA COMPLETATA: HARRY POTTER è giocabile! (Trasferito d\'ufficio: Greendale ha meno cause legali.)',
@@ -5251,6 +5251,18 @@ function drawMboss(){
       const colc = enraged ? (Math.floor(m.anim / 9) % 2 ? 0 : 4) : [1,2,3,2][Math.floor(m.anim / 9) % 4];
       ctx.drawImage(mimg, colc*48, (enraged ? d.rowRage : d.rowCalm)*48, 48, 48, -24*sc, 0, 48*sc, 48*sc);
       if (d.goatee){ ctx.fillStyle = '#241610'; ctx.fillRect(-3*sc, 19*sc, 6*sc, 3*sc); }
+      if (d.tigre){   // REVIEW-FIX: EL TIGRE ha un COSTUME — orecchie, fascia, strisce e coda (il Dean non è stato consultato)
+        ctx.fillStyle = '#e8862a';
+        ctx.beginPath(); ctx.moveTo(-9*sc, 8*sc); ctx.lineTo(-5*sc, 0); ctx.lineTo(-1*sc, 8*sc); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(3*sc, 8*sc); ctx.lineTo(7*sc, 0); ctx.lineTo(11*sc, 8*sc); ctx.fill();
+        ctx.fillRect(-10*sc, 9*sc, 21*sc, 3*sc);
+        ctx.fillStyle = '#1a1a24';
+        ctx.fillRect(-6*sc, 9*sc, 3*sc, 3*sc); ctx.fillRect(2*sc, 9*sc, 3*sc, 3*sc);
+        ctx.fillRect(-11*sc, 24*sc, 5*sc, 3*sc); ctx.fillRect(7*sc, 28*sc, 5*sc, 3*sc); ctx.fillRect(-11*sc, 32*sc, 5*sc, 3*sc);
+        ctx.strokeStyle = '#e8862a'; ctx.lineWidth = 3*sc;
+        ctx.beginPath(); ctx.moveTo(-12*sc, 38*sc); ctx.quadraticCurveTo(-23*sc, 36*sc, -21*sc, 25*sc); ctx.stroke();
+        ctx.fillStyle = '#1a1a24'; ctx.fillRect(-23*sc, 24*sc, 4*sc, 4*sc);
+      }
     } else {
       const row = enraged ? d.rowRage : d.rowCalm;
       const col = Math.floor(m.anim / 9) % d.cols;
