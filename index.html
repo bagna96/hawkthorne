@@ -1138,6 +1138,7 @@ const QUESTS = [
   { id:'el_tigre',     atto:3, mondo:6, tipo:'kill', target:'mboss', nome:'EL TIGRE CHINO' },
   { id:'boccino',      atto:3, mondo:7, tipo:'collect', target:'Z', nome:'Il Boccino (ce l\'ha Annie\'s Boobs)' },
   { id:'changemort',   atto:3, mondo:7, tipo:'kill', target:'mboss', nome:'Lord Changemort', fineAtto:3 },
+  { id:'trono',        atto:4, mondo:8, tipo:'kill', target:'boss', nome:'Detronizza CORNELIUS HAWTHORNE' },   // REVIEW-FIX: il finale ora ESISTE per la bussola
   { id:'abed_oscuro',  atto:4, mondo:9, tipo:'kill', target:'mboss', nome:'Abed-Oscuro nel Dreamatorium', fineAtto:4 },
 ];
 const ACTS = {
@@ -3598,8 +3599,6 @@ function loadLevel(i){
   }
   setSong(def.song);
 }
-function mkWalker(x, y){ return { type:'walker', x:x+3, y:y+8, w:26, h:24, vx:-0.8, vy:0, hp:1, anim:Math.random()*99 }; }
-function mkFlyer(x, y){ return { type:'flyer', x0:x, y0:y, x, y, w:28, h:20, t:Math.random()*99, hp:1, anim:0 }; }
 function mkRival(x, y){
   return { x, y: y - 14, w:22, h:30, vx:0, vy:0, hp:8, maxhp:8, face:-1,
     mode:'pace', t:0, hurtT:0, defeated: gilbertAlly, onGround:false, anim:0 };
@@ -3813,11 +3812,15 @@ function updateAmbush(){
     const id = Math.random() < caosA
       ? (ambush.spawned % 3 === 2 ? CAOS_F[Math.floor(Math.random()*CAOS_F.length)] : CAOS_W[Math.floor(Math.random()*CAOS_W.length)])
       : (ambush.spawned % 3 === 2 ? ((lvl.def.spawn || {}).f || 'bat') : ((lvl.def.spawn || {}).e || 'acorn'));
-    enemies.push(mkEnemy(id, ambush.cx + side * (190 + Math.random()*90), ambush.cy - 50 - Math.random()*40));
+    const ne = mkEnemy(id, ambush.cx + side * (190 + Math.random()*90), ambush.cy - 50 - Math.random()*40);
+    ne._amb = true;   // REVIEW-FIX: l'imboscata si chiude sui SUOI spawn, non sul full-clear del livello
+    if (lvlIdx >= 1 && ne.type === 'walker' && Math.random() < 0.22){ ne.shooter = true; ne.shootT = 90 + Math.random() * 90; }
+    else if (lvlIdx >= 2 && ne.type === 'walker' && Math.random() < 0.35){ ne.hp = 2; eliteMod(ne); }
+    enemies.push(ne);
     ambush.spawned++;
     burst(ambush.cx + side * 220, ambush.cy - 60, '#e85a5a', 8, 3); sfx('atk');
   }
-  if (ambush.spawned >= ambush.n && !enemies.some(e => e.hp > 0)){
+  if (ambush.spawned >= ambush.n && !enemies.some(e => e._amb && e.hp > 0)){
     const eraRaid = ambush.raid;
     addWallet(25); stinger('clear'); sfx('craft'); flashGrade([255, 215, 90], 14);
     if (Math.random() < 0.5) wdrops.push({ x: ambush.cx + 10, y: ambush.cy - 20, id: randomWeaponId() });
@@ -4071,11 +4074,6 @@ function fallRespawn(p){
 }
 
 // ------------------------------------------------ UPDATE: GIOCO
-function firePlayerShot(p, lava){
-  projs.push({ from:'player', owner: p, x: p.x + p.w/2 + p.face*10, y: p.y + 10, w: lava?12:10, h: lava?12:10,
-    vx: p.face * (lava?7:6.5), vy: 0, t: 80, fire: true, dmg: lava?2:1 });
-  sfx('fire');
-}
 function updateOnePlayer(p, atkBoxes){
   if (p.hp <= 0){
     p.downT--;
@@ -4218,12 +4216,13 @@ function updateOnePlayer(p, atkBoxes){
   } else p.ginT = 0;
   const mdf = mountDef(p);
   if (flyMode){ p.vy = pDown(p,'jump') ? -4.5 : pDown(p,'down') ? 4.5 : 0; p.jumps = 0; p.airDashes = 0; }
-  else if (mdf && mdf.fly && !p.onGround && pDown(p,'jump') && p.mountFuel > 0){
+  else if (mdf && mdf.fly && !p.onGround && pDown(p,'jump') && p.mountFuel > 0 && p.y > TS){
     p.vy = Math.max(p.vy - 1.7, -4.6); p.mountFuel--;   // R11: il VOLO si sente (era una planata travestita)
     if (mdf.firetrail && frame % 6 === 0)   // il drago semina fuoco: scia che morde
       projs.push({ from:'player', owner:p, x:p.x + p.w/2 - p.face*14, y:p.y + p.h, w:8, h:8, vx:0, vy:2.2, t:34, fire:true, dmg:1 });
     if (frame % 4 === 0) parts.push({ x:p.x + p.w/2 - p.face*16, y:p.y + p.h, vx:-p.face, vy:0.8, t:12, ng:1, sz:2, color:'rgba(90,232,122,0.6)' });
   }
+  if (mdf && mdf.fly && p.y <= TS && p.vy < 0) p.vy = 0;   // REVIEW-FIX: tetto di volo — niente sorvoli sopra la riga 0 (cancelli-leva M5)
   if (mdf && mdf.fly && p.onGround) p.mountFuel = mdf.fly;
   if ((hasAbil('glide') || p.cdef.ab === 'glide' || (mdf && mdf.glide)) && pDown(p,'jump') && p.vy > 1.4 && !p.onGround){ p.vy = 1.4; if (frame % 6 === 0) parts.push({ x:p.x + p.w/2, y:p.y + p.h, vx:0, vy:0.3, t:10, ng:1, sz:3, color:'rgba(230,230,255,0.5)' }); }
   // atterraggio: polvere + SCHIANTO (onda d'urto)
@@ -5283,6 +5282,7 @@ function hitBoss(n){
   burst(boss.x + 48, boss.y + 48, '#a44ae8', 14, 3);
   if (boss.hp <= 0){
     boss.dead = true;
+    questEvent('kill','boss');   // REVIEW-FIX: chiude la quest 'trono'
     babies = [];
     burst(boss.x + 48, boss.y + 48, '#f5d442', 60, 5);
     grantShards(5);
@@ -6427,9 +6427,9 @@ function drawHUD(){
     const rows = [['ATK', '×' + atkX], ['RATEO', (60 / cdB).toFixed(1) + '/s'], ['GIT', gitt], ['VEL', velX], ['❤', p0.maxhp]];
     ctx.font = '11px "Courier New", monospace';
     for (let k = 0; k < rows.length; k++){
-      ctx.fillStyle = 'rgba(10,10,26,0.55)'; ctx.fillRect(14, 84 + k * 16, 78, 14);
+      ctx.fillStyle = 'rgba(10,10,26,0.55)'; ctx.fillRect(14, 84 + k * 16, 96, 14);
       ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillText(rows[k][0], 18, 95 + k * 16);
-      ctx.fillStyle = '#fff'; ctx.fillText('' + rows[k][1], 48, 95 + k * 16);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText('' + rows[k][1], 106, 95 + k * 16); ctx.textAlign = 'left';   // REVIEW-FIX: valore a destra, mai più "RATEO6.0/s"
     }
   }
   // monete + cristalli
@@ -6439,7 +6439,6 @@ function drawHUD(){
   ctx.fillStyle = '#5ae8e8';
   ctx.beginPath(); ctx.moveTo(106, 62); ctx.lineTo(114, 69); ctx.lineTo(106, 76); ctx.lineTo(98, 69); ctx.fill();
   text('x ' + cristalli, 120, 75, 16, '#fff');
-  if (lavagun) text('LANCIA-LAVA [C]', 14, 96, 12, '#f5822a');
   text(lvl.name, W/2, 26, 15, 'rgba(255,255,255,0.85)', 'center');
   if (boss && !boss.dead){
     const bw = 400;
@@ -6463,6 +6462,7 @@ function drawHUD(){
 function drawMinimap(){
   if (!lvl || !players.length || lvl.def.hub) return;
   if (SAVE.opts && SAVE.opts.map === false) return;
+  if (lvlBanner) return;   // REVIEW-FIX: il banner del livello passava SOTTO la minimappa — lei aspetta 3 secondi
   const mw = 210, mh = 52, ox = W - mw - 14, oy = players[1] ? 92 : 78;
   ctx.fillStyle = 'rgba(8,8,20,0.5)'; ctx.fillRect(ox - 3, oy - 3, mw + 6, mh + 6);
   ctx.strokeStyle = 'rgba(138,232,232,0.45)'; ctx.lineWidth = 1; ctx.strokeRect(ox - 3, oy - 3, mw + 6, mh + 6);
@@ -6919,9 +6919,10 @@ function drawDoorSigns(){
     if (Math.abs(p.x + p.w/2 - wx) > 120 || Math.abs(p.y + p.h/2 - wy) > 140) continue;
     const lbl = doorLabel(c); if (!lbl) continue;
     const bob = Math.sin(frame * 0.06) * 2;
-    const lx = wx - cam.x, ly = wy - 26 - cam.y + bob;
+    const ly = wy - 26 - cam.y + bob;
     ctx.font = '12px "Courier New", monospace';
     const tw = ctx.measureText(lbl).width;
+    const lx = Math.max(tw/2 + 9, Math.min(W - tw/2 - 9, wx - cam.x));   // REVIEW-FIX: cartello sempre DENTRO lo schermo
     ctx.fillStyle = 'rgba(8,8,20,0.85)'; ctx.fillRect(lx - tw/2 - 7, ly - 12, tw + 14, 18);
     ctx.strokeStyle = 'rgba(245,212,66,0.6)'; ctx.lineWidth = 1; ctx.strokeRect(lx - tw/2 - 7, ly - 12, tw + 14, 18);
     text(lbl, lx, ly + 1, 12, '#f5d442', 'center');
