@@ -90,18 +90,19 @@ function switchSlot(){
 function exportSave(){
   try {
     const code = btoa(unescape(encodeURIComponent(JSON.stringify(SAVE))));
-    window.prompt('Copia questo codice e conservalo (Cmd+C):', code);
+    codeBox({ title:'ESPORTA SALVATAGGIO', msg:'Conserva questo codice dove vuoi (note, mail): è TUTTO il tuo progresso.', value: code });
   } catch(e){}
 }
 function importSave(){
-  try {
-    const code = window.prompt('Incolla il codice del salvataggio:');
+  codeBox({ title:'IMPORTA SALVATAGGIO', msg:'Incolla il codice esportato in precedenza. Sovrascrive il salvataggio di questo slot!', input:true }).then(code => {
     if (!code) return;
-    const obj = JSON.parse(decodeURIComponent(escape(atob(String(code).trim()))));
-    if (!obj || typeof obj !== 'object' || !('wallet' in obj)) throw 0;
-    SAVE = Object.assign({ wallet: 0, chars: {}, finished: false, meta: {}, shards: 0 }, obj);
-    saveGame(); location.reload();
-  } catch(e){ showToast('Codice non valido. Il Decano è visibilmente deluso.'); }
+    try {
+      const obj = JSON.parse(decodeURIComponent(escape(atob(String(code).trim()))));
+      if (!obj || typeof obj !== 'object' || !('wallet' in obj)) throw 0;
+      SAVE = Object.assign({ wallet: 0, chars: {}, finished: false, meta: {}, shards: 0 }, obj);
+      saveGame(); location.reload();
+    } catch(e){ showToast('Codice non valido. Il Decano è visibilmente deluso.'); }
+  });
 }
 // MOSSE BASE: disponibili SUBITO per tutti (movimento fluido di default, richiesta utente)
 const BASE_ABIL = { djump: 1, dash: 1, walljump: 1 };
@@ -376,12 +377,13 @@ function drawCornelius(x, y, u){
 const keys = {};
 const justPressed = {};
 window.addEventListener('keydown', e => {
+  if (modalOpen) return;
   if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Tab'].includes(e.key)) e.preventDefault();
   if (!keys[e.code]) justPressed[e.code] = true;
   keys[e.code] = true;
   initAudio();
 });
-window.addEventListener('keyup', e => { keys[e.code] = false; });
+window.addEventListener('keyup', e => { if (modalOpen) return; keys[e.code] = false; });
 // R2: perdita di focus = mani alzate — niente tasti fantasma dopo alt-tab/notifiche
 function releaseAllInputs(){
   for (const k in keys) keys[k] = false;
@@ -391,6 +393,40 @@ function releaseAllInputs(){
 }
 window.addEventListener('blur', releaseAllInputs);
 document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAllInputs(); });
+// R3 — PANNELLO CODICI (DOM): window.prompt è un NO-OP sulla PWA iOS standalone → export,
+// import e scambio codici co-op erano inaccessibili proprio su iPhone. Overlay con textarea
+// (tastiera/incolla nativi), COPIA via clipboard API con fallback execCommand.
+let modalOpen = false;
+function codeBox(o){   // { title, msg, value (mostra/copia), input (chiedi testo) } → Promise<string|true|null>
+  return new Promise(res => {
+    modalOpen = true; releaseAllInputs();
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:60;background:rgba(4,4,14,0.86);display:flex;align-items:center;justify-content:center;font-family:"Courier New",monospace;';
+    const pane = document.createElement('div');
+    pane.style.cssText = 'background:#12122a;border:2px solid #8ae8e8;border-radius:10px;padding:18px;width:min(520px,92vw);color:#fff;box-shadow:0 0 40px rgba(138,232,232,0.25);';
+    const h = document.createElement('div'); h.textContent = o.title; h.style.cssText = 'color:#f5d442;font-weight:bold;font-size:18px;margin-bottom:8px;';
+    const msg = document.createElement('div'); msg.textContent = o.msg || ''; msg.style.cssText = 'font-size:13px;color:#bfc6e0;margin-bottom:10px;';
+    const ta = document.createElement('textarea');
+    ta.style.cssText = 'width:100%;height:92px;background:#0a0a1c;color:#8ae8e8;border:1px solid #444;border-radius:6px;font-family:inherit;font-size:16px;padding:6px;box-sizing:border-box;resize:none;';   // 16px: sotto, iOS ZOOMA la pagina al focus
+    if (o.value){ ta.value = o.value; ta.readOnly = true; }
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:10px;margin-top:12px;justify-content:flex-end;';
+    const done = v => { modalOpen = false; wrap.remove(); res(v); };
+    const mkBtn = (label, fn, col) => { const b = document.createElement('button'); b.textContent = label;
+      b.style.cssText = 'background:' + (col || '#1c1c3a') + ';color:#fff;border:1px solid #666;border-radius:6px;padding:9px 16px;font-family:inherit;font-size:13px;cursor:pointer;';
+      b.onclick = fn; row.appendChild(b); };
+    if (o.value) mkBtn('COPIA', async () => {
+      let okc = false;
+      try { await navigator.clipboard.writeText(o.value); okc = true; } catch(e){}
+      if (!okc){ try { ta.readOnly = false; ta.focus(); ta.setSelectionRange(0, ta.value.length); okc = document.execCommand('copy'); ta.readOnly = true; } catch(e){} }   // iOS: select() nudo non basta
+      showToast(okc ? 'Copiato ✔' : 'Copia manuale: seleziona il testo');
+    });
+    if (o.input) mkBtn('ANNULLA', () => done(null));
+    mkBtn(o.input ? 'CONFERMA' : 'OK', () => done(o.input ? ta.value.trim() : true), '#274a27');
+    pane.append(h, msg, ta, row); wrap.appendChild(pane); document.body.appendChild(wrap);
+    wrap.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Escape') done(o.input ? null : true); });
+    if (o.input) setTimeout(() => ta.focus(), 60);
+  });
+}
 // ------------------------------------------------ TOUCH (v18, S9): iPhone/iPad
 // Pulsanti virtuali multi-touch mappati sui tasti P1: compaiono al PRIMO tocco.
 // ▲ = salto/nav-su, ✕ = salto/OK: gli stessi codici funzionano in gioco E nei menu.
@@ -757,6 +793,44 @@ function drawVFX(id, x, y, s){
   ctx.drawImage(img, col*d.fw, 0, d.fw, d.fh, x - d.fw/2*s, y - d.fh/2*s, d.fw*s, d.fh*s);
   ctx.globalAlpha = 1;
 }
+// R3 — TINTE PRE-RENDERIZZATE: ctx.filter per-frame era ignorato da Safari <17.4 (élite
+// INVISIBILI) e lento altrove. Qui: matrice hue-rotate/saturate/brightness del filter
+// spec W3C applicata UNA volta per sheet su canvas offscreen, poi solo drawImage.
+let tintSeq = 0;
+const tintCache = new Map();
+function tinted(img, filterStr){
+  if (!img || !img.complete || !img.naturalWidth) return img;
+  const key = filterStr + '|' + (img.__tid || (img.__tid = ++tintSeq));
+  let cv2 = tintCache.get(key);
+  if (cv2) return cv2;
+  cv2 = document.createElement('canvas');
+  cv2.width = img.naturalWidth; cv2.height = img.naturalHeight;
+  const c2 = cv2.getContext('2d', { willReadFrequently: true });
+  c2.drawImage(img, 0, 0);
+  try {
+    const rot = (filterStr.match(/hue-rotate\((-?\d+)deg\)/) || [])[1] * Math.PI / 180 || 0;
+    const sat = +(filterStr.match(/saturate\(([\d.]+)\)/) || [])[1] || 1;
+    const bri = +(filterStr.match(/brightness\(([\d.]+)\)/) || [])[1] || 1;
+    const cs = Math.cos(rot), sn = Math.sin(rot);
+    const m = [   // matrice hue-rotate del filter spec (conserva la luminanza)
+      0.213 + cs*0.787 - sn*0.213, 0.715 - cs*0.715 - sn*0.715, 0.072 - cs*0.072 + sn*0.928,
+      0.213 - cs*0.213 + sn*0.143, 0.715 + cs*0.285 + sn*0.140, 0.072 - cs*0.072 - sn*0.283,
+      0.213 - cs*0.213 - sn*0.787, 0.715 - cs*0.715 + sn*0.715, 0.072 + cs*0.928 + sn*0.072,
+    ];
+    const idata = c2.getImageData(0, 0, cv2.width, cv2.height), d = idata.data;
+    for (let i = 0; i < d.length; i += 4){
+      if (!d[i+3]) continue;
+      let r = d[i], g = d[i+1], b = d[i+2];
+      let r2 = m[0]*r + m[1]*g + m[2]*b, g2 = m[3]*r + m[4]*g + m[5]*b, b2 = m[6]*r + m[7]*g + m[8]*b;
+      if (sat !== 1){ const L = 0.213*r2 + 0.715*g2 + 0.072*b2; r2 = L + (r2-L)*sat; g2 = L + (g2-L)*sat; b2 = L + (b2-L)*sat; }
+      d[i] = Math.max(0, Math.min(255, r2*bri)); d[i+1] = Math.max(0, Math.min(255, g2*bri)); d[i+2] = Math.max(0, Math.min(255, b2*bri));
+    }
+    c2.putImageData(idata, 0, 0);
+  } catch(e){}
+  tintCache.set(key, cv2);
+  return cv2;
+}
+const F_ELITE = 'hue-rotate(140deg)', F_EVIL = 'hue-rotate(180deg) saturate(1.5) brightness(0.85)';
 // player VFX one-shot: {id, x, y, f, s, rot, flip, vx, vy} — riproduce lo sheet una volta e sparisce
 let fxShots = [];
 // v20.4 — SCIE FANTASMA del dash aereo (silhouette alla Celeste che sbiadiscono)
@@ -3024,7 +3098,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v20.6';    // R2 FEEL: camera con lookahead/lerp/deadzone, igiene input, ospite online riparato
+const GAME_VERSION = 'v20.7';    // R3 iOS: pannello codici DOM (prompt era morto su PWA), tinte élite/evil pre-renderizzate
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -4914,10 +4988,9 @@ function drawMboss(){
     ctx.scale(Math.sign((nearestPlayer(m.x) || m).x - m.x) || 1, 1);
     if (d.char){   // sheet-personaggio: walk row 1, attacco row 9 (cols 0/4) quando infuriato
       const sc = d.scale;
-      if (d.filter) ctx.filter = d.filter;
+      const mimg = d.filter ? tinted(img, d.filter) : img;   // R3: tinta pre-renderizzata
       const colc = enraged ? (Math.floor(m.anim / 9) % 2 ? 0 : 4) : [1,2,3,2][Math.floor(m.anim / 9) % 4];
-      ctx.drawImage(img, colc*48, (enraged ? d.rowRage : d.rowCalm)*48, 48, 48, -24*sc, 0, 48*sc, 48*sc);
-      ctx.filter = 'none';
+      ctx.drawImage(mimg, colc*48, (enraged ? d.rowRage : d.rowCalm)*48, 48, 48, -24*sc, 0, 48*sc, 48*sc);
       if (d.goatee){ ctx.fillStyle = '#241610'; ctx.fillRect(-3*sc, 19*sc, 6*sc, 3*sc); }
     } else {
       const row = enraged ? d.rowRage : d.rowCalm;
@@ -5100,9 +5173,8 @@ function drawWalkerInner(e){
       ctx.save();
       ctx.translate(x + e.w/2, y + e.h - bob);
       ctx.scale(dir === (g.face || 1) ? 1 : -1, 1);
-      if (e.elite) ctx.filter = 'hue-rotate(140deg)';
-      ctx.drawImage(img, fi*a[1], a[0], a[1], a[2], -a[1]*sc/2, -a[2]*sc, a[1]*sc, a[2]*sc);
-      ctx.restore(); ctx.filter = 'none';
+      ctx.drawImage(e.elite ? tinted(img, F_ELITE) : img, fi*a[1], a[0], a[1], a[2], -a[1]*sc/2, -a[2]*sc, a[1]*sc, a[2]*sc);
+      ctx.restore();
       return;
     }
   }
@@ -5113,10 +5185,7 @@ function drawWalkerInner(e){
       ctx.save();
       ctx.translate(x + e.w/2, y + e.h - 44);
       ctx.scale(dir > 0 ? -1 : 1, 1);
-      if (e.evil) ctx.filter = 'hue-rotate(180deg) saturate(1.5) brightness(0.85)';
-      else if (e.elite) ctx.filter = 'hue-rotate(140deg)';
-      ctx.drawImage(img, wf*48, 48, 48, 48, -24, 0, 48, 48);
-      ctx.filter = 'none';
+      ctx.drawImage(e.evil ? tinted(img, F_EVIL) : e.elite ? tinted(img, F_ELITE) : img, wf*48, 48, 48, 48, -24, 0, 48, 48);
       if (e.evil){ ctx.fillStyle = '#241610'; ctx.fillRect(-9, 19, 6, 4); }   // pizzetto di feltro: canone
       ctx.restore();
       return;
@@ -5126,9 +5195,8 @@ function drawWalkerInner(e){
     const f = Math.floor(e.anim / 10) % 4;
     ctx.save(); ctx.translate(x + 13, y + e.h - 44);
     ctx.scale(dir > 0 ? -1 : 1, 1);
-    if (e.elite){ ctx.filter = 'hue-rotate(140deg)'; }
-    ctx.drawImage(IMGS.en_hippy, f*48, 0, 48, 48, -24, 0, 48, 48);
-    ctx.restore(); ctx.filter = 'none';
+    ctx.drawImage(e.elite ? tinted(IMGS.en_hippy, F_ELITE) : IMGS.en_hippy, f*48, 0, 48, 48, -24, 0, 48, 48);
+    ctx.restore();
     return;
   }
   if (IMGS.en_acorn && IMGS.en_acorn.complete && IMGS.en_acorn.naturalWidth){
@@ -6821,9 +6889,9 @@ async function netSetup(role){
     await iceDone();
     const code = btoa(JSON.stringify(net.pc.localDescription));
     try { if (navigator.clipboard) navigator.clipboard.writeText(code); } catch(e){}   // v18: COPIA CODICE automatica
-    prompt('CODICE 1 — già copiato negli appunti (se il browser lo permette). Mandalo all\'amico:', code);
-    const ans = prompt('Ora incolla qui il CODICE 2 che ti manda l\'amico:');
-    if (ans){ try { await net.pc.setRemoteDescription(JSON.parse(atob(ans.trim()))); } catch(e){ alert('Codice non valido.'); netDrop(); } }
+    await codeBox({ title:'CODICE 1 — mandalo all\'amico', msg:'Già copiato negli appunti (se il browser lo permette). WhatsApp, mail, come volete.', value: code });
+    const ans = await codeBox({ title:'CODICE 2 — dall\'amico', msg:'Incolla qui il CODICE 2 che ti rimanda l\'amico.', input:true });
+    if (ans){ try { await net.pc.setRemoteDescription(JSON.parse(atob(ans.trim()))); } catch(e){ showToast('Codice non valido. Riprovate con calma.'); netDrop(); } }
     else netDrop();
   } else {
     net.pc.ondatachannel = ev => {
@@ -6831,7 +6899,7 @@ async function netSetup(role){
       net.ch.onopen = onOpen; net.ch.onmessage = onMsg;
       net.ch.onclose = () => netDrop();
     };
-    const off = prompt('Incolla il CODICE 1 dell\'host:');
+    const off = await codeBox({ title:'CODICE 1 — dall\'host', msg:'Incolla il CODICE 1 che ti ha mandato chi ospita.', input:true });
     if (!off){ netDrop(); return; }
     try {
       await net.pc.setRemoteDescription(JSON.parse(atob(off.trim())));
@@ -6840,8 +6908,8 @@ async function netSetup(role){
       await iceDone();
       const code2 = btoa(JSON.stringify(net.pc.localDescription));
       try { if (navigator.clipboard) navigator.clipboard.writeText(code2); } catch(e){}   // v18: COPIA CODICE
-      prompt('CODICE 2 — già copiato negli appunti (se il browser lo permette). Rimandalo all\'host:', code2);
-    } catch(e){ alert('Codice non valido.'); netDrop(); }
+      await codeBox({ title:'CODICE 2 — rimandalo all\'host', msg:'Già copiato negli appunti (se il browser lo permette).', value: code2 });
+    } catch(e){ showToast('Codice non valido. Riprovate con calma.'); netDrop(); }
   }
   function iceDone(){
     return new Promise(res => {
