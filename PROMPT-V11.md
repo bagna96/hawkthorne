@@ -79,17 +79,24 @@ LIMITE loggato: il modal non è pad-only (serve tastiera/appunti di sistema:
 accettato). LEZIONE: su iOS ogni input DOM va a 16px, e la copia va testata
 col fallback — mai fidarsi del solo navigator.clipboard.
 
-### ☐ R4 — IDENTITÀ DEI MONDI (caos a dieta + élite che pensano)
-- CAOS: grep "0.12 + lvlIdx" → cap 0.35 (oggi 0.82 al mondo 7: i mondi di V14
-  anneggano nel crossover). Il caos è spezia, non piatto.
-- ÉLITE COMPORTAMENTALI (ricerca: comportamenti > numeri): registro ELITE_MODS
-  con 3 mod assegnate a caso: 'scudo' (immune dal fronte, indicatore visivo:
-  colpiscila da dietro/sopra), 'vendetta' (alla morte 3 proiettili radiali
-  lenti e schivabili), 'campo' (alone visibile che velocizza i vicini).
-  In cambio, i numeri SCENDONO: spd élite 1.4→1.2 (la sfida è la decisione).
-  Tinte per mod distinct (usa la cache R3 se già fatta, altrimenti colori).
-- ESAME: ogni mod leggibile a colpo d'occhio (silhouette/indicatore)?
-  Cambia davvero come giochi (test a mano)? Il mondo 7 è tornato SUO?
+### ☐ R4 — COMBATTIMENTO LEGGIBILE (espansa col feedback utente 11 lug sera:
+### "i boss non sparano, i nemici fanno male solo al tocco — peccato")
+- CAOS: grep "0.12 + lvlIdx" → cap 0.35 (oggi 0.82 al mondo 7).
+- ÉLITE COMPORTAMENTALI: e.mod ∈ {scudo (immune dal FRONTE, colpiscila da
+  dietro/sopra, indicatore visivo), vendetta (alla morte 3 proiettili radiali
+  LENTI e schivabili), campo (alone visibile che velocizza i vicini)}.
+  Glifo sopra la testa per leggibilità. In cambio spd élite 1.4→1.2.
+- MOB A DISTANZA (richiesta utente): walker 'shooter' (~18% dal mondo 1+):
+  si ferma, telegraph '!' 30f, UNA lobbata ad arco lenta (grav, vel~4,
+  from:'enemy'). Tinta dedicata via tinted(). Nei mazzi CAOS.
+- TELEGRAFI MELEE (richiesta utente): il ghost si ferma 20f e lampeggia
+  prima dello scatto; leaper idem se veloce.
+- PATTERN BOSS (richiesta utente): Re Ghianda (hopper): all'atterraggio 2
+  ghiande ad arco telegrafate dal salto; El Tigre: dopo lo stun a muro, 3
+  bolt a ventaglio lenti. Changemort ha già il ventaglio. TUTTO leggibile:
+  proiettili lenti, colore distinto, mai spam.
+- ESAME: ogni minaccia schivabile con la 8-dir A VISTA; mod élite leggibili;
+  il mondo 7 è tornato SUO; nessun pattern che spamma.
 
 ### ☐ R5 — ROSTER PROFONDO (basta fotocopie) — la più grande, può spezzarsi in 2
 - (a) AUDIT: script che stampa la tabella id/base/pow/ult (verb+numeri) dei 41
@@ -126,13 +133,61 @@ col fallback — mai fidarsi del solo navigator.clipboard.
 - ESAME: smoke run COMPLETO post-potatura (campagna 2 livelli + endless +
   boss rush + select + touch); file più leggero di prima; zero errori.
 
+### ☐ R8 — LA BUSSOLA DEL MONDO (feedback utente 11 lug sera: "caotico, teletrasporti
+### bruttissimi, non capisco dove sono le mappe e i luoghi secondari") — PRIORITÀ ALTA
+Tutte e 4 le richieste approvate dall'utente:
+- MAPPA DEL MONDO (in pausa + dal cartello fast-travel del hub): schema alla
+  Super Mario World — nodi = 10 mondi + luoghi segreti SCOPERTI (Konoha, corridoio,
+  Sottosopra, paintball, Dreamatorium), "TU SEI QUI" lampeggiante, linee tra i nodi.
+  Registro WORLD_MAP data-driven {id, nome, x,y, needs}. SAVE.found[] per i segreti.
+- CARTELLI SULLE PORTE: ogni porta X/crepa ψ/armadietto ¾/torii @/porta '8'
+  mostra PRIMA dove porta (etichetta sopra quando sei vicino): "→ SCUOLA DI MAGIA",
+  "??? (mai visitato)" per i segreti. Riusa il pattern lockers/interact.
+- TRANSIZIONI CINEMATICHE: entrata nei luoghi segreti = wipe A PORTALE (nuovo
+  wipeKind) + banner grande "BENVENUTO A …" + stinger dedicato. L'uscita idem
+  ("DI NUOVO A …"). Il viaggio si deve SENTIRE.
+- MINIMAPPA RICCA: marker porte (X, bonus), segreti S scoperti, boss, uscita.
+- ESAME: un giocatore NUOVO capisce dove si trova in ogni istante? Ogni porta
+  dichiara la destinazione? Il ritorno dal bonus ti ri-ancora (banner)?
+
+### ☐ R9 — VERTICALITÀ E SAGOME (feedback utente: "il mondo sembra piatto…
+### non si può andare sotto o sopra"; "nemici e personaggi tutti grandi uguali")
+- SOTTOSUOLO/SOPRA nei mondi 1-5 via tools_build_maps.py: ogni mondo guadagna
+  UNO strato extra — caverna sotterranea (ingresso-buco + risalita, tesoro/
+  segreto dentro) o torre/cime (scalata opzionale con premio). Il main path
+  resta; lo strato è OPZIONALE e ricco. Regole 21/23/25 valgono.
+- SAGOME: taglie differenziate — mob 'runt' (piccoli ×0.7, veloci) e 'brute'
+  (grossi ×1.4, lenti, 3hp) come varianti di scala in drawWalker (scale param);
+  i mini-boss +20% di scala. Il colpo d'occhio deve dire CHI è cosa.
+- ATTACCO PESANTE (utente: "bruttissimo perché banale"): differenziarlo
+  PER ARMA (spada=fendente ampio, martello=onda d'urto a terra, lancia=
+  affondo lungo, pugni=combo 2 colpi) — riusa i verbi/fx esistenti.
+- ESAME: silhouette leggibili a colpo d'occhio; lo strato extra si trova
+  senza guida?; il pesante di 3 armi diverse SI SENTE diverso.
+
+### ☐ R10 — ONBOARDING (feedback utente: "non c'è un'introduzione, non si
+### capisce cosa fanno gli oggetti, quali sono gli attacchi, obiettivi poco chiari")
+- PRIMA PARTITA GUIDATA: nel mondo 1, i primi 60 secondi insegnano GIOCANDO:
+  pannellini contestuali una-tantum al primo uso possibile (▢ quando appare
+  il primo nemico, ◯ alla prima minaccia, L1 quando il cd è pronto, R1 alla
+  prima barra piena) — riusa/estendi il registro GUIDE (già una-tantum).
+- OGGETTI SPIEGATI: primo perk/arma/boon raccolto → card breve "COSA FA"
+  (nome+icona+1 riga); da lì in poi solo il toast attuale.
+- OBIETTIVO SEMPRE VISIBILE: il lvlBanner scade — aggiungere la riga obiettivo
+  in PAUSA e sulla minimappa (icona bersaglio).
+- ESAME: un giocatore che NON ha mai visto il gioco capisce i 4 tasti nei
+  primi 2 minuti senza leggere tabelle? (test: utente o amico).
+
 ## §RESIDUI-EXTRA (non-review, quando capita o su richiesta)
 S-GRAFICA mondi 1-6 (texture/sfondi, DOPO R7); jutsu autentici extra (in R5c);
 Pain/Sai/Karin/Suigetsu/Jugo da narutoshinrumble (mapper diverso); Deidara
-(sheet 73406); Ron/Hermione/Voldemort (fan-sheet DA con immagini proposte
-prima, o cattura emulatore dell'utente); Quidditch gravità ridotta; lezioni
-mini-stanze; Cornelius nel boss rush; side-quest atto 0 (Annie's Boobs, statua
-Guzmán, consegne Dean); preset layout pad in Opzioni ("Comandi", 2-3 preset).
+(sheet 73406); **Ron/Hermione/Voldemort — PRIORITÀ ALZATA dall'utente 11 lug
+("mancano tutti gli sbloccabili Harry Potter")**: fan-sheet DeviantArt con
+immagini PROPOSTE prima, o cattura emulatore dell'utente; Quidditch gravità
+ridotta; lezioni mini-stanze; Cornelius nel boss rush; side-quest atto 0
+(Annie's Boobs, statua Guzmán, consegne Dean); preset layout pad in Opzioni.
+Ordine consigliato post-R4: R8 (bussola: è il dolore #1 dichiarato) → R9 → R10
+→ R5 → R6 → R7 (il debito prima di S-GRAFICA resta obbligatorio).
 
 ## §COMICITÀ — playbook permanente (Community + British + Scrubs + nonsense)
 Ogni testo nuovo passa per UNA lente: 1. META/Abed (callback, regola-Beetlejuice,
