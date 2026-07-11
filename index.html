@@ -1040,6 +1040,30 @@ function drawProjKind(pr){
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
       for (let i = 0; i < 4; i++){ const a = i / 4 * 6.3 + frame * 0.2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * 8 * sc, Math.sin(a) * 8 * sc); ctx.stroke(); }
       break; }
+    case 'minion': {                                   // R5: bunshin/cane/marionetta che corre
+      ctx.globalCompositeOperation = 'source-over';
+      const wob = Math.sin(frame * 0.4) * 1.5;
+      if (pr.skin === 'bunshin' && pr.owner){
+        ctx.globalAlpha = 0.88;
+        drawActor(sheetOf(pr.owner), 'walk', Math.round(frame + (pr.x % 7)), -24, -46 + wob, Math.sign(pr.vx) || 1, 0.8);
+      } else if (pr.skin === 'cane'){
+        ctx.scale(Math.sign(pr.vx) || 1, 1);
+        ctx.fillStyle = '#8a5a36'; ctx.fillRect(-9, -10 + wob, 18, 8);
+        ctx.fillRect(4, -16 + wob, 8, 8);                                   // testa
+        ctx.fillStyle = '#5a3a20'; ctx.fillRect(6, -19 + wob, 3, 4); ctx.fillRect(10, -19 + wob, 3, 4);  // orecchie
+        const lg = Math.floor(frame / 4) % 2 ? 2 : -2;
+        ctx.fillStyle = '#6a4426'; ctx.fillRect(-7 + lg, -2 + wob, 3, 5); ctx.fillRect(4 - lg, -2 + wob, 3, 5);
+      } else {                                            // marionetta di legno
+        ctx.scale(Math.sign(pr.vx) || 1, 1);
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-4, -34); ctx.lineTo(-4, -22); ctx.moveTo(4, -34); ctx.lineTo(4, -22); ctx.stroke();  // fili
+        ctx.fillStyle = '#b08a5a'; ctx.fillRect(-6, -22 + wob, 12, 14);
+        ctx.fillRect(-4, -30 + wob, 8, 8);                                  // testa
+        ctx.fillStyle = '#7a5a36'; ctx.fillRect(-2, -27 + wob, 2, 2); ctx.fillRect(1, -27 + wob, 2, 2);
+        const lg2 = Math.floor(frame / 5) % 2 ? 2 : -2;
+        ctx.fillRect(-6 + lg2, -8 + wob, 3, 8); ctx.fillRect(3 - lg2, -8 + wob, 3, 8);
+      }
+      break; }
     default: {                                         // 'star' e simili: stella morbida
       ctx.globalCompositeOperation = 'lighter'; ctx.rotate(frame * 0.15); ctx.fillStyle = c;
       ctx.beginPath();
@@ -1739,7 +1763,7 @@ const KITS = {
                     extra:{ verb:'nova', r:260, dmg:2, kb:11, col:'#cfe8ff' } } },
   naruto:  { base:{ verb:'bolt', vel:10, dmg:1, col:'#c9c9d0', icona:'🔪', nome:'Kunai' },
              pow: { verb:'dashstrike', t:55, cd:5, col:'#5ab8e8', icona:'🌀', nome:'Rasengan' },
-             ult: { verb:'volley', n:14, dmg:1, cd:10, col:'#f5822a', icona:'🍥', nome:'KAGE BUNSHIN NO JUTSU' } },
+             ult: { verb:'clone', n:4, t:340, dmg:1, cd:10, col:'#f5822a', icona:'🍥', nome:'KAGE BUNSHIN NO JUTSU' } },
   sasuke:  { base:{ verb:'bolt', vel:11, dmg:1, col:'#c9c9d0', icona:'✴️', nome:'Shuriken' },
              pow: { verb:'dashstrike', t:60, cd:6, col:'#5ae8e8', icona:'⚡', nome:'Chidori',
                     extra:{ verb:'storm', k:1, dmg:2, col:'#5ae8e8' } },
@@ -1749,16 +1773,16 @@ const KITS = {
              ult: { verb:'focus', t:480, cd:10, col:'#e85a4a', icona:'🚪', nome:'OTTO PORTE (fino alla sesta)' } },
   kakashi: { base:{ verb:'bolt', vel:9, dmg:1, pierce:true, col:'#b8c9e8', icona:'📖', nome:'Tecnica copiata' },
              pow: { verb:'storm', k:2, dmg:2, cd:6, col:'#5ae8e8', icona:'⚡', nome:'Raikiri (l\'originale)' },
-             ult: { verb:'quake', dmg:3, cd:10, col:'#8a6a4a', icona:'🐕', nome:'EVOCAZIONE: OTTO CANI NINJA' } },
+             ult: { verb:'clone', skin:'cane', n:8, t:280, dmg:1, cd:10, col:'#8a6a4a', icona:'🐕', nome:'EVOCAZIONE: OTTO CANI NINJA' } },
   // ---- kit CAST KONOHA v19
   gaara:   { base:{ verb:'bolt', vel:8, dmg:1, col:'#d8c088', icona:'⏳', nome:'Proiettile di sabbia' },
              pow: { verb:'trap', cd:6, col:'#d8c088', icona:'⌛', nome:'Sabaku Kyū (bara di sabbia)' },
              ult: { verb:'quake', dmg:4, cd:10, col:'#d8c088', icona:'🏜', nome:'FUNERALE DEL DESERTO' } },
   hinata:  { base:{ verb:'wave', vel:5.5, dmg:1, col:'#c8b8e8', icona:'👐', nome:'Palmo gentile' },
-             pow: { verb:'nova', r:150, dmg:1, kb:10, cd:5, col:'#c8b8e8', icona:'🛡', nome:'Protezione dei 32 palmi' },
+             pow: { verb:'orbit', n:4, r:60, t:260, dmg:1, cd:5, col:'#c8b8e8', icona:'🛡', nome:'Protezione dei 32 palmi' },
              ult: { verb:'nova', r:300, dmg:4, kb:12, cd:10, col:'#c8b8e8', icona:'✨', nome:'OTTO TRIGRAMMI: 64 PALMI' } },
   neji:    { base:{ verb:'bolt', vel:9.5, dmg:1, col:'#e8e0d0', icona:'👁', nome:'Colpo del Byakugan' },
-             pow: { verb:'nova', r:160, dmg:2, kb:11, cd:5, col:'#e8e0d0', icona:'🌀', nome:'Kaiten (rotazione celeste)' },
+             pow: { verb:'orbit', n:6, r:52, t:200, dmg:1, cd:5, col:'#e8e0d0', icona:'🌀', nome:'Kaiten (rotazione celeste)' },
              ult: { verb:'volley', n:14, dmg:1, cd:10, col:'#e8e0d0', icona:'☯', nome:'OTTO TRIGRAMMI: 128 COLPI' } },
   guy:     { base:{ verb:'wave', vel:6, dmg:1, col:'#5ae87a', icona:'👊', nome:'Onda della giovinezza' },
              pow: { verb:'dashstrike', t:55, cd:4, col:'#5ae87a', icona:'💥', nome:'Dynamic Entry!' },
@@ -1788,11 +1812,11 @@ const KITS = {
              pow: { verb:'heal', n:1, cd:8, col:'#e8d8a0', icona:'💚', nome:'Palmo mistico' },
              ult: { verb:'quake', dmg:5, cd:10, col:'#e8d8a0', icona:'💢', nome:'FORZA DI UN CENTESIMO' } },
   sasori:  { base:{ verb:'bolt', vel:9, dmg:1, pierce:true, col:'#b06a4a', icona:'🧵', nome:'Ago avvelenato' },
-             pow: { verb:'volley', n:6, dmg:1, cd:6, col:'#b06a4a', icona:'🎭', nome:'Teatro delle cento marionette' },
+             pow: { verb:'clone', skin:'puppet', n:2, t:300, dmg:1, cd:6, col:'#b06a4a', icona:'🎭', nome:'Teatro delle cento marionette' },
              ult: { verb:'trap', n:4, t:300, cd:10, col:'#b06a4a', icona:'🕴', nome:'BURATTINAIO SUPREMO' } },
   kankuro: { base:{ verb:'bolt', vel:8.5, dmg:1, col:'#8a5aa8', icona:'🎪', nome:'Filo di chakra' },
              pow: { verb:'trap', cd:6, col:'#8a5aa8', icona:'🐦‍⬛', nome:'Karasu ti abbraccia' },
-             ult: { verb:'volley', n:10, dmg:1, cd:10, col:'#8a5aa8', icona:'🎭', nome:'TUTTO IL TEATRO IN SCENA' } },
+             ult: { verb:'clone', skin:'puppet', n:5, t:320, dmg:1, cd:10, col:'#8a5aa8', icona:'🎭', nome:'TUTTO IL TEATRO IN SCENA' } },
   eleven:  { base:{ verb:'bolt', vel:9, dmg:1, pierce:true, col:'#e8b8d8', icona:'🧠', nome:'Spinta telecinetica' },
              pow: { verb:'trap', cd:6, col:'#e8b8d8', icona:'🤏', nome:'Presa psichica' },
              ult: { verb:'nova', r:320, dmg:4, kb:14, cd:10, col:'#ffd8e8', icona:'🩸', nome:'CHIUDO IO IL CANCELLO',
@@ -1801,7 +1825,7 @@ const KITS = {
              pow: { verb:'quake', dmg:2, cd:6, col:'#8a6a4a', icona:'👊', nome:'Sfondamento (la porta era chiusa)' },
              ult: { verb:'rain', t:120, cd:10, col:'#e8d05a', icona:'☕', nome:'CAFFÈ E CONTEMPLAZIONE' } },
   jeff:    { base:{ verb:'bolt', vel:8.5, dmg:1, col:'#f5d442', icona:'⚖️', nome:'Obiezione!' },
-             pow: { verb:'slow', t:180, cd:7, col:'#f5d442', icona:'🗣️', nome:'Discorso Winger (tascabile)' },
+             pow: { verb:'mark', n:3, t:360, cd:7, col:'#f5d442', icona:'🗣️', nome:'Discorso Winger (il colpevole è SEGNATO)' },
              ult: { verb:'nova', r:290, dmg:4, slow:240, cd:10, col:'#f5d442', icona:'⚖️', nome:'ARRINGA FINALE' } },
   britta:  { base:{ verb:'bolt', vel:8, dmg:1, fire:true, col:'#f5822a', icona:'🔥', nome:'Fiammella di protesta' },
              pow: { verb:'cone', n:3, vel:7, dmg:1, fire:true, cd:5, col:'#f5822a', icona:'🍾', nome:'Molotov (accidentale)' },
@@ -1829,7 +1853,7 @@ const KITS = {
              ult: { verb:'dashstrike', t:90, cd:10, col:'#f5822a', icona:'🐯', nome:'EL TIGRE CHINO',
                     extra:{ verb:'storm', all:true, dmg:2, col:'#f5d442' } } },
   dean:    { base:{ verb:'wave', vel:5, dmg:1, col:'#e8d05a', icona:'📣', nome:'Annuncio del Decano' },
-             pow: { verb:'slow', t:150, cd:6, col:'#e8d05a', icona:'👗', nome:'Salve salvino (ipnotico)' },
+             pow: { verb:'pull', r:280, t:150, cd:6, col:'#e8d05a', icona:'👗', nome:'Salve salvino (ipnotico)' },
              ult: { verb:'nova', r:300, dmg:3, freeze:300, cd:10, col:'#e8d05a', icona:'🕺', nome:'SFILATA FINALE' } },
   leonard: { base:{ verb:'bolt', vel:7, dmg:1, lob:true, fire:true, col:'#f5822a', icona:'🍖', nome:'Polpetta bollente' },
              pow: { verb:'nova', r:140, dmg:1, kb:8, cd:6, col:'#c9c9d0', icona:'🤫', nome:'ZITTI TUTTI' },
@@ -1874,23 +1898,23 @@ const KIT_VFX = {
   rocklee: {                         pow:{sig:'wind'},      ult:{sig:'gates', sigs:1.3} },
   kakashi: { base:{proj:'kunai'},    pow:{sig:'chidori'},   ult:{sig:'blade'} },
   gaara:   { base:{proj:'sand'},     pow:{sig:'sand'},      ult:{sig:'sand',  sigs:1.5} },
-  hinata:  {                         pow:{sig:'rune'},      ult:{sig:'rune'} },
-  neji:    { base:{proj:'needle'},   pow:{sig:'rune'},      ult:{sig:'rune'} },
+  hinata:  {                         pow:{sig:'wind'},      ult:{sig:'petals'} },
+  neji:    { base:{proj:'needle'},   pow:{sig:'wind'},      ult:{sig:'orb'} },
   guy:     {                         pow:{sig:'gates'},     ult:{sig:'gates', sigs:1.3} },
-  tenten:  { base:{proj:'kunai'},    pow:{sig:'blade'},     ult:{sig:'blade'} },
+  tenten:  { base:{proj:'kunai'},    pow:{sig:'blade'},     ult:{sig:'orb'} },
   temari:  {                         pow:{sig:'wind', proj:'leaf'}, ult:{sig:'wind'} },
   ino:     { base:{proj:'petal'},    pow:{sig:'rune'},      ult:{sig:'petals'} },
   kiba:    { base:{proj:'star'},     pow:{sig:'wind'},      ult:{sig:'wind'} },
   choji:   { base:{proj:'star'},     pow:{sig:'orb'},       ult:{sig:'orb', sigs:1.3} },
   shino:   { base:{proj:'bug'},      pow:{sig:'swarm'},     ult:{sig:'swarm'} },
-  itachi:  { base:{proj:'shuriken'}, pow:{sig:'rune'},      ult:{sig:'sand'} },   // amaterasu: fiamme nere (col scuro dal kit)
-  tsunade: { base:{proj:'star'},     pow:{sig:'rune'},      ult:{sig:'rune'} },
+  itachi:  { base:{proj:'shuriken'}, pow:{sig:'orb'},       ult:{sig:'sand'} },   // amaterasu: fiamme nere (col scuro dal kit)
+  tsunade: { base:{proj:'star'},     pow:{sig:'petals'},    ult:{sig:'gates'} },
   sasori:  { base:{proj:'needle'},   pow:{sig:'blade'},     ult:{sig:'rune'} },
   kankuro: { base:{proj:'star'},     pow:{sig:'rune'},      ult:{sig:'blade'} },
   // Harry Potter / Stranger Things
   harry:   { base:{proj:'spark'},    pow:{fx:'lumos', fxs:1.3}, ult:{fx:'patronum', fxs:1.5, fxv:3.5} },
   eleven:  { base:{proj:'spark'},    pow:{sig:'rune'},      ult:{sig:'rune'} },
-  hopper:  { base:{proj:'star'},     pow:{sig:'blade'},     ult:{sig:'blade'} },
+  hopper:  { base:{proj:'star'},     pow:{sig:'gates'},     ult:{sig:'blade'} },
   // Cast Community + Greendale
   jeff:    { base:{proj:'star'},     pow:{sig:'rune'},      ult:{sig:'holy'} },
   britta:  { base:{proj:'spark'},    pow:{sig:'chidori'},   ult:{sig:'sand'} },
@@ -1903,15 +1927,15 @@ const KIT_VFX = {
   chang:   { base:{proj:'star'},     pow:{sig:'chidori'},   ult:{sig:'wind'} },
   dean:    {                         pow:{sig:'rune'},      ult:{sig:'petals'} },
   leonard: { base:{proj:'star'},     pow:{sig:'sand'},      ult:{sig:'blade'} },
-  fatneil: { base:{proj:'star'},     pow:{sig:'rune'},      ult:{sig:'holy'} },
-  duncan:  { base:{proj:'needle'},   pow:{sig:'rune'},      ult:{sig:'blade'} },
+  fatneil: { base:{proj:'star'},     pow:{sig:'gates'},     ult:{sig:'holy'} },
+  duncan:  { base:{proj:'needle'},   pow:{sig:'orb'},       ult:{sig:'blade'} },
   vaughn:  { base:{proj:'leaf'},     pow:{sig:'petals'},    ult:{sig:'wind'} },
   vicki:   { base:{proj:'petal'},    pow:{sig:'petals'},    ult:{sig:'holy'} },
   buddy:   { base:{proj:'spark'},    pow:{sig:'chidori'},   ult:{sig:'gates'} },
-  garrett: {                         pow:{sig:'rune'},      ult:{sig:'wind'} },
+  garrett: {                         pow:{sig:'swarm'},     ult:{sig:'wind'} },
   guzman:  { base:{proj:'star'},     pow:{sig:'blade'},     ult:{sig:'orb'} },
-  rich:    { base:{proj:'spark'},    pow:{sig:'holy'},      ult:{sig:'rune'} },
-  vicedean:{ base:{proj:'spark'},    pow:{sig:'rune'},      ult:{sig:'petals'} },
+  rich:    { base:{proj:'spark'},    pow:{sig:'holy'},      ult:{sig:'orb'} },
+  vicedean:{ base:{proj:'spark'},    pow:{sig:'petals'},    ult:{sig:'petals'} },
 };
 for (const id in KIT_VFX){
   const m = KIT_VFX[id], k = KITS[id]; if (!k) continue;
@@ -2110,6 +2134,31 @@ function execVerb(p, s, tier){
         hitMboss(1, p); burst(mboss.x, mboss.y, col, 14, 3); sfx('gem');
       } else sfx('text');   // a vuoto: nessun bersaglio
       break; }
+    case 'clone': {   // R5: EVOCAZIONI VERE — bunshin/cani/marionette che corrono e mordono
+      for (let k = 0; k < (s.n || 3); k++)
+        projs.push({ from:'player', owner:p, walker:true, kind:'minion', skin:s.skin || 'bunshin',
+          x:cx + dir*(6 + k*4), y:cy - 16, w:16, h:30,
+          vx:dir * (2.4 + (k % 3) * 0.6), vy:-3 - (k % 2) * 1.5, grav:true, pierce:true,
+          t:s.t || 300, dmg:s.dmg || 1 });
+      sfx('join'); break; }
+    case 'orbit': {   // R5: satelliti orbitanti — la difesa che macina
+      for (let k = 0; k < (s.n || 4); k++)
+        projs.push({ from:'player', owner:p, orbit:{ r:s.r || 62, w:0.09, a:k / (s.n || 4) * 6.283 },
+          x:cx, y:cy, w:12, h:12, vx:0, vy:0, pierce:true, t:s.t || 240, dmg:s.dmg || 1,
+          kind:'star', pcol:col, dir });
+      sfx('gem'); break; }
+    case 'pull': {    // R5: ipnosi — trascina i nemici verso di te (per punirli da vicino)
+      for (const e of enemies) if (e.hp > 0 && Math.hypot(e.x - cx, e.y - cy) < (s.r || 260)){
+        e.vx = Math.sign(cx - e.x || dir) * 2.2; e.x += Math.sign(cx - e.x || dir) * 22;
+        e.slowT = Math.max(e.slowT || 0, s.t || 120);
+        parts.push({ txt:'♨', x:e.x + e.w/2, y:e.y - 10, vx:0, vy:-0.6, t:24, color:col });
+      }
+      sfx('organ'); break; }
+    case 'mark': {    // R5: bersaglio SEGNATO — prende +50% da tutto, finché dura
+      const mt = enemies.filter(e => e.hp > 0).sort((a,b) => Math.hypot(a.x-cx,a.y-cy) - Math.hypot(b.x-cx,b.y-cy)).slice(0, s.n || 3);
+      for (const e of mt){ e.markT = s.t || 360; burst(e.x + e.w/2, e.y, col, 8, 2); }
+      if (!mt.length && mboss && !mboss.dead) mboss.markT = s.t || 360;
+      sfx('text'); break; }
     case 'dashstrike':
       p.sprintT = s.t || 50; p.inv = Math.max(p.inv, s.t || 50); p.face = dir;
       playFX('streak', cx + dir*14, cy, 0.6, { flip: dir < 0, rot: dir < 0 ? 0.8 : -0.8 });
@@ -2166,6 +2215,16 @@ const COMBO_SUPERS = {
   'naruto+sasuke': { nome:'RIVALI, MA CON STILE', verb:'storm', all:true, dmg:3, col:'#5ae8e8', icona:'⚡' },
   'eleven+hopper': { nome:'PROTOCOLLO HAWKINS', verb:'nova', r:400, dmg:5, kb:16, col:'#e8b8d8', icona:'🧇' },
   'harry+eleven':  { nome:'DUE BAMBINI TROPPO POTENTI', verb:'beam', t:150, col:'#cfe8ff', icona:'✨' },
+  'gaara+temari':  { nome:'FRATELLI DELLA SABBIA', verb:'storm', all:true, dmg:3, col:'#d8c088', icona:'🏜' },
+  'itachi+sasuke': { nome:'RIMPIANTI UCHIHA', verb:'lava', col:'#e84a4a', icona:'👁' },
+  'harry+naruto':  { nome:'DUE PREDESTINATI', verb:'beam', t:150, col:'#cfe8ff', icona:'⚡' },
+  'kiba+shino':    { nome:'SQUADRA 8 (QUASI)', verb:'rain', t:130, col:'#8a9a7a', icona:'🐛' },
+  'hinata+naruto': { nome:'IL CORAGGIO DI HINATA', verb:'nova', r:350, dmg:4, heal:1, col:'#c8b8e8', icona:'💜' },
+  'guy+rocklee':   { nome:'GIOVENTÙ ETERNA!', verb:'focus', t:600, col:'#5ae87a', icona:'🔥' },
+  'chang+dean':    { nome:'GREENDALE È NOSTRA', verb:'storm', all:true, dmg:3, col:'#f5d442', icona:'🏫' },
+  'gilbert+pierce':{ nome:'GLI EREDI DI HAWTHORNE', verb:'volley', n:16, dmg:1, col:'#8a6ae8', icona:'🕹' },
+  'sasori+tsunade':{ nome:'LA NONNA E IL BURATTINAIO', verb:'clone', skin:'puppet', n:6, t:320, dmg:1, col:'#b06a4a', icona:'🎭' },
+  'abed+annie':    { nome:'REGIA DI PRECISIONE', verb:'mark', n:8, t:480, col:'#e85a7a', icona:'🎬' },
   _default:        { nome:'SINERGIA DA STUDIO DI GRUPPO', verb:'nova', r:340, dmg:4, kb:12, col:'#f5d442', icona:'📚' },
 };
 let lastUlt = null;   // { slot, frame } dell'ultimo supremo lanciato
@@ -3225,7 +3284,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v21.2';    // R11 CAVALCATURE VERE: la scopa VOLA, 3 nuove (rospo/carrello/scimmia), identità per tutte
+const GAME_VERSION = 'v21.3';    // R5 ROSTER: bunshin/cani/marionette VERI, orbite, marchio, ipnosi, +11 combo super
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -4737,6 +4796,7 @@ function updatePlay(){
     e.aura = enemies.some(o => o !== e && o.hp > 0 && o.mod === 'campo' && Math.abs(o.x - e.x) < 130 && Math.abs(o.y - e.y) < 90);
   for (const e of enemies){
     if (worldTick){
+      if (e.markT > 0) e.markT--;
       if (e.trapT > 0){   // R1: IN GABBIA — fermo, innocuo, picchiabile
         e.trapT--; e.anim++;
         if (frame % 10 === 0) parts.push({ x:e.x + Math.random()*e.w, y:e.y + Math.random()*e.h, vx:0, vy:-0.3, t:12, ng:1, sz:2, color:e.trapCol || '#fff' });
@@ -4786,7 +4846,7 @@ function updatePlay(){
       }
     }
     for (const ab of atkBoxes) if (e.hp > 0 && overlap(ab, e)){
-      let d = ab.dmg || 1;
+      let d = (ab.dmg || 1) * (e.markT > 0 ? 1.5 : 1);   // R5: il segnato soffre
       const back = ab.wpn && ab.wpn.backstab && (Math.sign(e.vx || -1) === ab.owner.face || synActive('STREETS AHEAD'));
       if (e.mod === 'scudo' && Math.sign(e.vx || -1) === -ab.owner.face && !back){
         burst(e.x + (ab.owner.face > 0 ? 0 : e.w), e.y + e.h/2, '#8ae8f0', 6, 2); sfx('thud'); continue;   // parata frontale
@@ -4822,9 +4882,15 @@ function updatePlay(){
   // proiettili
   for (const pr of projs){
     const hostile = pr.from !== 'player' && pr.from !== 'ally';
-    if (!hostile || worldTick){
+    if (pr.orbit && pr.owner){   // R5: satellite — orbita attorno al padrone
+      pr.orbit.a += pr.orbit.w;
+      pr.x = pr.owner.x + pr.owner.w/2 + Math.cos(pr.orbit.a) * pr.orbit.r - pr.w/2;
+      pr.y = pr.owner.y + pr.owner.h/2 + Math.sin(pr.orbit.a) * pr.orbit.r * 0.8 - pr.h/2;
+      pr.t--;
+    } else if (!hostile || worldTick){
       pr.x += pr.vx; pr.y += pr.vy; pr.t--;
       if (pr.grav) pr.vy += 0.25;
+      if (pr.walker && pr.vy === 0 && Math.abs(pr.vx) < 1.8) pr.vx = Math.sign(pr.vx || 1) * 2.6;   // il minion non si ferma
     }
     // HOMING (v13): i proiettili a ricerca curvano verso il nemico più vicino
     if (!hostile && !pr.ball && (pr.homing || homingAll || boons.homing)){
@@ -4872,7 +4938,11 @@ function updatePlay(){
       pr.t = 0;
     }
     else if (isSolid(tc)){
-      if (pr.ball && pr.bounces > 0){       // la Dodgeball rimbalza sui muri
+      if (pr.walker){                       // R5: i MINION camminano — atterrano e girano ai muri
+        if (pr.vy > 0){ pr.y = Math.floor((pr.y + pr.h) / TS) * TS - pr.h; pr.vy = 0; }
+        else { pr.vx = -pr.vx; pr.x += pr.vx * 2; }
+      }
+      else if (pr.ball && pr.bounces > 0){       // la Dodgeball rimbalza sui muri
         pr.bounces--; sfx('stomp');
         const wallSide = isSolid(tileAt(Math.floor((pr.x + pr.w/2 + Math.sign(pr.vx)*12) / TS), Math.floor((pr.y + pr.h/2 - pr.vy*2) / TS)));
         if (wallSide){ pr.vx = -pr.vx; pr.x += pr.vx * 2; }
@@ -4889,7 +4959,7 @@ function updatePlay(){
             if (!pr.pierce) pr.t = 0;   // R4 scudo: il fronte para — giragli dietro o salta in testa
             continue;
           }
-          let dmProj = pr.dmg || 1;
+          let dmProj = (pr.dmg || 1) * (e.markT > 0 ? 1.5 : 1);   // R5: il segnato soffre
           if (pr.d20){ dmProj = 1 + Math.floor(Math.random() * 4); parts.push({ txt:'🎲' + dmProj + (dmProj === 4 ? ' CRITICO!' : ''), x:e.x + e.w/2, y:e.y - 12, vx:0, vy:-0.8, t:36, color: dmProj === 4 ? '#f5d442' : '#fff' }); }
           e.hp -= dmProj;
           if (pr.freeze){ e.slowT = 130; burst(e.x + e.w/2, e.y + e.h/2, '#bfe8ff', 8, 2); }
@@ -5015,7 +5085,8 @@ function updateRival(atkBoxes){
 function hitMboss(n, byPlayer){
   if (!mboss || mboss.dead || mboss.hurtT > 0) return;
   if (mboss.inter > 0){ sfx('text'); return; }   // interfase: invulnerabile
-  if (mboss.restT > 0) n *= 2;                    // sta riprendendo fiato: punizione doppia
+  if (mboss.restT > 0) n *= 2;                    // sta riprendendo fiato: punizione
+  if (mboss.markT > 0) n = Math.round(n * 1.5);   // R5: segnato doppia
   mboss.hp -= n; mboss.hurtT = 16; sfx('boss'); addShake(5);
   hitstop = Math.max(hitstop, mboss.boss2 ? 5 : 3);
   burst(mboss.x + 33, mboss.y + 30, '#e8a84a', 12, 3);
@@ -5045,6 +5116,7 @@ function hitMboss(n, byPlayer){
 }
 function updateMboss(atkBoxes){
   if (mboss && mboss._ballCd > 0) mboss._ballCd--;
+  if (mboss && mboss.markT > 0) mboss.markT--;
   const m = mboss;
   const p = nearestPlayer(m.x);
   if (!p) return;
@@ -7001,6 +7073,7 @@ function drawPlay(){
     }
     if (e.shooter && e.shootT <= 34 && e.hp > 0)   // in mira: avviso grande, hai ~mezzo secondo
       text('!', e.x + e.w/2 - cam.x, e.y - 12 - cam.y, 18, '#f5d442', 'center');
+    if (e.markT > 0 && e.hp > 0) text('🎯', e.x + e.w/2 - cam.x, e.y - 20 - cam.y, 11, '#fff', 'center');
     if (e._boltT > 0){   // FULMINE DI CHANG: arco frastagliato dal caster al nemico
       e._boltT--;
       ctx.strokeStyle = 'rgba(245,212,66,' + (e._boltT / 8) + ')'; ctx.lineWidth = 3;
