@@ -336,7 +336,7 @@ function drawActor(sheetKey, anim, t, x, y, dir, s){
     return;
   }
   const a = ANIM[anim] || ANIM.idle;
-  const i = a.loop ? Math.floor(t / a.spd) % a.fr.length : Math.min(a.fr.length - 1, Math.floor(t / a.spd));
+  const i = a.loop ? Math.floor(t / a.spd) % a.fr.length : Math.min(a.fr.length - 1, Math.max(0, Math.floor(t / a.spd)));   // R9: t negativi (atkT>12, es. mazza) crashavano il draw dal v13
   let [c, r] = a.fr[i];
   if (dir < 0 && !a.nodir) r -= 1;
   ctx.drawImage(img, (c-1)*F, (r-1)*F, F, F, Math.round(x), Math.round(y), F*s, F*s);
@@ -2812,9 +2812,14 @@ const LEVELS = [
 "     o     o                                                                          BBBB                                                                X",
 "   P                                                            o   o               BBBBBB                BBBBBBBB                                        X",
 "        T    J        p   T   e         e   C T   e       e   T   &   T         J   BBBBBB  T e     C     S o oho   T   e       e       e   T e   T       X",
-"###################################   ##############   #############################BBBBBB#################################   ##############################",
-"###################################   ##############   #############################BBBBBB#################################   ##############################",
-"###################################^^^##############^^^#############################BBBBBB#################################^^^##############################",
+"###################################   ##############   #############################BBBBBB#######  #####################      ##############################",
+"###################################   ##############   #############################BBBBBB#######o #####################      ##############################",
+"###################################^^^##############^^^#############################BBBBBB####### o#####################   ^^^##############################",
+"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB  BBBBBBBBBBBBBBBBBBBBB   BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+"###############################################################################################                              ###############################",
+"###############################################################################################                              ###############################",
+"###############################################################################################      i o o  k e g  o i  JJJ  ###############################",
+"############################################################################################################################################################",
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 ]},
 {
@@ -2833,8 +2838,8 @@ const LEVELS = [
 "                                            BB  o    qqq                  BB :          ---           f         h",
 "                  f                         BB ---                        BB :                     ---        ---",
 "             oo        o                    BB              f             BB :                                        X",
-"                                        ---                                  : BBBBBB        ---         Q            X",
-"   P   T   e   T     e   T    e  TL   C                                        S oog      C T   T                 T   X",
+"                                        ---                                  :               ---         Q            X",
+"   P   T   e   T     e   T    e  TL   C                                                   C T   T                 T   X",
 "############################################BB############################BB############################################",
 "############################################BB############################BB############################################",
 "############################################BB############################BB############################################",
@@ -2858,9 +2863,14 @@ const LEVELS = [
 "            BBBBBBB       BBBBBBBB            : BBB                                                                BBBBBBB--- BBBBBBB       BBBBBB        X",
 "        --  BBBBBBB       BBBBBBBB            :                                                                    9          BBBBBBB       BBBBBB        X",
 "   P  u     BBBeBBB     e BBBBBBBB        e u :         C ! ! ! kk  b    T  &  T    a   w       H   u   t     C =  9 oghg   T BBeBBBB   e   BBBBeB  T     X",
-"############BBBBBBB#######BBBBBBBB##############BBB#######################################################################   #BBBBBBB#######BBBBBB##########",
-"############BBBBBBB#######BBBBBBBB##############BBB#######################################################################   #BBBBBBB#######BBBBBB##########",
-"############BBBBBBB#######BBBBBBBB##############BBB#######################################################################^^^#BBBBBBB#######BBBBBB##########",
+"############BBBBBBB#######BBBBBBBB##############BBB###################  #################################    #############   #BBBBBBB#######BBBBBB##########",
+"############BBBBBBB#######BBBBBBBB##############BBB###################o #################################    #############   #BBBBBBB#######BBBBBB##########",
+"############BBBBBBB#######BBBBBBBB##############BBB################### o#################################    #############^^^#BBBBBBB#######BBBBBB##########",
+"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB  BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB    BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+"####################################                                                                         ###############################################",
+"####################################                                                                         ###############################################",
+"####################################    i    o o  k    e    o    g      i     o   e     k   g    o  i    JJJ ###############################################",
+"############################################################################################################################################################",
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 ]},
 {
@@ -2901,8 +2911,8 @@ const LEVELS = [
 "B                              f                    B           BBBBBBB       BBBBBBB                            f                              h   :      B",
 "B                                                   B                                 ---                                           ---       ---   :      B",
 "B                                                   B                                                                                               :    X B",
-"B  P         oo           qqqqqqqqqqq               9           BBBBB                                          BB  BB                               :    X B",
-"B     i   e     i   e   i             i   C   =  i  9 ook       S ohg                     e i C     &  i ψi    BB  BB   i  i R     i  e         e    i  X B",
+"B  P         oo           qqqqqqqqqqq               9                                                          BB  BB                               :    X B",
+"B     i   e     i   e   i             i   C   =  i  9 ook         i                       e i C     &  i  i    BB  BB   i   i R     i  e         e    i  X B",
 "B#########################~~~~~~~~~~~#######################################################################~~~~~~~~~~~####################################B",
 "B#########################~~~~~~~~~~~#######################################################################~~~~~~~~~~~####################################B",
 "B#########################~~~~~~~~~~~#######################################################################~~~~~~~~~~~####################################B",
@@ -3166,7 +3176,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v20.9';    // R8 BUSSOLA: mappa del mondo, cartelli sulle porte, portale, minimappa ricca
+const GAME_VERSION = 'v21.0';    // R9: CANTINE sotto i mondi, sagome runt/brute, pesante per arma, molla potenziata
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -3466,6 +3476,13 @@ function loadLevel(i){
     // R4: MOB A DISTANZA prima del dado élite (dopo, il 55% élite li rendeva quasi introvabili)
     if (lvlIdx >= 1 && e.type === 'walker' && Math.random() < 0.22){ e.shooter = true; e.shootT = 90 + Math.random() * 90; }
     if (lvlIdx >= 2 && e.type === 'walker' && !e.shooter && Math.random() < 0.55){ e.hp = 2; eliteMod(e); }
+    // R9: SAGOME — la taglia È l'informazione: runt piccoli e lesti, brute grossi, lenti e tosti
+    if (e.type === 'walker' && !e.elite){
+      const rl = Math.random();
+      if (rl < 0.14){ e.sizeK = 0.72; e.runt = true; }
+      else if (rl < 0.26 && lvlIdx >= 2){ e.sizeK = 1.38; e.brute = true; e.hp += 2; }
+      if (e.sizeK){ const oh = e.h; e.w = Math.round(e.w * e.sizeK); e.h = Math.round(e.h * e.sizeK); e.y -= e.h - oh; }
+    }
     if (nightmare){
       e.hp++;
       if ((SAVE.incubi || {}).furia){ e.hp++; if (e.vx) e.vx *= 1.25; }   // NEMICI FURIOSI
@@ -4226,17 +4243,33 @@ function updateOnePlayer(p, atkBoxes){
         p.hvyCd = Math.max(4, Math.round(w.cd * rateoMul())); wsfx('keytar'); rumble(p.slot, w.rumb[0], w.rumb[1]);
         projs.push({ from:'player', owner:p, wave:true, pierce:true, x:p.x + p.w/2, y:p.y - 4, w:18, h:40,
           vx:p.face*w.vel, vy:0, t:85, dmg:w.dmg });
-      } else if (w){                                     // arco / smash
+      } else if (w && w.tipo === 'smash'){               // R9: SLAM — il martello parla al terreno
         p.atkT = w.atkT; p.hvyCd = Math.max(4, Math.round(w.cd * rateoMul())); p.wstrike = p.wpn[p.wsel];
+        p.arcBack = false;
         wsfx(p.wstrike); rumble(p.slot, w.rumb[0], w.rumb[1]);
-        playFX('slash', p.x + p.w/2 + p.face*30, p.y + p.h/2 - 4, 0.85, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
-      } else {                                           // a mani nude: pugno pesante
+        if (p.onGround || p.coyote > 0){                 // onda d'urto lungo il suolo, nei due versi
+          addShake(6); sfx('stomp');
+          for (const d2 of [-1, 1])
+            projs.push({ from:'player', owner:p, x:p.x + p.w/2, y:p.y + p.h - 10, w:16, h:12, vx:d2*5.5, vy:0, pierce:true, t:34, dmg:Math.max(1, w.dmg - 1) });
+          parts.push({ ring:true, x:p.x + p.w/2, y:p.y + p.h, r:12, vx:0, vy:0, t:12, color:'#e8a84a' });
+        }
+        playFX('slash', p.x + p.w/2 + p.face*30, p.y + p.h/2 - 4, 0.95, { flip: p.face < 0, rot: 0.9 });
+      } else if (w){                                     // R9: ARCO — fendente a 360°, copre anche le spalle
+        p.atkT = w.atkT; p.hvyCd = Math.max(4, Math.round(w.cd * rateoMul())); p.wstrike = p.wpn[p.wsel];
+        p.arcBack = true;
+        wsfx(p.wstrike); rumble(p.slot, w.rumb[0], w.rumb[1]);
+        playFX('slash',   p.x + p.w/2 + p.face*30, p.y + p.h/2 - 4, 0.85, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
+        playFX('slash_b', p.x + p.w/2 - p.face*26, p.y + p.h/2 - 4, 0.6,  { flip: p.face > 0, rot: (Math.random()-0.5)*0.5 });
+      } else {                                           // R9: PUGNI — combo 1-2, il secondo AVANZA
         const fast = p.cdef.ab === 'blade' || p.focusT > 0;
+        p.puFlip = !p.puFlip;
         p.atkT = fast ? 13 : 11;
-        p.hvyCd = Math.max(5, Math.round((p.focusT > 0 ? 10 : fast ? 20 : 28) * rateoMul()));
+        p.arcBack = false;
+        if (p.puFlip){ p.vx += p.face * 2.8; }           // il "2" del combo entra col passo
+        p.hvyCd = Math.max(5, Math.round((p.focusT > 0 ? 10 : fast ? 18 : p.puFlip ? 20 : 26) * rateoMul()));
         p.wstrike = null;
         sfx('atk');
-        playFX('slash', p.x + p.w/2 + p.face*24, p.y + p.h/2 - 4, 0.62, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
+        playFX('slash', p.x + p.w/2 + p.face*(p.puFlip ? 30 : 22), p.y + p.h/2 - 4, p.puFlip ? 0.72 : 0.58, { flip: p.face < 0, rot: (Math.random()-0.5)*0.5 });
       }
     }
   }
@@ -4275,7 +4308,7 @@ function updateOnePlayer(p, atkBoxes){
     else if (c === 'h'){ if (p.hp < p.maxhp){ setTile(tx, ty, ' '); p.hp = Math.min(p.maxhp, p.hp + (trait(p,'shirley') || trait(p,'duncan') ? 2 : 1)); sfx('heart'); burst(tx*TS+16, ty*TS+16, '#e85a7a', 8, 2); } }
     else if (c === 'Z'){ setTile(tx, ty, ' '); burst(tx*TS+16, ty*TS+16, '#f5d442', 20, 3); questEvent('collect','Z'); showGuide('sigillo'); }
     else if (c === 'C'){ setTile(tx, ty, 'c'); players.forEach(q => { q.cpx = tx*TS + 4; q.cpy = ty*TS - q.h - 2; }); sfx('check'); showToast('CONSOLE — CHECKPOINT'); }
-    else if (c === 'J'){ if (p.vy >= -2){ p.vy = -16; p.jumps = 0; p.airDashes = 0; p.pounding = false; sfx('jump'); addShake(3); burst(tx*TS+16, ty*TS+30, '#5ae8e8', 12, 3); showGuide('bounce'); } }
+    else if (c === 'J'){ if (p.vy >= -2){ p.vy = -17.5; p.ginLeapT = 28; p.jumps = 0; p.airDashes = 0; p.pounding = false; sfx('jump'); addShake(3); burst(tx*TS+16, ty*TS+30, '#5ae8e8', 12, 3); showGuide('bounce'); } }
     else if (c === ':'){ p.vy = Math.max(p.vy - 1.3, -7.5); p.jumps = 0; p.airDashes = 0; showGuide('corrente'); }
     else if (c === '^'){ hurtPlayer(p, 1, tx*TS + 16); }
     else if (c === '~'){ if (!lvl.def.gin && !trait(p,'vicedean')) hurtPlayer(p, 1, tx*TS + 16); }
@@ -4373,6 +4406,9 @@ function updateOnePlayer(p, atkBoxes){
     if (boons.furia && combo.n >= Math.max(3, 6 - bl('furia'))) dmg *= 2;
     atkBoxes.push({ x: p.face === 1 ? p.x + p.w : p.x - aw, y: p.y + 2, w: aw,
       h: w && w.tipo === 'smash' ? 34 : 26, owner: p, dmg, crit, wpn: w });
+    if (p.arcBack && w)   // R9: il 360° morde anche dietro (più corto e più gentile)
+      atkBoxes.push({ x: p.face === 1 ? p.x - Math.round(aw*0.7) : p.x + p.w, y: p.y + 2, w: Math.round(aw*0.7),
+        h: 26, owner: p, dmg: Math.max(1, Math.round(dmg * 0.6)), wpn: w });
   }
   if (p.slideT > 0){
     atkBoxes.push({ x: p.x - 6, y: p.y + 10, w: p.w + 12, h: p.h - 10, owner: p, dmg: 1 });
@@ -4638,7 +4674,7 @@ function updatePlay(){
           }
         }
         if (e.slowT > 0){ e.slowT--; if (frame % 8 === 0) parts.push({ x:e.x + Math.random()*e.w, y:e.y + Math.random()*e.h, vx:0, vy:0.3, t:12, ng:1, sz:2, color:'#bfe8ff' }); }
-        e.vx = (e.shooter && e.shootT <= 34) ? 0 : Math.sign(e.vx || -1) * 0.8 * spd * (e.elite ? 1.2 : 1) * (e.aura ? 1.35 : 1) * (e.slowT > 0 ? 0.35 : 1);   // in mira sta fermo
+        e.vx = (e.shooter && e.shootT <= 34) ? 0 : Math.sign(e.vx || -1) * 0.8 * spd * (e.elite ? 1.2 : 1) * (e.aura ? 1.35 : 1) * (e.runt ? 1.35 : e.brute ? 0.68 : 1) * (e.slowT > 0 ? 0.35 : 1);   // in mira sta fermo
         const dir = Math.sign(e.vx);
         moveAndCollide(e);
         if (e.hitWall) e.vx = -dir * 0.8;
@@ -6836,7 +6872,10 @@ function drawPlay(){
   if (monkey) drawMonkey(monkey.x - cam.x, monkey.y - cam.y - 16, frame);
   const hasNeil = players.some(p => trait(p,'fatneil'));
   for (const e of enemies){
+    const sizeK = e.sizeK || 1;   // R9: la sagoma scala attorno ai piedi
+    if (sizeK !== 1){ ctx.save(); const ax = e.x + e.w/2 - cam.x, ay = e.y + e.h - cam.y; ctx.translate(ax, ay); ctx.scale(sizeK, sizeK); ctx.translate(-ax, -ay); }
     e.type === 'walker' ? drawWalker(e) : e.type === 'ghost' ? drawGhost(e) : drawFlyer(e);
+    if (sizeK !== 1) ctx.restore();
     if (e.trapT > 0){   // R1: la gabbia si VEDE — sbarre tinte del kit che l'ha evocata
       const gx = e.x - cam.x - 3, gy = e.y - cam.y - 6, gw = e.w + 6, gh = e.h + 8;
       const ga = Math.min(1, e.trapT / 30);   // dissolve negli ultimi 30f: avviso di rilascio
@@ -6882,7 +6921,11 @@ function drawPlay(){
     }
   }
   if (rival && !rival.defeated) drawRival();
-  if (mboss && !mboss.dead) drawMboss();
+  if (mboss && !mboss.dead){   // R9: il capo si vede da lontano (+20%, hitbox invariata = schivi facile)
+    ctx.save(); const mx = mboss.x + mboss.w/2 - cam.x, my = mboss.y + mboss.h - cam.y;
+    ctx.translate(mx, my); ctx.scale(1.2, 1.2); ctx.translate(-mx, -my);
+    drawMboss(); ctx.restore();
+  }
   if (boss && !boss.dead){
     drawBoss();
     if (boss.hp <= boss.maxhp * 0.66 && frame % 7 < 3) drawBolt(boss.x + 48 - cam.x, boss.y + 48 - cam.y, 0.8);

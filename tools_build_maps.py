@@ -38,14 +38,35 @@ def door(g, x, y):
     """porta d'uscita alta 3 tile, a filo del bordo: impossibile mancarla"""
     put(g, x, y, 'X'); put(g, x, y - 1, 'X'); put(g, x, y - 2, 'X')
 
+def underfill(g, W, top=18):
+    """R9: fondamenta piene sotto il suolo — per scavarci le CANTINE."""
+    H = len(g)
+    for y in range(top, H - 1): hrun(g, 0, W - 1, y, '#')
+    hrun(g, 0, W - 1, H - 1, 'B')
+
+def cave(g, x0, x1, ent, esc, loot=None):
+    """R9: CANTINA opzionale (feedback: "il mondo sembra piatto, non si va sotto").
+    Camera alle righe 18-20 (pavimento 21), buco d'ingresso a ent (2 col, monete-esca),
+    pozzo d'uscita a esc con DOPPIA MOLLA (-16 esente dal taglio: riporta su d'un balzo)."""
+    for x in range(x0, x1 + 1):
+        for y in (18, 19, 20): g[y][x] = ' '
+    for x in (ent, ent + 1):
+        for y in range(14, 18): g[y][x] = ' '
+    for x in range(esc, esc + 4):            # pozzo d'uscita LARGO: la salita deriva, il muro perdona
+        for y in range(14, 18): g[y][x] = ' '
+    coins(g, [(ent, 15), (ent + 1, 16)])
+    for x in range(esc, esc + 3): put(g, x, 20, 'J')
+    for x, y, ch in (loot or []): put(g, x, y, ch)
+
 def render(g):
     return [''.join(r).rstrip() or ' ' for r in g]
 
 # ---------------------------------------------------------------- MONDO 1 — LA RADURA (l'aggancio)
 def mondo1():
-    W, H = 156, 18
+    W, H = 156, 23
     g = mkgrid(W, H)
     ground(g, 0, W - 1)
+    underfill(g, W)
     # apertura: cadi dal cielo su una scia di monete che punta alla MOLLA
     put(g, 3, 12, 'P')
     coins(g, [(5, 11), (7, 10), (9, 10), (11, 11)])
@@ -78,6 +99,10 @@ def mondo1():
     g[8][88] = 'o'
     put(g, 92, 13, 'T'); put(g, 94, 13, 'e')
     put(g, 100, 13, 'C')
+    # R9 — LA CANTINA DELLA RADURA: buco-esca dopo il checkpoint, bottino, molle di risalita
+    cave(g, 95, 124, 97, 120, loot=[
+        (101, 20, 'i'), (103, 20, 'o'), (105, 20, 'o'), (108, 20, 'k'),
+        (110, 20, 'e'), (112, 20, 'g'), (115, 20, 'o'), (117, 20, 'i')])
     # stanza SEGRETA a piano terra: sfonda la S con lo scatto
     solid(g, 106, 113, 12, 12)             # tetto della nicchia
     put(g, 106, 13, 'S')
@@ -135,9 +160,10 @@ def mondo2():
 
 # ---------------------------------------------------------------- MONDO 3 — IL VILLAGGIO (tetti e barili)
 def mondo3():
-    W, H = 156, 18
+    W, H = 156, 23
     g = mkgrid(W, H)
     ground(g, 0, W - 1)
+    underfill(g, W)
     put(g, 3, 13, 'P')
     put(g, 6, 13, 'u')
     plat(g, 8, 12, 2)
@@ -182,6 +208,11 @@ def mondo3():
     for x in (128, 136, 144): put(g, x, 13, 'e')
     put(g, 138, 6, 'f'); put(g, 131, 6, 'f'); put(g, 124, 13, 'T'); put(g, 148, 13, 'T')
     pit(g, 122, 124)
+    # R9 — LE CANTINE DEL VILLAGGIO: lunga galleria sotto la piazza, ricca e abitata
+    cave(g, 36, 108, 70, 105, loot=[
+        (40, 20, 'i'), (45, 20, 'o'), (47, 20, 'o'), (50, 20, 'k'), (55, 20, 'e'),
+        (60, 20, 'o'), (65, 20, 'g'), (72, 20, 'i'), (78, 20, 'o'), (82, 20, 'e'),
+        (88, 20, 'k'), (92, 20, 'g'), (97, 20, 'o'), (100, 20, 'i')])
     door(g, 154, 13)
     return render(g)
 
