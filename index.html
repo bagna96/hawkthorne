@@ -900,7 +900,7 @@ let sigs = [];
 function spawnSig(kind, x, y, s, col, dir){
   sigs.push({ kind, x, y, s: s || 1, col: col || '#fff', dir: dir || 1, f: 0, life: SIG_LIFE[kind] || 26 });
 }
-const SIG_LIFE = { orb:24, chidori:22, sand:28, wind:20, petals:30, swarm:34, gates:30, rune:30, holy:34, blade:18 };
+const SIG_LIFE = { orb:24, chidori:22, sand:28, wind:20, petals:30, swarm:34, gates:30, rune:30, holy:34, blade:18, gale:22, fang:18, burst:20 };
 function drawSigs(){
   for (const g of sigs){
     const t = g.f / g.life, k = 1 - t;               // t 0→1, k = alpha di uscita
@@ -954,6 +954,38 @@ function drawSigs(){
           ctx.arc(-d * off, 0, r, d > 0 ? -1.2 : Math.PI - 1.2, d > 0 ? 1.2 : Math.PI + 1.2);
           ctx.stroke();
         }
+        break; }
+      case 'gale': {                                   // REVIEW-FIX: raffiche a SPIRALE — il vento corre, non archeggia
+        ctx.strokeStyle = c; ctx.lineWidth = 2.5;
+        for (let i = 0; i < 5; i++){
+          const a0 = i / 5 * 6.3 + g.f * 0.35 * d, rr = (10 + i * 7) * s * (0.4 + t);
+          ctx.globalAlpha = k * (1 - i * 0.15);
+          ctx.beginPath();
+          for (let j = 0; j <= 6; j++){ const a = a0 + j * 0.16 * d, r2 = rr + j * 2.2; const px = Math.cos(a) * r2, py = Math.sin(a) * r2 * 0.8; j ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+          ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.fillRect(Math.cos(a0) * rr - 1, Math.sin(a0) * rr * 0.8 - 1, 2, 2);
+        }
+        break; }
+      case 'fang': {                                   // REVIEW-FIX: due ARTIGLIATE a X + lampo — il colpo di zanna
+        ctx.strokeStyle = c; ctx.lineWidth = 4;
+        const Rf = 26 * s * (0.5 + t * 0.8);
+        for (const sgn of [-1, 1]){
+          ctx.globalAlpha = k;
+          ctx.beginPath(); ctx.arc(-d * 6 * sgn, sgn * 4, Rf, sgn > 0 ? 0.6 : 3.7, sgn > 0 ? 2.5 : 5.7); ctx.stroke();
+        }
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.globalAlpha = k;
+        ctx.beginPath(); ctx.moveTo(-Rf * 0.7 * d, Rf * 0.5); ctx.lineTo(Rf * 0.7 * d, -Rf * 0.5); ctx.stroke();
+        break; }
+      case 'burst': {                                  // REVIEW-FIX: DEFLAGRAZIONE — raggi radiali + anello di spinta
+        ctx.strokeStyle = c; ctx.lineWidth = 3;
+        const Rb = 34 * s * t;
+        for (let i = 0; i < 10; i++){
+          const a = i / 10 * 6.3 + (i % 2) * 0.1;
+          ctx.globalAlpha = k * (i % 2 ? 0.6 : 1);
+          ctx.beginPath(); ctx.moveTo(Math.cos(a) * Rb * 0.45, Math.sin(a) * Rb * 0.4); ctx.lineTo(Math.cos(a) * Rb, Math.sin(a) * Rb * 0.9); ctx.stroke();
+        }
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.globalAlpha = k;
+        ctx.beginPath(); ctx.arc(0, 0, Rb * 0.5, 0, 6.3); ctx.stroke();
         break; }
       case 'petals': {                                 // fiore: petali che si aprono
         ctx.fillStyle = c;
@@ -1934,26 +1966,26 @@ const KIT_VFX = {
   rocklee: {                         pow:{sig:'wind'},      ult:{sig:'gates', sigs:1.3} },
   kakashi: { base:{proj:'kunai'},    pow:{sig:'chidori'},   ult:{sig:'blade'} },
   gaara:   { base:{proj:'sand'},     pow:{sig:'sand'},      ult:{sig:'sand',  sigs:1.5} },
-  hinata:  {                         pow:{sig:'wind'},      ult:{sig:'petals'} },
-  neji:    { base:{proj:'needle'},   pow:{sig:'wind'},      ult:{sig:'orb'} },
+  hinata:  {                         pow:{sig:'gale'},      ult:{sig:'petals'} },
+  neji:    { base:{proj:'needle'},   pow:{sig:'gale'},      ult:{sig:'burst'} },
   guy:     {                         pow:{sig:'gates'},     ult:{sig:'gates', sigs:1.3} },
-  tenten:  { base:{proj:'kunai'},    pow:{sig:'blade'},     ult:{sig:'orb'} },
-  temari:  {                         pow:{sig:'wind', proj:'leaf'}, ult:{sig:'wind'} },
+  tenten:  { base:{proj:'kunai'},    pow:{sig:'blade'},     ult:{sig:'burst'} },
+  temari:  {                         pow:{sig:'gale', proj:'leaf'}, ult:{sig:'gale'} },
   ino:     { base:{proj:'petal'},    pow:{sig:'rune'},      ult:{sig:'petals'} },
-  kiba:    { base:{proj:'star'},     pow:{sig:'wind'},      ult:{sig:'wind'} },
+  kiba:    { base:{proj:'star'},     pow:{sig:'gale'},      ult:{sig:'gale'} },
   choji:   { base:{proj:'star'},     pow:{sig:'orb'},       ult:{sig:'orb', sigs:1.3} },
   shino:   { base:{proj:'bug'},      pow:{sig:'swarm'},     ult:{sig:'swarm'} },
-  itachi:  { base:{proj:'shuriken'}, pow:{sig:'orb'},       ult:{sig:'sand'} },   // amaterasu: fiamme nere (col scuro dal kit)
+  itachi:  { base:{proj:'shuriken'}, pow:{sig:'burst'},       ult:{sig:'sand'} },   // amaterasu: fiamme nere (col scuro dal kit)
   tsunade: { base:{proj:'star'},     pow:{sig:'petals'},    ult:{sig:'gates'} },
   sasori:  { base:{proj:'needle'},   pow:{sig:'blade'},     ult:{sig:'rune'} },
-  kankuro: { base:{proj:'star'},     pow:{sig:'rune'},      ult:{sig:'blade'} },
+  kankuro: { base:{proj:'star'},     pow:{sig:'rune'},      ult:{sig:'fang'} },
   // Harry Potter / Stranger Things
   harry:   { base:{proj:'spark'},    pow:{fx:'lumos', fxs:1.3}, ult:{fx:'patronum', fxs:1.5, fxv:3.5} },
-  ron:     { base:{proj:'spark'},    pow:{sig:'wind'},      ult:{sig:'orb'} },
+  ron:     { base:{proj:'spark'},    pow:{sig:'wind'},      ult:{sig:'burst'} },
   hermione:{ base:{proj:'spark'},    pow:{sig:'sand'},      ult:{sig:'orb'} },
-  voldemort:{ base:{proj:'spark'},   pow:{sig:'swarm'},     ult:{sig:'holy'} },
+  voldemort:{ base:{proj:'spark'},   pow:{sig:'swarm'},     ult:{sig:'burst'} },
   eleven:  { base:{proj:'spark'},    pow:{sig:'rune'},      ult:{sig:'rune'} },
-  hopper:  { base:{proj:'star'},     pow:{sig:'gates'},     ult:{sig:'blade'} },
+  hopper:  { base:{proj:'star'},     pow:{sig:'gates'},     ult:{sig:'fang'} },
   // Cast Community + Greendale
   jeff:    { base:{proj:'star'},     pow:{sig:'rune'},      ult:{sig:'holy'} },
   britta:  { base:{proj:'spark'},    pow:{sig:'chidori'},   ult:{sig:'sand'} },
@@ -1962,17 +1994,17 @@ const KIT_VFX = {
   annie:   { base:{proj:'needle'},   pow:{sig:'blade'},     ult:{sig:'holy'} },
   shirley: {                         pow:{sig:'holy'},      ult:{sig:'holy'} },
   pierce:  {                         pow:{sig:'sand'},      ult:{sig:'holy'} },
-  gilbert: { base:{proj:'star'},     pow:{sig:'chidori'},   ult:{sig:'blade'} },
+  gilbert: { base:{proj:'star'},     pow:{sig:'chidori'},   ult:{sig:'fang'} },
   chang:   { base:{proj:'star'},     pow:{sig:'chidori'},   ult:{sig:'wind'} },
   dean:    {                         pow:{sig:'rune'},      ult:{sig:'petals'} },
-  leonard: { base:{proj:'star'},     pow:{sig:'sand'},      ult:{sig:'blade'} },
+  leonard: { base:{proj:'star'},     pow:{sig:'sand'},      ult:{sig:'fang'} },
   fatneil: { base:{proj:'star'},     pow:{sig:'gates'},     ult:{sig:'holy'} },
-  duncan:  { base:{proj:'needle'},   pow:{sig:'orb'},       ult:{sig:'blade'} },
+  duncan:  { base:{proj:'needle'},   pow:{sig:'orb'},       ult:{sig:'fang'} },
   vaughn:  { base:{proj:'leaf'},     pow:{sig:'petals'},    ult:{sig:'wind'} },
   vicki:   { base:{proj:'petal'},    pow:{sig:'petals'},    ult:{sig:'holy'} },
   buddy:   { base:{proj:'spark'},    pow:{sig:'chidori'},   ult:{sig:'gates'} },
   garrett: {                         pow:{sig:'swarm'},     ult:{sig:'wind'} },
-  guzman:  { base:{proj:'star'},     pow:{sig:'blade'},     ult:{sig:'orb'} },
+  guzman:  { base:{proj:'star'},     pow:{sig:'blade'},     ult:{sig:'burst'} },
   rich:    { base:{proj:'spark'},    pow:{sig:'holy'},      ult:{sig:'orb'} },
   vicedean:{ base:{proj:'spark'},    pow:{sig:'petals'},    ult:{sig:'petals'} },
 };
