@@ -1669,7 +1669,7 @@ const KITS = {
              ult: { verb:'quake', dmg:3, cd:10, col:'#8a6a4a', icona:'🐕', nome:'EVOCAZIONE: OTTO CANI NINJA' } },
   // ---- kit CAST KONOHA v19
   gaara:   { base:{ verb:'bolt', vel:8, dmg:1, col:'#d8c088', icona:'⏳', nome:'Proiettile di sabbia' },
-             pow: { verb:'jail', cd:6, col:'#d8c088', icona:'⌛', nome:'Sabaku Kyū (bara di sabbia)' },
+             pow: { verb:'trap', cd:6, col:'#d8c088', icona:'⌛', nome:'Sabaku Kyū (bara di sabbia)' },
              ult: { verb:'quake', dmg:4, cd:10, col:'#d8c088', icona:'🏜', nome:'FUNERALE DEL DESERTO' } },
   hinata:  { base:{ verb:'wave', vel:5.5, dmg:1, col:'#c8b8e8', icona:'👐', nome:'Palmo gentile' },
              pow: { verb:'nova', r:150, dmg:1, kb:10, cd:5, col:'#c8b8e8', icona:'🛡', nome:'Protezione dei 32 palmi' },
@@ -1687,7 +1687,7 @@ const KITS = {
              pow: { verb:'cone', n:3, vel:8, dmg:1, cd:5, col:'#b8e0d0', icona:'🍃', nome:'Falce di vento' },
              ult: { verb:'storm', all:true, dmg:3, cd:10, col:'#b8e0d0', icona:'🌪', nome:'KAMAITACHI' } },
   ino:     { base:{ verb:'bolt', vel:9, dmg:1, col:'#e8d0e8', icona:'💐', nome:'Spinta Yamanaka' },
-             pow: { verb:'jail', cd:6, col:'#e8d0e8', icona:'🧠', nome:'Trasferimento mentale' },
+             pow: { verb:'trap', cd:6, col:'#e8d0e8', icona:'🧠', nome:'Trasferimento mentale' },
              ult: { verb:'nova', r:320, dmg:3, freeze:240, cd:10, col:'#e8d0e8', icona:'💫', nome:'CONTROLLO TOTALE' } },
   kiba:    { base:{ verb:'bolt', vel:9.5, dmg:1, col:'#d0b090', icona:'🐕', nome:'Zanna lanciata' },
              pow: { verb:'dashstrike', t:60, cd:4, col:'#d0b090', icona:'🌀', nome:'Gatsuga (con Akamaru)' },
@@ -1706,12 +1706,12 @@ const KITS = {
              ult: { verb:'quake', dmg:5, cd:10, col:'#e8d8a0', icona:'💢', nome:'FORZA DI UN CENTESIMO' } },
   sasori:  { base:{ verb:'bolt', vel:9, dmg:1, pierce:true, col:'#b06a4a', icona:'🧵', nome:'Ago avvelenato' },
              pow: { verb:'volley', n:6, dmg:1, cd:6, col:'#b06a4a', icona:'🎭', nome:'Teatro delle cento marionette' },
-             ult: { verb:'jail', cd:10, col:'#b06a4a', icona:'🕴', nome:'BURATTINAIO SUPREMO' } },
+             ult: { verb:'trap', n:4, t:300, cd:10, col:'#b06a4a', icona:'🕴', nome:'BURATTINAIO SUPREMO' } },
   kankuro: { base:{ verb:'bolt', vel:8.5, dmg:1, col:'#8a5aa8', icona:'🎪', nome:'Filo di chakra' },
-             pow: { verb:'jail', cd:6, col:'#8a5aa8', icona:'🐦‍⬛', nome:'Karasu ti abbraccia' },
+             pow: { verb:'trap', cd:6, col:'#8a5aa8', icona:'🐦‍⬛', nome:'Karasu ti abbraccia' },
              ult: { verb:'volley', n:10, dmg:1, cd:10, col:'#8a5aa8', icona:'🎭', nome:'TUTTO IL TEATRO IN SCENA' } },
   eleven:  { base:{ verb:'bolt', vel:9, dmg:1, pierce:true, col:'#e8b8d8', icona:'🧠', nome:'Spinta telecinetica' },
-             pow: { verb:'jail', cd:6, col:'#e8b8d8', icona:'🤏', nome:'Presa psichica' },
+             pow: { verb:'trap', cd:6, col:'#e8b8d8', icona:'🤏', nome:'Presa psichica' },
              ult: { verb:'nova', r:320, dmg:4, kb:14, cd:10, col:'#ffd8e8', icona:'🩸', nome:'CHIUDO IO IL CANCELLO',
                     extra:{ verb:'slow', t:240, col:'#e8b8d8' } } },
   hopper:  { base:{ verb:'bolt', vel:9.5, dmg:1, col:'#e8d05a', icona:'🚔', nome:'Ordinanza di Hawkins' },
@@ -1981,6 +1981,22 @@ function execVerb(p, s, tier){
       const nc = pool[Math.floor(Math.random() * pool.length)];
       if (nc){ p.jail = { base: p.cdef, t: 900 }; p.cdef = nc; p.costume = null; showToast('JAILBREAK: sei diventato ' + nc.name + '!'); }
       break; }
+    case 'trap': {   // R1: la GABBIA promessa dai nomi — intrappola il nemico (jail resta solo ad Abed)
+      const inR = enemies.filter(e => e.hp > 0 && !(e.trapT > 0) && Math.hypot(e.x - cx, e.y - cy) < (s.r || 260))
+        .sort((a,b) => Math.hypot(a.x-cx,a.y-cy) - Math.hypot(b.x-cx,b.y-cy)).slice(0, s.n || 1);
+      for (const t of inR){
+        t.trapT = s.t || 240; t.trapCol = col; t.vx = 0;
+        if (s.dmg){ t.hp -= s.dmg; }   // di default il trap NON ferisce: è CONTROLLO (la gabbia si vede, il danno lo fai tu)
+        burst(t.x + t.w/2, t.y + t.h/2, col, 14, 3);
+        parts.push({ ring:true, x:t.x + t.w/2, y:t.y + t.h/2, r:18, vx:0, vy:0, t:12, color:col });
+        if (t.hp <= 0) killEnemy(t, p);
+      }
+      if (inR.length){ sfx('gem'); }
+      else if (mboss && !mboss.dead && Math.hypot(mboss.x - cx, mboss.y - cy) < 320){
+        mboss.restT = Math.max(mboss.restT || 0, 120);   // il capo non entra in gabbia: ma si FERMA (e prende ×2)
+        hitMboss(1, p); burst(mboss.x, mboss.y, col, 14, 3); sfx('gem');
+      } else sfx('text');   // a vuoto: nessun bersaglio
+      break; }
     case 'dashstrike':
       p.sprintT = s.t || 50; p.inv = Math.max(p.inv, s.t || 50); p.face = dir;
       playFX('streak', cx + dir*14, cy, 0.6, { flip: dir < 0, rot: dir < 0 ? 0.8 : -0.8 });
@@ -2040,7 +2056,7 @@ const COMBO_SUPERS = {
   _default:        { nome:'SINERGIA DA STUDIO DI GRUPPO', verb:'nova', r:340, dmg:4, kb:12, col:'#f5d442', icona:'📚' },
 };
 let lastUlt = null;   // { slot, frame } dell'ultimo supremo lanciato
-function ultLv(p){ return Math.min(3, 1 + Math.floor(((SAVE.ultUses || {})[p.cdef.id] || 0) / 5)); }
+function ultLv(p){ const uid = (p.jail ? p.jail.base : p.cdef).id; return Math.min(3, 1 + Math.floor(((SAVE.ultUses || {})[uid] || 0) / 5)); }
 const ROMANI = ['', 'I', 'II', 'III'];
 function castUlt(p){
   const k = kitOf(p).ult;
@@ -2048,7 +2064,8 @@ function castUlt(p){
   // LIVELLI I→III ogni 5 usi: la pratica paga (per personaggio, persistente)
   SAVE.ultUses = SAVE.ultUses || {};
   const lvPrima = ultLv(p);
-  SAVE.ultUses[p.cdef.id] = (SAVE.ultUses[p.cdef.id] || 0) + 1;
+  const ultOwner = (p.jail ? p.jail.base : p.cdef).id;   // R1: jailed = esperienza al personaggio VERO
+  SAVE.ultUses[ultOwner] = (SAVE.ultUses[ultOwner] || 0) + 1;
   const lv = ultLv(p);
   if (lv > lvPrima){
     showToast('★ Il supremo di ' + p.cdef.name.split(' ')[0] + ' sale al LIVELLO ' + ROMANI[lv] + '!');
@@ -2998,7 +3015,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v20.4';    // menu subito (intro al primo GIOCA) + SCHIVATA AEREA 8-dir alla Celeste
+const GAME_VERSION = 'v20.5';    // R1 ONESTÀ: verbo trap (la gabbia promessa), jail solo ad Abed, contabilità supremi
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -4423,7 +4440,10 @@ function updatePlay(){
   const spd = nightmare ? 1.25 : 1;
   for (const e of enemies){
     if (worldTick){
-      if (e.type === 'walker'){
+      if (e.trapT > 0){   // R1: IN GABBIA — fermo, innocuo, picchiabile
+        e.trapT--; e.anim++;
+        if (frame % 10 === 0) parts.push({ x:e.x + Math.random()*e.w, y:e.y + Math.random()*e.h, vx:0, vy:-0.3, t:12, ng:1, sz:2, color:e.trapCol || '#fff' });
+      } else if (e.type === 'walker'){
         e.anim++;
         e.hitWall = false;
         if (e.slowT > 0){ e.slowT--; if (frame % 8 === 0) parts.push({ x:e.x + Math.random()*e.w, y:e.y + Math.random()*e.h, vx:0, vy:0.3, t:12, ng:1, sz:2, color:'#bfe8ff' }); }
@@ -4475,7 +4495,7 @@ function updatePlay(){
         else if (e.type !== 'ghost' && p.preVy > 2 && p.y + p.h < e.y + e.h * 0.6){
           e.hp--; p.vy = -8;
           if (e.hp <= 0) killEnemy(e, p); else sfx('stomp');
-        } else hurtPlayer(p, 1, e.x + e.w/2);
+        } else if (!(e.trapT > 0)) hurtPlayer(p, 1, e.x + e.w/2);   // in gabbia non morde
       }
     }
   }
@@ -6542,6 +6562,18 @@ function drawPlay(){
   const hasNeil = players.some(p => trait(p,'fatneil'));
   for (const e of enemies){
     e.type === 'walker' ? drawWalker(e) : e.type === 'ghost' ? drawGhost(e) : drawFlyer(e);
+    if (e.trapT > 0){   // R1: la gabbia si VEDE — sbarre tinte del kit che l'ha evocata
+      const gx = e.x - cam.x - 3, gy = e.y - cam.y - 6, gw = e.w + 6, gh = e.h + 8;
+      const ga = Math.min(1, e.trapT / 30);   // dissolve negli ultimi 30f: avviso di rilascio
+      ctx.save(); ctx.globalAlpha = 0.85 * ga;
+      ctx.strokeStyle = e.trapCol || '#fff'; ctx.lineWidth = 2;
+      ctx.strokeRect(gx, gy, gw, gh);
+      for (let i = 1; i < 4; i++){ ctx.beginPath(); ctx.moveTo(gx + gw*i/4, gy); ctx.lineTo(gx + gw*i/4, gy + gh); ctx.stroke(); }
+      ctx.globalAlpha = 0.35 * ga; ctx.fillStyle = e.trapCol || '#fff';
+      ctx.fillRect(gx, gy - 3, gw, 3);
+      ctx.restore();
+      addLight(gx + gw/2, gy + gh/2, 40, hexRgb(e.trapCol || '#ffffff'), 0.3);
+    }
     if (hasNeil && e.hp > 0){    // il DM vede i punti vita
       ctx.fillStyle = '#26262e'; ctx.fillRect(e.x - cam.x, e.y - 10 - cam.y, 26, 4);
       ctx.fillStyle = '#5ae87a'; ctx.fillRect(e.x - cam.x, e.y - 10 - cam.y, 26 * Math.min(1, e.hp / 3), 4);
@@ -6814,7 +6846,7 @@ function hostSnapshot(){
     pl: players.map(p => [sheetOf(p), Math.round(p.x), Math.round(p.y), p.face,
       p.hp <= 0 ? 'dead' : p.atkT > 0 ? 'attack' : !p.onGround ? 'jump' : Math.abs(p.vx) > 0.3 ? 'walk' : 'idle',
       Math.round(p.anim), p.hp, p.maxhp, Math.round(p.soul), p.shield]),
-    en: enemies.map(e => [e.type, Math.round(e.x), Math.round(e.y), Math.round(e.anim), e.sprite || '', Math.sign(e.vx || -1)]),
+    en: enemies.map(e => [e.type, Math.round(e.x), Math.round(e.y), Math.round(e.anim), e.sprite || '', Math.sign(e.vx || -1), e.trapT > 0 ? (e.trapCol || '#fff') : 0]),
     pr: projs.map(pr => [Math.round(pr.x), Math.round(pr.y), pr.w, pr.h, pr.fire ? 1 : pr.from === 'ally' ? 2 : 0]),
     bb: babies.map(b => [Math.round(b.x), Math.round(b.y), Math.round(b.anim), b.vx > 0 ? 1 : -1]),
     bo: boss && !boss.dead ? [Math.round(boss.x), Math.round(boss.y), boss.hp, boss.maxhp, boss.mode, boss.hurtT] : null,
@@ -6867,6 +6899,13 @@ function drawGuest(){
   for (const e of s.en){
     const fake = { type:e[0], x:e[1], y:e[2], anim:e[3], t:e[3], w:28, h:24, hp:1, sprite:e[4], vx:e[5] };
     e[0] === 'walker' ? drawWalker(fake) : e[0] === 'ghost' ? drawGhost(fake) : drawFlyer(fake);
+    if (e[6]){   // R1: la gabbia si vede anche dall'altra parte della rete
+      const gx = fake.x - cam.x - 3, gy = fake.y - cam.y - 6, gw = fake.w + 6, gh = fake.h + 8;
+      ctx.save(); ctx.globalAlpha = 0.85; ctx.strokeStyle = e[6]; ctx.lineWidth = 2;
+      ctx.strokeRect(gx, gy, gw, gh);
+      for (let i = 1; i < 4; i++){ ctx.beginPath(); ctx.moveTo(gx + gw*i/4, gy); ctx.lineTo(gx + gw*i/4, gy + gh); ctx.stroke(); }
+      ctx.restore();
+    }
   }
   if (s.ri) drawActor('gilbert', s.ri[4], s.ri[5], s.ri[0] + 11 - 24 - cam.x, s.ri[1] + 30 - 46 - cam.y, s.ri[2], 1);
   if (s.bo){
