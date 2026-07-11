@@ -13,6 +13,13 @@ Tutti gli asset sono incorporati in base64 dentro `index.html` (vincolo single-f
   Usati: mezzelune slash (oro/blu/viola), streak, arrow — 6 frame da 126×150,
   strip ricomposte in `fx_slash`, `fx_slash_b`, `fx_slash_p`, `fx_streak`, `fx_arrow`.
   Nel gioco: attacchi corpo a corpo, scatti, incantesimi, super, critici (v12.0).
+- **Jutsu autentici (v20.0, §S-VFX)** — ritagliati dagli sheet DS *Naruto Shippuden:
+  Naruto vs Sasuke* via The Spriters Resource (fx_double_rasengan #98910 → `fx_rasengan`,
+  3 frame 56px; fx_fireball_rasengan #98912 → `fx_katon`, 3 frame 64px). Estrazione con
+  chroma-key robusto (fondo verde/teal + riquadri-cella ciano) in `tools_fx_extract.py`.
+  Nel gioco: firma del potere di Naruto (rasengan) e del supremo di Sasuke/Troy (Katōn).
+  Le altre firme per-kit (chidori, sabbia, vento, rune, insetti, petali, gates, holy) sono
+  procedurali (canvas, zero asset), tinte dal colore di ciascun kit.
 
 ## Personaggi ospiti e ambientazioni (assets/guest/, INTEGRATI in v15.0)
 - **Harry Potter e il Prigioniero di Azkaban (GBA)** e **HP e la Pietra Filosofale (GBA)** —
