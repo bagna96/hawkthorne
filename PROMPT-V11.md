@@ -67,18 +67,17 @@ FINDING: nit 1px residuo asintotico al clamp del bordo (cosmetico, ignorato).
 LEZIONE per i test: dopo blur l'inerzia fa ~12px con attrito 0.72 — non è un
 tasto incastrato (quello fa 80px): misurare le soglie sul comportamento reale.
 
-### ☐ R3 — PIATTAFORMA iOS (prompt morti + élite invisibili)
-- MODAL CUSTOM al posto dei 4 `window.prompt` (grep "prompt("): export/import
-  salvataggio + scambio codici co-op. Su PWA iOS standalone prompt è un no-op
-  → overlay DOM (div+textarea+2 bottoni, stile CRT) + navigator.clipboard
-  con fallback select()+execCommand. Il canvas resta sotto; niente lib.
-- ÉLITE/EVIL PRE-RENDER: oggi tinta SOLO via `ctx.filter='hue-rotate(...)'`
-  per-frame (grep "ctx.filter"): Safari <17.4 la IGNORA (élite identiche ai
-  normali!) e dove c'è forza il percorso lento. → cache di canvas offscreen
-  tintati per sheet (chiave sheet+mod), tinta per-pixel one-shot in JS se
-  filter non supportato. Rimuovere ctx.filter dal draw caldo.
-- ESAME: export/import provato in Safari desktop + chiedere all'utente prova
-  su PWA; confronto screenshot élite/evil prima/dopo (identici dove filter c'era).
+### ☑ R3 — PIATTAFORMA iOS ✅ FATTA (v20.7, commit 7ff6f95)
+codeBox (DOM, Promise, COPIA con fallback iOS, guardia modalOpen sui listener):
+i 5 prompt/alert sono spariti; export/import e scambio codici co-op vivono anche
+su PWA standalone. tinted(img, filterStr) + cache: matrice hue/sat/bri del filter
+spec calcolata una volta per sheet — ctx.filter: 0 occorrenze (coperti élite,
+evil, mboss def.filter, hippy, ospiti, render online). PASS RECENSORE: fixati
+2 difetti iOS del mio stesso modal (textarea <16px = auto-zoom; select() nudo
+non copia → setSelectionRange). DA PROVARE SULL'IPHONE UTENTE: export + copia.
+LIMITE loggato: il modal non è pad-only (serve tastiera/appunti di sistema:
+accettato). LEZIONE: su iOS ogni input DOM va a 16px, e la copia va testata
+col fallback — mai fidarsi del solo navigator.clipboard.
 
 ### ☐ R4 — IDENTITÀ DEI MONDI (caos a dieta + élite che pensano)
 - CAOS: grep "0.12 + lvlIdx" → cap 0.35 (oggi 0.82 al mondo 7: i mondi di V14
