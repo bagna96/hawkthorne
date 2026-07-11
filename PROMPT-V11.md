@@ -56,20 +56,16 @@ FINDING APERTI (da R1):
   kakashi.ult OTTO CANI, sasori.pow cento marionette, kankuro.ult TUTTO IL
   TEATRO → risolte in R5(b) col verbo 'clone'/'summon'.
 
-### ☐ R2 — FEEL (camera 2026 + igiene input)
-- CAMERA (il singolo fix col miglior rapporto resa/ore): oggi
-  `cam.x = Math.round(clamp(fx - W/2))` hard-lock (grep "cam.x = Math.round").
-  → target con LOOKAHEAD (tx = fx - W/2 + faceSmooth*40, faceSmooth = lerp del
-  facing per non scattare), LERP 0.12 su cam.x/cam.y, DEADZONE verticale
-  (aggiorna ty solo se il player esce da banda ±40px o quando onGround).
-  Round SOLO al momento del draw (pixel-snap senza jitter del lerp).
-  ATTENZIONE: lo snapshot netcode invia cam (grep "s.cx") — invariato, ok.
-- BLUR: window 'blur' + 'visibilitychange' → azzera keys/justPressed/touchHeld
-  + stickRelease() (oggi: tasti incastrati all'alt-tab/notifica).
-- CAP PARTICELLE: parts oltre 600 → splice dalla testa (nel punto di update).
-- ESAME: screenshot prima/dopo su corsa+salto+dash (lookahead visibile);
-  nessun jitter da fermo; il dash 8-dir non fa più "sberla"; camera nei
-  livelli boss (arene strette: il clamp deve vincere sul lookahead).
+### ☑ R2 — FEEL ✅ FATTA (v20.6, commit d7d8f87)
+Camera: camF float + lerp 0.12 + lookahead 52 (lead misurato 38px) + deadzone
+±44 con bias in caduta (vy>7) + snap su tp + clamp ai bordi; jitter 0px.
+Blur/visibilitychange rilasciano tutto; parts cap 600. BONUS GROSSO: riparato
+l'OSPITE ONLINE (rotto dalla v13: drawSoul senza kit nella tupla → crash a ogni
+frame) — tupla pl estesa (+cdef/powCd/ultCd), kitOf blindata, fakeGuest DI NUOVO
+FUNZIONANTE (regola 2 torna valida), cam esposta in _hawk.info per i test.
+FINDING: nit 1px residuo asintotico al clamp del bordo (cosmetico, ignorato).
+LEZIONE per i test: dopo blur l'inerzia fa ~12px con attrito 0.72 — non è un
+tasto incastrato (quello fa 80px): misurare le soglie sul comportamento reale.
 
 ### ☐ R3 — PIATTAFORMA iOS (prompt morti + élite invisibili)
 - MODAL CUSTOM al posto dei 4 `window.prompt` (grep "prompt("): export/import
