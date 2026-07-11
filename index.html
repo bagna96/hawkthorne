@@ -2643,7 +2643,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v18.1';    // fix touch: STICK virtuale + rombo PS simmetrico (feedback utente)
+const GAME_VERSION = 'v18.2';    // fix telefono: il ✕ conferma OVUNQUE (select, negozio, game over, win, online)
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -5755,7 +5755,7 @@ function updateMenu(){
   const m = menu;
   if (jp('ArrowUp') || jp('KeyW') || gpJP(0,'jump') || netBitJP('jump')) m.sel = (m.sel + m.items.length - 1) % m.items.length;
   if (jp('ArrowDown') || jp('KeyS') || gpJP(0,'down') || netBitJP('down')) m.sel = (m.sel + 1) % m.items.length;
-  if (jp('Enter') || gpJP(0,'ok') || netBitJP('ok')){
+  if (jp('Enter') || jp('Space') || jp('KeyZ') || gpJP(0,'ok') || netBitJP('ok')){   // v18.2: ✕ touch
     const it = m.items[m.sel];
     const cost = menuCost(it);
     if (SAVE.wallet >= cost){ SAVE.wallet -= cost; saveGame(); it.act(m.p); checkSynergies(m.p); sfx('buy'); showToast(it.name); menu = null; }
@@ -6332,7 +6332,7 @@ function netEncodeInput(){
   let b = 0;
   const sc = SCHEMES[0];
   for (const k in NETBITS) if ((sc[k] && anyDown(sc[k])) || gpDown(0, k)) b |= NETBITS[k];
-  if (jp('Enter') || gpJP(0,'ok')) b |= NETBITS.ok;
+  if (jp('Enter') || jp('Space') || jp('KeyZ') || gpJP(0,'ok')) b |= NETBITS.ok;   // v18.2: ✕ touch anche per l'ospite
   return b;
 }
 async function netSetup(role){
@@ -6660,7 +6660,7 @@ function update(){
         }
       }
       if ((jp('KeyN') || gpJP(0,'sup')) && SAVE.finished){ nightmare = !nightmare; sfx(nightmare ? 'organ' : 'text'); }
-      if (jp('Enter') || gpJP(0,'ok')){
+      if (jp('Enter') || jp('Space') || jp('KeyZ') || gpJP(0,'ok')){   // v18.2: anche il ✕ touch conferma
         const c = CHARS[selIdx];
         if (isUnlocked(c)){
           if (net.role === 'guest'){ netSend({ t:'hello', id:c.id, cost: selCostume }); state = 'guestplay'; showToast('Sei il Giocatore 2!'); }
@@ -6690,7 +6690,7 @@ function update(){
       else updatePlay();
       break;
     case 'over':
-      if (jp('Enter')){
+      if (OKJ()){   // v18.2: si riparte anche dal ✕ touch
         if (rushMode){ rushMode = false; state = 'title'; setSong('title'); titleT = 0; break; } // la fila ricomincia da capo
         if (endless){ endless = null; state = 'title'; setSong('title'); titleT = 0; break; } // la run infinita muore con te
         players.forEach(p => { p.hp = p.maxhp; p.downT = 0; });
@@ -6698,7 +6698,7 @@ function update(){
       }
       break;
     case 'win':
-      if (jp('Enter')){ state = 'title'; setSong('title'); titleT = 0; }
+      if (OKJ()){ state = 'title'; setSong('title'); titleT = 0; }
       break;
   }
   updateMusic();
