@@ -1,4 +1,5 @@
-# PROMPT V10 — Hawkthorne "Leggendario" (campagna multi-sessione)
+# PROMPT V10 — ⚠ ARCHIVIO: il prompt ATTIVO è PROMPT-V11.md (ciclo del Recensore, roadmap R1-R7)
+# Questo file resta come cronaca dettagliata v10→v20.4: consultalo solo se serve la storia.
 
 > Autosufficiente: contesto, regole, architettura, storia, asset, fasi.
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
