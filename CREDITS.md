@@ -20,6 +20,12 @@ Tutti gli asset sono incorporati in base64 dentro `index.html` (vincolo single-f
   Nel gioco: firma del potere di Naruto (rasengan) e del supremo di Sasuke/Troy (Katōn).
   Le altre firme per-kit (chidori, sabbia, vento, rune, insetti, petali, gates, holy) sono
   procedurali (canvas, zero asset), tinte dal colore di ciascun kit.
+- **"Pixelart Spells"** — OpenGameArt.org, licenza **CC0**
+  (https://opengameart.org/content/pixelart-spells, pixelart_spells_1.zip).
+  Usati (v20.1): "Bolt Of Purity" tinto oro → `fx_lumos` (potere di Harry,
+  Lumos Maxima); "Light Bolt" tinto argento-azzurro → `fx_patronum` (supremo
+  EXPECTO PATRONUM: la creatura alata plana in avanti). Tinta = moltiplicazione
+  RGB per luminanza (sprite quasi bianchi), upscale 3× nearest (16→48px).
 
 ## Personaggi ospiti e ambientazioni (assets/guest/, INTEGRATI in v15.0)
 - **Harry Potter e il Prigioniero di Azkaban (GBA)** e **HP e la Pietra Filosofale (GBA)** —
