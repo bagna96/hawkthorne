@@ -109,7 +109,19 @@ mod élite né tiratori (solo loadLevel+notte) — da estendere quando capita;
 - ESAME: ogni minaccia schivabile con la 8-dir A VISTA; mod élite leggibili;
   il mondo 7 è tornato SUO; nessun pattern che spamma.
 
-### ☐ R5 — ROSTER PROFONDO (basta fotocopie) — la più grande, può spezzarsi in 2
+### ☑ R5 — ROSTER PROFONDO ✅ FATTA in gran parte (v21.3, commit fe25938)
+4 verbi nuovi: 'clone' (minion-walker VERI con skin bunshin/cane/marionetta —
+fisica proiettile-walker: atterrano, invertono ai muri), 'orbit', 'pull', 'mark'
+(+50% sui segnati, 🎯). Le 4 mezze-bugie di R1 sanate; Hinata/Neji orbitano;
+Dean ipnotizza; Jeff marchia (rinominato onesto). Combo 6→17. Firme: rune 20→8
+ma wind/blade a 11 — RESIDUO (c): servono firme procedurali NUOVE (fan, puppet,
+mind...) non riciclo, target ≤8. RESIDUO (0) HP: TSR ri-confermato vuoto per
+Ron/Hermione; candidati DeviantArt PROPOSTI all'utente (mudkat101 610401296,
+byakko 2627751, JenHazakitheHedgehog 310806409, maxjacksonhk 730757905) —
+IN ATTESA di approvazione, poi pipeline guest (immagini → strip → GUESTS +
+needs + boss a tema per lo sblocco). DPS: clone n4 dmg1 t340 ≈ volley n14 (ok).
+--- testo originale (riferimento): ---
+### (era) R5 — ROSTER PROFONDO (basta fotocopie) — la più grande, può spezzarsi in 2
 - (0) SBLOCCABILI HARRY POTTER (promemoria utente 12 lug, PRIORITÀ):
   Ron/Hermione/Voldemort (+Draco se esiste) — fan-sheet DeviantArt con immagini
   PROPOSTE all'utente prima di integrare, o cattura emulatore sua. Pipeline
