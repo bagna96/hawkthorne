@@ -95,9 +95,10 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   god/infSoul azzerano powCd/ultCd; barra Meraviglia SOSTITUITA da 2
   barre cooldown con icone kit (drawSoul riscritta); aura DBZ quando
   l'ult è pronta. SPELLS elementali assorbite nei kit (castSpell resta
-  ma orfana). PAD rimappato (scelta utente): ◯/R1 schivata, ✕ salto,
-  ▢ base, △ pesante, L1/L2 potere, R2 supremo, croce SU cavalcatura /
-  GIÙ interagisci / DESTRA cambia arma (la croce muove SOLO nei menu:
+  ma orfana). PAD (⚠ AGGIORNATO in v20.3, scelta utente): ✕ salto,
+  ◯/L2 schivata, ▢ base, △/R2 pesante, L1 POTERE, R1 SUPREMO (grilletti
+  studiati: L2 schivata alla Gungeon, R2 pesante alla GoW), croce SU
+  cavalcatura / GIÙ interagisci / DESTRA cambia arma (croce SOLO nei menu:
   `state !== 'play'` nel pad-mapping); tastiera X/C/Q/R/E/Shift/Tab, P2
   F/G/H/J/T/Y/U; NETBITS estesi (heavy/pow/roll/wswap/mount). CAVALCATURE:
   registro `MOUNTS` (scopa glide ×1.5 / unicorno ram ×1.75 / drago fly
