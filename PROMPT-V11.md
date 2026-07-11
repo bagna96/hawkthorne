@@ -264,7 +264,11 @@ aperti in alto — tenere d'occhio i puzzle leva (M3/M5); se rompe, tetto di vol
 o soffitti nei punti-puzzle. Misure col taglio del salto: presa LUNGA nei test.
 
 ## §RESIDUI-EXTRA (non-review, quando capita o su richiesta)
-S-GRAFICA mondi 1-6 (texture/sfondi, DOPO R7); jutsu autentici extra (in R5c);
+S-GRAFICA: sfondi dipinti mondi 1-5 ✅ v21.7 (celle nrpg_battlebg 3×3, inset
+2px + taglio 16px barre a mezza larghezza, quantizzate 160 col, ~12KB l'una;
+def.bgImg + loadImg + inline). RESTANO: texture tile per bioma ('#'/'B' oltre
+hog), arredi hi-res, VFX con glow, eventuale bg M6. Peso: 2.35/3MB.
+Jutsu autentici extra (in R5c);
 Pain/Sai/Karin/Suigetsu/Jugo da narutoshinrumble (mapper diverso); Deidara
 (sheet 73406); **Ron/Hermione/Voldemort — PRIORITÀ ALZATA dall'utente 11 lug
 ("mancano tutti gli sbloccabili Harry Potter")**: fan-sheet DeviantArt con
