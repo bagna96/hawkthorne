@@ -52,6 +52,11 @@ Tutti gli asset sono incorporati in base64 dentro `index.html` (vincolo single-f
 - ⚠ Opere di fan senza licenza esplicita, su IP Netflix: stesso regime fan-game non
   commerciale del resto del progetto. Nessuna rivendicazione; credito agli autori dei repo.
 
+- **"Pixel Harry Potter sprites" di mudkat101 (DeviantArt)** — fan-art, uso
+  con credito (v21.5): Ron, Hermione e Voldemort giocabili — ritagli dal
+  roster chibi, walk a 2 frame e bacchetta ricostruiti in pipeline.
+  https://www.deviantart.com/mudkat101/art/Pixel-Harry-Potter-sprites-610401296
+
 ## S-GRAFICA (v16.0)
 - Atlante `g_hogtiles` (muro in mattoni + pavimento a rombi ×2) ritagliato da
   `hp_hallways` (rip GBA già accreditato sopra): tile texturizzate di Scuola e Corridoio.
