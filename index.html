@@ -3098,7 +3098,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v20.7';    // R3 iOS: pannello codici DOM (prompt era morto su PWA), tinte élite/evil pre-renderizzate
+const GAME_VERSION = 'v20.8';    // R4: combattimento leggibile — élite con mod, tiratori, telegrafi, boss che sparano, caos 35%
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -3165,7 +3165,23 @@ function comboKill(){
   if (line) showToast('COMBO x' + combo.n + ' — ' + line);
 }
 function comboMult(){ return Math.min(5, 1 + Math.floor(combo.n / 3)); }
+// R4 — ÉLITE COMPORTAMENTALI: la sfida è la decisione, non i numeri (ricerca roguelite).
+// scudo = immune dal FRONTE (giragli dietro o salta in testa) · vendetta = alla morte 3
+// proiettili radiali LENTI · campo = alone che velocizza i vicini (uccidila per prima).
+function eliteMod(e){
+  e.elite = true;
+  e.mod = ['scudo','vendetta','campo'][Math.floor(Math.random() * 3)];
+}
 function killEnemy(e, byPlayer){
+  if (e.mod === 'vendetta' && !e._vendicato){   // R4: l'ultima parola — 3 proiettili LENTI e schivabili
+    e._vendicato = true;
+    for (let k = -1; k <= 1; k++){
+      const ang = -Math.PI/2 + k * 0.75;
+      projs.push({ from:'enemy', x:e.x + e.w/2, y:e.y + e.h/2, w:10, h:10,
+        vx: Math.cos(ang) * 2.6, vy: Math.sin(ang) * 2.6, t:110, dmg:1 });
+    }
+    burst(e.x + e.w/2, e.y + e.h/2, '#e84a4a', 10, 2.5);
+  }
   e.hp = 0; sfx('stomp');
   burst(e.x + e.w/2, e.y + e.h/2, '#c9a227', 10);
   hitstop = Math.min(6, 2 + Math.floor(combo.n / 3));   // fermo-immagine: il colpo "pesa"
@@ -3374,7 +3390,9 @@ function loadLevel(i){
   if (def.boss){ boss = mkBoss(); babyEventDone = false; }
   // scaling nemici: élite dal mondo 2, Incubo ovunque
   for (const e of enemies){
-    if (lvlIdx >= 2 && e.type === 'walker' && Math.random() < 0.55){ e.hp = 2; e.elite = true; }
+    // R4: MOB A DISTANZA prima del dado élite (dopo, il 55% élite li rendeva quasi introvabili)
+    if (lvlIdx >= 1 && e.type === 'walker' && Math.random() < 0.22){ e.shooter = true; e.shootT = 90 + Math.random() * 90; }
+    if (lvlIdx >= 2 && e.type === 'walker' && !e.shooter && Math.random() < 0.55){ e.hp = 2; eliteMod(e); }
     if (nightmare){
       e.hp++;
       if ((SAVE.incubi || {}).furia){ e.hp++; if (e.vx) e.vx *= 1.25; }   // NEMICI FURIOSI
@@ -3384,7 +3402,7 @@ function loadLevel(i){
   // v16: CAOS CRESCENTE — più avanzi, più il multiverso perde i pezzi: i rinforzi
   // vengono pescati a caso da TUTTO il bestiario (Community, HP, Konoha, Sottosopra).
   if (!def.hub && !def.boss && lvlIdx > 0){
-    let caos = Math.min(0.85, 0.12 + lvlIdx * 0.1);   // mondo 1: 22% · mondo 7: 82%
+    let caos = Math.min(0.35, 0.12 + lvlIdx * 0.1);   // R4: cap 35% — il caos è spezia, i mondi restano SUOI
     if (nightmare && (SAVE.incubi || {}).caosx) caos = 0.85;              // MULTIVERSO ROTTO
     const pesca = arr => arr[Math.floor(Math.random() * arr.length)];
     const extra = [];
@@ -3398,7 +3416,7 @@ function loadLevel(i){
   }
   // Linea Oscura: nemici potenziati a costo asset zero
   if (def.remix){
-    for (const e of enemies){ e.hp++; if (e.type === 'walker') e.elite = true; }
+    for (const e of enemies){ e.hp++; if (e.type === 'walker') eliteMod(e); }
     if (mboss){ mboss.hp = mboss.maxhp = Math.round(mboss.hp * 1.5); }
   }
   // BOSS DELLE PROFONDITÀ: fasi, telegraph, arena (S4)
@@ -4397,7 +4415,7 @@ function updatePlay(){
       const side = Math.random() < 0.5 ? -1 : 1;
       const id = Math.random() < 0.3 ? ((lvl.def.spawn||{}).f || 'bat') : ((lvl.def.spawn||{}).e || 'acorn');
       const ne = mkEnemy(id, p0.x + side * (300 + Math.random() * 160), p0.y - 90);
-      if (nightWave.spawned % 3 === 2 && ne.type === 'walker') ne.elite = true;
+      if (nightWave.spawned % 3 === 2 && ne.type === 'walker') eliteMod(ne);
       enemies.push(ne);
       nightWave.spawned++;
       burst(ne.x + 12, ne.y + 12, '#aac6ff', 8, 2);
@@ -4522,6 +4540,8 @@ function updatePlay(){
 
   // nemici
   const spd = nightmare ? 1.25 : 1;
+  if (frame % 6 === 0) for (const e of enemies)   // R4 campo: aura dei capobanda
+    e.aura = enemies.some(o => o !== e && o.hp > 0 && o.mod === 'campo' && Math.abs(o.x - e.x) < 130 && Math.abs(o.y - e.y) < 90);
   for (const e of enemies){
     if (worldTick){
       if (e.trapT > 0){   // R1: IN GABBIA — fermo, innocuo, picchiabile
@@ -4530,8 +4550,20 @@ function updatePlay(){
       } else if (e.type === 'walker'){
         e.anim++;
         e.hitWall = false;
+        if (e.shooter){   // R4: tiratore — si ferma, avvisa, lobba (lenta, schivabile a vista)
+          e.shootT--;
+          if (e.shootT <= 0){
+            const tgt = nearestPlayer(e.x);
+            if (tgt){
+              projs.push({ from:'enemy', x:e.x + e.w/2, y:e.y + 4, w:10, h:10,
+                vx: Math.sign(tgt.x - e.x) * 3.0, vy: -4.6, grav:true, t:170, dmg:1, ball:true });
+              sfx('hop');
+            }
+            e.shootT = 150 + Math.random() * 80;
+          }
+        }
         if (e.slowT > 0){ e.slowT--; if (frame % 8 === 0) parts.push({ x:e.x + Math.random()*e.w, y:e.y + Math.random()*e.h, vx:0, vy:0.3, t:12, ng:1, sz:2, color:'#bfe8ff' }); }
-        e.vx = Math.sign(e.vx || -1) * 0.8 * spd * (e.elite ? 1.4 : 1) * (e.slowT > 0 ? 0.35 : 1);
+        e.vx = (e.shooter && e.shootT <= 34) ? 0 : Math.sign(e.vx || -1) * 0.8 * spd * (e.elite ? 1.2 : 1) * (e.aura ? 1.35 : 1) * (e.slowT > 0 ? 0.35 : 1);   // in mira sta fermo
         const dir = Math.sign(e.vx);
         moveAndCollide(e);
         if (e.hitWall) e.vx = -dir * 0.8;
@@ -4546,17 +4578,26 @@ function updatePlay(){
       } else if (e.type === 'ghost'){
         e.anim++; e.t++;
         const t = nearestPlayer(e.x);
-        if (t){
+        if (e.wind > 0){   // R4: WIND-UP — si ferma e lampeggia PRIMA dello scatto (leggibilità)
+          e.wind--;
+          if (e.wind === 0 && t){ const d0 = Math.hypot(t.x - e.x, t.y - 10 - e.y) || 1; e.dashX = (t.x - e.x) / d0 * 3.4; e.dashY = (t.y - 10 - e.y) / d0 * 3.4; e.dash = 26; sfx('hop'); }
+        } else if (e.dash > 0){
+          e.dash--; e.x += e.dashX; e.y += e.dashY;
+        } else if (t){
           const dx = t.x - e.x, dy = t.y - 10 - e.y;
           const d = Math.hypot(dx, dy) || 1;
           const gspd = 0.9 * spd;
           e.x += dx / d * gspd; e.y += dy / d * gspd + Math.sin(e.anim * 0.08) * 0.6;
+          if (e.t % 170 === 0 && d < 260) e.wind = 22;
         }
       }
     }
     for (const ab of atkBoxes) if (e.hp > 0 && overlap(ab, e)){
       let d = ab.dmg || 1;
       const back = ab.wpn && ab.wpn.backstab && (Math.sign(e.vx || -1) === ab.owner.face || synActive('STREETS AHEAD'));
+      if (e.mod === 'scudo' && Math.sign(e.vx || -1) === -ab.owner.face && !back){
+        burst(e.x + (ab.owner.face > 0 ? 0 : e.w), e.y + e.h/2, '#8ae8f0', 6, 2); sfx('thud'); continue;   // parata frontale
+      }
       if (back){ d *= 3; parts.push({ txt:'CRIT!', x:e.x+e.w/2, y:e.y-14, vx:0, vy:-0.9, t:34, color:'#e85a7a' }); }
       e.hp -= d;
       if (ab.wpn){
@@ -4650,6 +4691,11 @@ function updatePlay(){
     if (pr.from === 'player'){
       for (const e of enemies){
         if (e.hp > 0 && overlap(pr, e) && !(pr.hitCd > 0)){
+          if (e.mod === 'scudo' && Math.abs(pr.vx) > Math.abs(pr.vy) && Math.sign(pr.vx || 1) !== Math.sign(e.vx || -1)){
+            burst(e.x + (Math.sign(e.vx || -1) < 0 ? 0 : e.w), e.y + e.h/2, '#8ae8f0', 6, 2); sfx('thud');
+            if (!pr.pierce) pr.t = 0;   // R4 scudo: il fronte para — giragli dietro o salta in testa
+            continue;
+          }
           let dmProj = pr.dmg || 1;
           if (pr.d20){ dmProj = 1 + Math.floor(Math.random() * 4); parts.push({ txt:'🎲' + dmProj + (dmProj === 4 ? ' CRITICO!' : ''), x:e.x + e.w/2, y:e.y - 12, vx:0, vy:-0.8, t:36, color: dmProj === 4 ? '#f5d442' : '#fff' }); }
           e.hp -= dmProj;
@@ -4805,6 +4851,7 @@ function hitMboss(n, byPlayer){
   }
 }
 function updateMboss(atkBoxes){
+  if (mboss && mboss._ballCd > 0) mboss._ballCd--;
   const m = mboss;
   const p = nearestPlayer(m.x);
   if (!p) return;
@@ -4872,6 +4919,11 @@ function updateMboss(atkBoxes){
       for (const q of alivePlayers())
         if (q.onGround && Math.abs(q.x - m.x) < 120 && Math.abs(q.y - m.y) < 60) hurtPlayer(q, 1, m.x + 33);
       if (enraged && !m.boss2 && Math.random() < 0.35) enemies.push(mkEnemy('acorn', m.x + 20, m.y));
+      if (m.def && m.def.ai === 'hopper' && !(m._ballCd > 0)){   // R4: il tonfo SPARA — 2 ghiande ad arco
+        m._ballCd = 50;   // gotcha 11: onGround oscilla, senza cd l'atterraggio mitraglia (56 projs misurati!)
+        for (const d2 of [-1, 1])
+          projs.push({ from:'enemy', x:m.x + 33, y:m.y + m.h - 40, w:12, h:12, vx:d2 * 2.4, vy:-6.2, grav:true, t:150, dmg:1, ball:true });
+      }
       if (!m.boss2 && (m.hops || 0) >= 3){ m.restT = 70; showGuide('mbrest'); }
     }
   } else if (ai === 'swooper'){
@@ -4906,7 +4958,19 @@ function updateMboss(atkBoxes){
     } else if (m.mode === 'stun'){
       m.restT--;
       if (frame % 9 === 0) parts.push({ x:m.x + m.w/2 + (Math.random()-0.5)*30, y:m.y - 6, vx:0, vy:-0.5, t:22, txt:'💫', sz:11, color:'#f5d442' });
-      if (m.restT <= 0){ m.restT = 0; m.mode = 'pace'; }
+      if (m.restT <= 0){
+        m.restT = 0; m.mode = 'pace';
+        const tp2 = nearestPlayer(m.x);   // R4: si rialza SPARANDO — ventaglio lento e leggibile
+        if (tp2){
+          const base = Math.atan2((tp2.y - m.y), (tp2.x - m.x));
+          for (let k = -1; k <= 1; k++){
+            const a = base + k * 0.32;
+            projs.push({ from:'enemy', x:m.x + m.w/2, y:m.y + m.h/2, w:10, h:10,
+              vx: Math.cos(a) * 3.0, vy: Math.sin(a) * 3.0, t:140, dmg:1, fire:true });
+          }
+          sfx('fire');
+        }
+      }
     } else {
       m.vx = Math.sign(dist) * 1.1; moveAndCollide(m);
       if (m.tel === 0 && m.t % (enraged ? 90 : 130) === 0){ m.tel = 26; sfx('boss'); }
@@ -5219,7 +5283,8 @@ function drawWalkerInner(e){
 }
 function drawGhost(e){
   const x = e.x - cam.x, y = e.y - cam.y;
-  const a = 0.45 + Math.sin(e.anim * 0.1) * 0.15;
+  let a = 0.45 + Math.sin(e.anim * 0.1) * 0.15;
+  if (e.wind > 0) a = frame % 6 < 3 ? 0.95 : 0.2;   // R4: lampeggia PRIMA dello scatto
   ctx.save(); ctx.globalAlpha = a;
   ctx.fillStyle = '#d8d8e8';
   ctx.fillRect(x + 4, y, 22, 24);
@@ -6668,7 +6733,22 @@ function drawPlay(){
       ctx.fillStyle = '#26262e'; ctx.fillRect(e.x - cam.x, e.y - 10 - cam.y, 26, 4);
       ctx.fillStyle = '#5ae87a'; ctx.fillRect(e.x - cam.x, e.y - 10 - cam.y, 26 * Math.min(1, e.hp / 3), 4);
     }
-    if (e.elite){ ctx.fillStyle = 'rgba(232,74,74,0.8)'; ctx.fillRect(e.x - cam.x + 8, e.y - 6 - cam.y, 10, 3); }
+    if (e.elite){   // R4: il MOD si legge a colpo d'occhio — glifo sopra la testa
+      const gl = e.mod === 'scudo' ? '🛡' : e.mod === 'vendetta' ? '💀' : e.mod === 'campo' ? '📣' : '★';
+      text(gl, e.x + e.w/2 - cam.x, e.y - 8 - cam.y, 11, '#fff', 'center');
+      if (e.mod === 'campo' && e.hp > 0){   // l'alone si VEDE: uccidi il capobanda per primo
+        ctx.strokeStyle = 'rgba(245,212,66,' + (0.25 + Math.abs(Math.sin(frame * 0.05)) * 0.2) + ')';
+        ctx.lineWidth = 2; ctx.beginPath();
+        ctx.arc(e.x + e.w/2 - cam.x, e.y + e.h/2 - cam.y, 60 + Math.sin(frame * 0.05) * 6, 0, Math.PI * 2); ctx.stroke();
+      }
+      if (e.mod === 'scudo'){   // barriera sul lato protetto
+        const fdir = Math.sign(e.vx || -1);
+        ctx.fillStyle = 'rgba(138,232,240,0.65)';
+        ctx.fillRect(e.x - cam.x + (fdir < 0 ? -4 : e.w), e.y - cam.y + 2, 4, e.h - 4);
+      }
+    }
+    if (e.shooter && e.shootT <= 34 && e.hp > 0)   // in mira: avviso grande, hai ~mezzo secondo
+      text('!', e.x + e.w/2 - cam.x, e.y - 12 - cam.y, 18, '#f5d442', 'center');
     if (e._boltT > 0){   // FULMINE DI CHANG: arco frastagliato dal caster al nemico
       e._boltT--;
       ctx.strokeStyle = 'rgba(245,212,66,' + (e._boltT / 8) + ')'; ctx.lineWidth = 3;
@@ -7278,7 +7358,7 @@ window._hawk = {
     if (!players.length) players = [mkPlayer(c, null, 0, 0, 0)];
     else players = players.map((p, k) => { const np = mkPlayer(c, null, p.x, p.y, k); np.wpn = p.wpn; np.wsel = p.wsel; return np; });
     return c.name; },
-  info(){ return { cam: { x: Math.round(cam.x), y: Math.round(cam.y) }, state, lvlIdx, players: players.map(p=>({id:p.cdef.id,hp:p.hp,x:Math.round(p.x),y:Math.round(p.y)})), menu: menu && menu.type, wallet:SAVE.wallet, cristalli, lavagun, boss: boss && boss.hp, rival: rival && rival.hp, gilbertAlly, villageBurning, assets: assetsDone + '/' + assetsTotal, fail: ASSET_FAIL.join(','),
+  info(){ return { nProjs: projs.length, nShooters: enemies.filter(e=>e.shooter).length, cam: { x: Math.round(cam.x), y: Math.round(cam.y) }, state, lvlIdx, players: players.map(p=>({id:p.cdef.id,hp:p.hp,x:Math.round(p.x),y:Math.round(p.y)})), menu: menu && menu.type, wallet:SAVE.wallet, cristalli, lavagun, boss: boss && boss.hp, rival: rival && rival.hp, gilbertAlly, villageBurning, assets: assetsDone + '/' + assetsTotal, fail: ASSET_FAIL.join(','),
     mboss: mboss && { k: mboss.mk, hp: mboss.hp, dead: mboss.dead }, nEnemies: enemies.length, nGroups: groups.length,
     guests: { hp: !!SAVE.guestHP, konoha: !!SAVE.guestKonoha, st: !!SAVE.guestST } }; },
   kill(){ if (boss && !boss.dead) hitBoss(boss.hp); },
