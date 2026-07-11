@@ -245,6 +245,22 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   .give .gems .boon .forge .incubo .next .fakeGuest .reset .info(+mboss/
   nEnemies/nGroups/guests/fail) .quest .mbkill .gen .remix .arma .pom
   .maledici .syn .god .perk .shards .unlock .ui`.
+- **V20.1-20.4 (post §S-VFX)**: 20.1 spell Harry dal pack CC0 (fx_lumos oro,
+  fx_patronum argento che PLANA — campo `fxv` in kitFX; beam tinto dal col
+  dell'ult del kit). 20.2 FIX iOS "gioco vecchio": auto-reload su
+  controllerchange (entro 30s, mai al primo install) + reg.update() — se un bug
+  "già fixato" torna su iPhone, è la cache SW, non il codice. 20.3 pad: L1
+  POTERE / R1 SUPREMO / L2 schivata (Gungeon) / R2 pesante (GoW), etichette
+  allineate ovunque (COMANDI, chip HUD R·R1, select, tutorial, touch).
+  20.4 (a) tv→title DIRETTO, cutscene lab al primo GIOCA (SAVE.introSeen);
+  (b) SCHIVATA AEREA 8-DIR alla Celeste: vettore normalizzato 10px/f, 11f
+  +3 hitstop, gravità sospesa, residuo vx*0.66 / vy*0.45 in salita (discesa
+  mantenuta), bit input 'up' nuovo (scheme P1 ArrowUp/P2 KeyW/pad ay<-0.5,
+  NETBITS 4096), scie fantasma `ghosts[]`+`drawGhosts()` (silhouette che
+  sbiadiscono, disegnate sotto i player), streak ruotato sull'angolo.
+  A terra scatto invariato (orizzontale). GOTCHA: `inAria = !onGround &&
+  airT>1` — NON usare coyote (declassa a orizzontale il dash a inizio salto)
+  NÉ onGround nudo (oscilla da fermi, gotcha 11).
 - **V20.0 (§S-VFX ✅)**: FIRME VFX PER-KIT — richiesta "ogni personaggio effetti
   PROPRI, mai la mezzaluna uguale a tutti". Gli slot dei `KITS` accettano ora
   `fx` (sprite jutsu AUTENTICO via `playFX`), `sig` (firma PROCEDURALE a canvas) e
