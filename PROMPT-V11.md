@@ -144,7 +144,17 @@ mod élite né tiratori (solo loadLevel+notte) — da estendere quando capita;
 - ESAME: smoke run COMPLETO post-potatura (campagna 2 livelli + endless +
   boss rush + select + touch); file più leggero di prima; zero errori.
 
-### ☐ R8 — LA BUSSOLA DEL MONDO (feedback utente 11 lug sera: "caotico, teletrasporti
+### ☑ R8 — LA BUSSOLA DEL MONDO ✅ FATTA (v20.9, commit 4b08642)
+Mappa alla SMW (nodi/sentiero/segreti-diamante SOLO da scoperti E con host noto,
+TU SEI QUI) da PAUSA e dal cartello hub (fast travel interattivo sulla mappa);
+cartelli destinazione su TUTTE le porte speciali ("???" se mai visitati);
+wipeKind 4 PORTALE + banner BENVENUTO/DI NUOVO per i luoghi segreti; minimappa
+con porte magenta; endless dichiara "fuori mappa". SAVE.found via def.mapId.
+PASS RECENSORE: fixati spoiler geografico (segreto su host ???) e posizione
+mancante in endless. NOTA: le posizioni WMAP_POS sono fisse su 960×540 — se
+si aggiungono mondi, aggiornare lì.
+--- testo originale (riferimento): ---
+### (era) R8 — LA BUSSOLA DEL MONDO (feedback utente 11 lug sera: "caotico, teletrasporti
 ### bruttissimi, non capisco dove sono le mappe e i luoghi secondari") — PRIORITÀ ALTA
 Tutte e 4 le richieste approvate dall'utente:
 - MAPPA DEL MONDO (in pausa + dal cartello fast-travel del hub): schema alla
