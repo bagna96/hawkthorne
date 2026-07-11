@@ -142,7 +142,16 @@ needs + boss a tema per lo sblocco). DPS: clone n4 dmg1 t340 ≈ volley n14 (ok)
 - ESAME: ricontare le duplicazioni post; per ogni kit toccato la domanda-cardine;
   bilancio: nessun verbo nuovo che superi il dps dei vecchi di >30% (test dummy).
 
-### ☐ R6 — LA SELECT È UN ELENCO TELEFONICO (bussola del roster)
+### ☑ R6 — LA SELECT ✅ FATTA (v21.4, commit 34814b8)
+selectOrder (favs→GREENDALE→HOGWARTS→KONOHA→HAWKINS da needs), nav per
+posizioni con selIdx fonte di verità (startRun/hello ok, testato); salto
+gruppo Q/R+L1 con indicatore; ☆ preferiti Shift/◯ (SAVE.favs); icone kit
+sulle card. FIX pre-esistente: TRATTO e desc alla stessa y da v13 (pannello
+82px, righe separate). Touch: la select touch usa i tasti P1 → Shift non
+esiste su touch — il preferito da telefono passa SOLO dal pad/tastiera
+(RESIDUO minore: aggiungere long-press sulla card).
+--- testo originale (riferimento): ---
+### (era) R6 — LA SELECT È UN ELENCO TELEFONICO (bussola del roster)
 - Raggruppa per serie con INTESTAZIONI (Community/Greendale/HP/Konoha/Hawkins);
   PREFERITI (☆ su tasto △, SAVE.favs, gruppo in testa); card con le 3 icone
   del kit (base/pow/ult) visibili senza selezionare; salto rapido di gruppo
