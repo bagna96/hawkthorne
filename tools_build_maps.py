@@ -258,11 +258,12 @@ def mondo4():
 
 # ---------------------------------------------------------------- MONDO 5 — LE CAVERNE (buio, lava, leve)
 def mondo5():
-    W, H = 156, 18
+    W, H = 156, 23          # REVIEW-FIX: +5 righe per la GROTTA DI OSSIDIANA (R9 residuo)
     g = mkgrid(W, H)
     hrun(g, 0, W - 1, 0, 'B')
     for y in range(H): g[y][0] = 'B'; g[y][W - 1] = 'B'
     ground(g, 1, W - 2)
+    underfill(g, W)
     put(g, 3, 12, 'P')
     put(g, 6, 13, 'i'); put(g, 16, 13, 'i')
     put(g, 10, 13, 'e'); put(g, 20, 13, 'e')
@@ -307,6 +308,12 @@ def mondo5():
     put(g, 148, 4, 'g'); plat(g, 146, 4, 2)
     put(g, 144, 9, 'h')
     put(g, 140, 4, 'f')
+    # GROTTA DI OSSIDIANA (R9 residuo): galleria sotto la metà destra, passa SOTTO il lago di lava.
+    # Tutta a destra del cancello-leva (52): la grotta arricchisce, non scavalca il puzzle.
+    cave(g, 58, 146, 74, 140, loot=[
+        (64, 20, 'i'), (70, 20, 'o'), (76, 19, 'f'), (78, 20, 'o'), (84, 20, 'g'),
+        (90, 20, 'e'), (96, 20, 'k'), (100, 19, 'f'), (102, 20, 'o'), (110, 20, 'g'),
+        (116, 20, 'e'), (122, 20, 'o'), (126, 19, 'f'), (128, 20, 'i'), (134, 20, 'g')])
     door(g, 153, 13); put(g, 150, 13, 'i')
     return render(g)
 
@@ -317,7 +324,7 @@ REQUIRED = {
     'MONDO 2': 'P X Q C L : q m'.split(),
     'MONDO 3': 'P X Z C b a t H = 9 & ! q m :'.split(),
     'MONDO 4': 'P X V C D ~ m q :'.split(),
-    'MONDO 5': 'P X Y C R = 9 & i ~ n q :'.split(),
+    'MONDO 5': 'P X Y C R = 9 & i ~ n q : J'.split(),
 }
 
 src = open(IDX).read()
