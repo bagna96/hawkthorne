@@ -2243,13 +2243,22 @@ function randomWeaponId(rng){
   const ids = weaponPool();
   return ids[Math.floor((rng ? rng() : Math.random()) * ids.length)];
 }
+const HVY_DESC = {   // R10: cosa fa il △ con quest'arma (una riga, onesta)
+  smash:      '△ SLAM: onde d\'urto lungo il terreno',
+  arco:       '△ FENDENTE A 360°: colpisce anche alle spalle',
+  proiettile: '△ SPARA un colpo dritto e cattivo',
+  rimbalzo:   '△ PALLA che rimbalza per la stanza (una alla volta)',
+  onda:       '△ ONDA sonora perforante',
+};
+let itemCard = null;   // card breve alla raccolta: nome + cosa fa
 function giveWeapon(p, id){
   if (!p.wpn){ p.wpn = [null, null]; p.wsel = 0; }
   const slot = p.wpn[0] == null ? 0 : p.wpn[1] == null ? 1 : p.wsel;
   const old = p.wpn[slot];
   p.wpn[slot] = id; p.wsel = slot;
   stinger('perk');
-  showToast(WEAPONS[id].icona + ' ' + WEAPONS[id].nome + ' equipaggiata! (TAB o L1 per cambiare)');
+  const wdef = WEAPONS[id];
+  itemCard = { t: 300, icona: wdef.icona, nome: wdef.nome, desc: HVY_DESC[wdef.tipo] || '△ colpo pesante d\'ordinanza', hint: 'TAB / croce DESTRA: cambia arma' };
   checkSynergies(p);
   return old;
 }
@@ -2563,6 +2572,13 @@ function drawPause(){
   panel(W/2 - pw/2, 150, pw, 70, 'rgba(5,5,14,0.85)');
   panel(W/2 - pw/2, my - 26, pw, items.length * step + 34, 'rgba(5,5,14,0.85)', 'rgba(138,232,232,0.25)');
   text('PAUSA', W/2, 196, 40, '#f5d442', 'center');
+  {   // R10: l'obiettivo non scade mai — in pausa c'è sempre
+    const qNow = lvlIdx > 0 ? QUESTS.find(q => q.mondo === lvlIdx && !questDone(q.id)) : null;
+    const obNow = lvl.def.hub ? 'Parla col cast, poi entra nella PORTA' :
+      lvl.def.boss ? 'OBIETTIVO: detronizza CORNELIUS' :
+      qNow ? 'OBIETTIVO: ' + qNow.nome : 'OBIETTIVO: raggiungi la porta in fondo (e saccheggia tutto)';
+    text('❖ ' + obNow, W/2, 214, 12, '#8ae8e8', 'center');
+  }
   for (let i = 0; i < items.length; i++){
     const s = i === pauseSel;
     if (s){ ctx.fillStyle = 'rgba(245,212,66,0.16)'; ctx.fillRect(W/2 - pw/2 + 18, my + i*step - 21, pw - 36, 30); }
@@ -3176,7 +3192,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v21.0';    // R9: CANTINE sotto i mondi, sagome runt/brute, pesante per arma, molla potenziata
+const GAME_VERSION = 'v21.1';    // R10 ONBOARDING: i 4 tasti si imparano giocando, card COSA FA, obiettivo in pausa
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -3441,7 +3457,7 @@ function loadLevel(i){
   const wMax = Math.max(...def.rows.map(r => r.length));
   const rows = def.rows.map(r => r.padEnd(wMax, ' ').split(''));
   lvl = { def, rows, w: wMax, h: rows.length, name: def.name, markers: [] };
-  enemies = []; projs = []; parts = []; babies = []; wdrops = []; fxShots = []; sigs = []; ghosts = []; fuses = []; critters = []; boss = null; rival = null; monkey = null; mboss = null; nightWave = null;
+  enemies = []; projs = []; parts = []; babies = []; wdrops = []; fxShots = []; sigs = []; ghosts = []; itemCard = null; fuses = []; critters = []; boss = null; rival = null; monkey = null; mboss = null; nightWave = null;
   movers = []; crumbs = []; crumbBack = []; ambush = null;
   raidT = (def.hub || def.boss) ? -1 : 2000 + Math.floor(Math.random() * 1600);
   if (raidT > 0 && nightmare && (SAVE.incubi || {}).orda) raidT = Math.floor(raidT / 2);   // ORDA
@@ -3894,6 +3910,11 @@ const GUIDE = {
   sottosopra: 'ABED: il Sottosopra. Due stanze: il DEMOGORGONE fa da buttafuori, VECNA da padrone di casa. Battili entrambi e UNDICI e HOPPER si uniscono al cast.',
   fuffi:  'ABED: cane a tre teste. Nei film si addormenta con la musica, ma la nostra è procedurale: picchia forte e schiva i balzi.',
   moves:  'ABED: hai doppio salto, SCATTO (Shift/◯/L2, invulnerabile) e rimbalzo sui muri.',
+  base:   'ABED: ▢ (X) = POTERE BASE. Tienilo premuto e spara da solo. Sì, per tutta la partita.',
+  dodge:  'ABED: ◯/L2 (Shift) = SCHIVATA, invulnerabile. In aria va in 8 direzioni. Abusane: è canone.',
+  pow:    'ABED: L1 (Q) = il tuo POTERE. Si ricarica da solo, quindi usarlo non è mai un errore.',
+  ult:    'ABED: R1 (R) = SUPREMO. Se lo tieni "per dopo", il dopo non arriva mai. Statistica, non filosofia.',
+  heavy:  'ABED: △ (C) = ATTACCO PESANTE. Ogni arma lo fa a modo suo: la card ti dice come.',
   bounce: 'ABED: una molla. Saltaci sopra e ti sparerà in alto.',
   secret: 'ABED: blocco incrinato = finto. Sfondalo con lo SCATTO e prendi il premio.',
   spesa:  'ABED: le Monete comprano abilità permanenti al NEGOZIO (dal titolo).',
@@ -4475,7 +4496,24 @@ function tryForge(){
   } else showToast('Servono 3 cristalli (' + cristalli + '/3)');
 }
 
+// R10 — PRIMA PARTITA GUIDATA: i 4 tasti si imparano GIOCANDO, uno alla volta e
+// solo quando servono (il registro GUIDE è una-tantum: i veterani non vedono nulla).
+let guideCd = 0;
+function onboardingTick(p){
+  if (lvlIdx < 1 || !p || p.hp <= 0) return;
+  if (guideCd > 0){ guideCd--; return; }
+  const seen = ((SAVE.flags || {}).seen) || {};
+  const fire = id => { showGuide(id); guideCd = 450; };
+  // il dodge si insegna nel SUO momento (colpo preso o pericolo addosso), non in coda agli altri
+  if (!seen.dodge && (p.inv > 55 ||
+      enemies.some(e => e.hp > 0 && Math.abs(e.x - p.x) < 220 && Math.abs(e.y - p.y) < 100) ||
+      projs.some(pr => pr.from === 'enemy' && Math.abs(pr.x - p.x) < 180))) return fire('dodge');
+  if (!seen.base){ if (enemies.some(e => e.hp > 0)) fire('base'); return; }
+  if (!seen.pow){ if (p.powCd <= 0) fire('pow'); return; }
+  if (!seen.ult){ if (p.ultCd <= 0 && killsRun >= 4) fire('ult'); return; }
+}
 function updatePlay(){
+  onboardingTick(players[0]);
   // v17: motore del BOSS RUSH — morto un capo, sotto col prossimo (con un cuore di cortesia)
   if (lvl.def.rush){
     rushClock++;
@@ -6266,6 +6304,17 @@ function drawHUD(){
   }
   if (combo.n >= 2){
     text('COMBO x' + combo.n, W/2, 52, 18 + Math.min(10, combo.n), '#f5822a', 'center');
+  }
+  if (itemCard){   // R10: card COSA FA — il pesante di quest'arma, spiegato mentre giochi
+    itemCard.t--;
+    const aC = Math.min(1, itemCard.t / 40);
+    ctx.save(); ctx.globalAlpha = aC;
+    panel(W/2 - 210, H - 132, 420, 70, 'rgba(8,8,20,0.9)', 'rgba(245,212,66,0.5)');
+    text(itemCard.icona + ' ' + itemCard.nome, W/2, H - 110, 15, '#f5d442', 'center');
+    text(itemCard.desc, W/2, H - 90, 13, '#fff', 'center');
+    if (itemCard.hint) text(itemCard.hint, W/2, H - 72, 11, 'rgba(255,255,255,0.55)', 'center');
+    ctx.restore();
+    if (itemCard.t <= 0) itemCard = null;
   }
   if (lvlBanner){   // v14.1: entri in un mondo e SAI cosa fare
     lvlBanner.t--;
