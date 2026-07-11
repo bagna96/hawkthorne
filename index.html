@@ -399,7 +399,7 @@ const TOUCH_BTNS = [
   { x: TB_C.x,            y: TB_C.y - TB_C.off, r: TB_C.r, code:'KeyC',      g:'△', col:'#7ae0c0' },
   { x: TB_C.x + TB_C.off, y: TB_C.y,            r: TB_C.r, code:'ShiftLeft', g:'◯', col:'#f0a0a0' },
   { x: 724, y: 404, r: 25, code:'KeyQ', g:'L1', col:'#d8d8e8' },
-  { x: 724, y: 472, r: 25, code:'KeyR', g:'R2', col:'#f5d442' },
+  { x: 724, y: 472, r: 25, code:'KeyR', g:'R1', col:'#f5d442' },
   { x: 724, y: 338, r: 20, code:'Tab',  g:'⇄',  col:'#d8d8e8' },
   { x: 932, y:  24, r: 16, code:'KeyP', g:'❚❚', col:'#d8d8e8' },
 ];
@@ -518,20 +518,21 @@ function pollGamepads(){
     if (!gp){ g.cur = {}; continue; }
     const b = n => !!(gp.buttons[n] && gp.buttons[n].pressed);
     const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
-    // mappatura PS5 scelta dall'utente: ✕=0 salto · ◯=1 schivata · ▢=2 potere base · △=3 attacco
-    // pesante · L1(4)/L2(6)=potere · R1(5)=schivata alt · R2(7)=SUPREMO · dpad: giù(13)=interagisci,
-    // destra(15)=cambia arma, su(12)=cavalcatura · Options(9)=pausa. La croce muove solo nei menu.
+    // mappatura PS5 v20.3 (scelta utente): ✕=0 salto · ◯=1 schivata · ▢=2 potere base · △=3 attacco
+    // pesante · L1(4)=POTERE · R1(5)=SUPREMO · L2(6)=schivata (Gungeon: mobilità sotto l'indice mentre
+    // il pollice spara) · R2(7)=pesante alt (GoW: colpo grosso sul grilletto destro) · dpad: giù(13)=
+    // interagisci, destra(15)=cambia arma, su(12)=cavalcatura · Options(9)=pausa. Croce muove solo nei menu.
     g.cur = {
       left:  ax < -0.4 || (state !== 'play' && b(14)),
       right: ax >  0.4 || (state !== 'play' && b(15)),
       down:  ay >  0.5 || b(13),
       jump:  b(0),
       atk:   b(2),
-      heavy: b(3),
-      pow:   b(4) || b(6),
-      sup:   b(7),
+      heavy: b(3) || b(7),
+      pow:   b(4),
+      sup:   b(5),
       ok:    b(9) || b(0),
-      roll:  b(1) || b(5),
+      roll:  b(1) || b(6),
       wswap: b(15),
       mount: b(12),
       start: b(9),
@@ -1090,7 +1091,7 @@ function tutorialPages(){
   if (padPresent()) return [
     { who:'abed', text:'Hai un controller. Scelta canonica. Ogni tasto è un potere: come in un MOBA, ma con più cuore.' },
     { who:'narr', text:'🎮 Levetta: MUOVITI · ✕ SALTA · ◯ SCHIVATA · ▢ POTERE BASE (spara!) · △ ATTACCO PESANTE (l\'arma)' },
-    { who:'narr', text:'🎮 L1 POTERE (si ricarica in secondi) · R2 SUPREMO (max 10s) · le barre in alto ti dicono quando' },
+    { who:'narr', text:'🎮 L1 POTERE (si ricarica in secondi) · R1 SUPREMO (max 10s) · le barre in alto ti dicono quando' },
     { who:'narr', text:'🎮 CROCE: GIÙ interagisci/negozia · DESTRA cambia arma · SU cavalcatura · Options: pausa' },
     { who:'abed', text:'Il secondo giocatore attacca il pad e preme ✕. Le regole le fa il gioco, non io.' }];
   return [
@@ -1633,7 +1634,7 @@ function ambientFX(){
 // Una riga = un'arma. OGNI arma cambia lo stile di gioco: tipo, ritmo, suono e rumble propri.
 // ------------------------------------------------ KIT ALLA LoL (v13)
 // Ogni personaggio è un campione: ▢ POTERE BASE (a distanza, senza cooldown, livellabile),
-// △ ATTACCO PESANTE (l'arma), L1/Q POTERE (cd a secondi), R2/R SUPREMO (cd max 10s, scenografico).
+// △ ATTACCO PESANTE (l'arma), L1/Q POTERE (cd a secondi), R1/R SUPREMO (cd max 10s, scenografico).
 // verbi: bolt cone wave nova beam rain volley storm freeze heal slow focus jail dashstrike quake lava
 const KITS = {
   // ---- kit OSPITI (S-OSPITI): progettati nel prompt master
@@ -2403,11 +2404,11 @@ function drawHelp(){
   const rows = [
     ['AZIONE',            'PAD PS5',        'TASTIERA'],
     ['Muoviti / Salta',   'levetta · ✕',    'frecce · Z/SPAZIO'],
-    ['Schivata (i-frame)','◯ o R1',         'SHIFT'],
+    ['Schivata (i-frame)','◯ o L2',         'SHIFT'],
     ['Potere base (spara)','▢',             'X'],
-    ['Attacco pesante',   '△',              'C'],
-    ['Potere  (ricarica in s.)','L1 o L2',  'Q'],
-    ['SUPREMO (max 10s)', 'R2',             'R'],
+    ['Attacco pesante',   '△ o R2',         'C'],
+    ['Potere  (ricarica in s.)','L1',       'Q'],
+    ['SUPREMO (max 10s)', 'R1',             'R'],
     ['Cavalcatura',       'croce SU',       'E'],
     ['Cambia arma',       'croce DESTRA',   'TAB'],
     ['Interagisci/negozia','croce GIÙ',     'freccia GIÙ'],
@@ -2488,7 +2489,7 @@ const ABILITIES = [
   { id:'dashblade',  nome:'SCATTO TAGLIENTE',          icona:'🗡️', cost:180, desc:'Lo scatto ferisce chi attraversi. Schivi E colpisci.' },
   { id:'glide',      nome:'ALI DI FALCO (USATE)',      icona:'🦅', cost:140, desc:'Tieni ✕/salto per planare. Trovate su eBay da Pierce.' },
   { id:'groundslam', nome:'SCHIANTO SISMICO',          icona:'💥', cost:200, desc:'GIÙ+▢ in aria: onda d\'urto enorme. I vicini si lamentano.' },
-  { id:'reflect',    nome:'SCATTO-SPECCHIO',           icona:'🛡️', cost:220, desc:'Scattare (R1) rispedisce i proiettili al mittente. Con gli interessi.' },
+  { id:'reflect',    nome:'SCATTO-SPECCHIO',           icona:'🛡️', cost:220, desc:'Scattare (◯/L2) rispedisce i proiettili al mittente. Con gli interessi.' },
   // — potenziamenti da vero castello (stile Rogue Legacy) —
   { id:'cuorone',    nome:'UN CUORE IN PIÙ (DI PIERCE)', icona:'❤️', cost:250, desc:'Tutti partono con un cuore extra. Ora i suoi 5 si spiegano.' },
   { id:'avidita',    nome:'PARCELLA DI JEFF',           icona:'💰', cost:160, desc:'+20% monete da ogni fonte. Obiezione? Respinta.' },
@@ -2985,7 +2986,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v20.2';    // FIX iOS: auto-reload quando il nuovo service worker prende il controllo
+const GAME_VERSION = 'v20.3';    // pad PS5 rimappato: L1 potere, R1 supremo, L2 schivata, R2 pesante
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -3669,7 +3670,7 @@ const GUIDE = {
   cartello: 'ABED: il cartello delle destinazioni. GIÙ e scegli il mondo: il fast travel è canone dal 1986.',
   sottosopra: 'ABED: il Sottosopra. Due stanze: il DEMOGORGONE fa da buttafuori, VECNA da padrone di casa. Battili entrambi e UNDICI e HOPPER si uniscono al cast.',
   fuffi:  'ABED: cane a tre teste. Nei film si addormenta con la musica, ma la nostra è procedurale: picchia forte e schiva i balzi.',
-  moves:  'ABED: hai doppio salto, SCATTO (Shift/R1, invulnerabile) e rimbalzo sui muri.',
+  moves:  'ABED: hai doppio salto, SCATTO (Shift/◯/L2, invulnerabile) e rimbalzo sui muri.',
   bounce: 'ABED: una molla. Saltaci sopra e ti sparerà in alto.',
   secret: 'ABED: blocco incrinato = finto. Sfondalo con lo SCATTO e prendi il premio.',
   spesa:  'ABED: le Monete comprano abilità permanenti al NEGOZIO (dal titolo).',
@@ -5906,11 +5907,11 @@ function drawHearts(p, x, right){
   }
 }
 function drawSoul(p, x, right){
-  // v13: barre di COOLDOWN alla LoL — potere (L1/Q) e supremo (R2/R)
+  // v13: barre di COOLDOWN alla LoL — potere (L1/Q) e supremo (R1/R)
   const kit = kitOf(p);
   const slots = [
     { ic: kit.pow.icona, cd: p.powCd, max: Math.max(1, Math.round(kit.pow.cd * 60)), key: right ? 'H' : 'Q·L1', col: kit.pow.col },
-    { ic: kit.ult.icona, cd: p.ultCd, max: Math.max(1, Math.min(600, Math.round(kit.ult.cd * 60))), key: right ? 'J' : 'R·R2', col: kit.ult.col },
+    { ic: kit.ult.icona, cd: p.ultCd, max: Math.max(1, Math.min(600, Math.round(kit.ult.cd * 60))), key: right ? 'J' : 'R·R1', col: kit.ult.col },
   ];
   for (let i = 0; i < 2; i++){
     const s = slots[i];
@@ -6399,7 +6400,7 @@ function drawSelect(){
   if (SAVE.finished) hint += ' · [N/△] Incubo: ' + (nightmare ? 'SÌ ☠' : 'no');
   text(hint, W/2, H - 38, 12, unlocked || SAVE.wallet >= c.cost ? '#5ae87a' : '#e84a4a', 'center');
   { const kk = KITS[c.id] || KITS.jeff;
-    text('KIT — ▢ ' + kk.base.nome + ' · L1 ' + kk.pow.icona + ' ' + kk.pow.nome + ' (' + kk.pow.cd + 's) · R2 ' + kk.ult.icona + ' ' + kk.ult.nome + ' (' + kk.ult.cd + 's)', W/2, H - 24, 11, '#8a6ae8', 'center');
+    text('KIT — ▢ ' + kk.base.nome + ' · L1 ' + kk.pow.icona + ' ' + kk.pow.nome + ' (' + kk.pow.cd + 's) · R1 ' + kk.ult.icona + ' ' + kk.ult.nome + ' (' + kk.ult.cd + 's)', W/2, H - 24, 11, '#8a6ae8', 'center');
     text('TRATTO: ' + (TRAITS[c.id] || '—'), W/2, H - 52, 11, 'rgba(255,255,255,0.55)', 'center'); }
   if (selCostume) text('COSTUME: ' + selCostume.toUpperCase(), W/2, H - 8, 13, '#5ae8e8', 'center');
   if (selMsg) text(selMsg, W/2, H - 8, 13, '#e84a4a', 'center');
