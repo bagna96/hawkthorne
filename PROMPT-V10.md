@@ -274,12 +274,15 @@ RESIDUI (scelte utente già prese, riprendili quando capita):
    detect_bands()/detect_cols() e verificare a schermo 1 sheet alla volta;
    assegnarli a `pow.fx`/`ult.fx` dei kit ninja al posto delle firme procedurali.
    Upgrade animazioni ospiti dai loro sheet personaggi (opz.). ❌ NIENTE draghi.
-2. HP H2: pack CC0 'Pixelart Spells' ricolorato canone (hue: Chidori/Patronus
-   +192, Rasengan +0, Lumos +64, Avada +128 — già calibrato) → `harry.pow.fx`/
-   `harry.ult.fx` (ora Harry ha firme procedurali rune/holy + proiettili spark,
-   funzionanti ma non "autentici"). H1 pose bacchetta da hp_harry (Lumos/Spell
-   Casting) = upgrade animazione. Bestiario GBC (src_tsr/harrypotterthechamber
-   ofsecrets) per Scuola/caos: Basilisco, folletti, mandragole, Weasley NPC.
+2. HP H2 ✅ FATTO (v20.1): pack CC0 'Pixelart Spells' montato — fx_lumos ('Bolt
+   Of Purity' tinto oro, pow) + fx_patronum ('Light Bolt' tinto argento, ult,
+   plana avanti con fxv:3.5); beam tinto dal col dell'ult del kit. Tinta =
+   moltiplicazione RGB per luminanza (NON hue-shift: gli sprite sono quasi
+   bianchi), 3× nearest. Il resto del pack (22 strip: fire/water/ice/darkness/
+   wind/arcane/shield...) è in scratchpad e su OGA: riusabile per altri kit.
+   RESTA di HP: H1 pose bacchetta da hp_harry (upgrade animazione); bestiario GBC
+   (src_tsr/harrypotterthechamberofsecrets) per Scuola/caos: Basilisco, folletti,
+   mandragole, Weasley NPC.
 3. RON/HERMIONE/VOLDEMORT: ROM GBA/PSP = VICOLO CIECO (regole 28-29). Strade vive:
    (a) fan-sheet DeviantArt (the-super-spriters Naruto; per HP cercare) → PROPORRE
    IMMAGINI prima; (b) l'utente cattura da emulatore e li ricompongo io.
