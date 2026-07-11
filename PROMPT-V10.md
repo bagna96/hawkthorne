@@ -4,8 +4,8 @@
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
 > `game-feel-expectations` (gusti dell'utente: juice + roguelite, PS5).
 
-## CONTESTO (stato v17.0 — Sessioni 1-8 + S-OSPITI + STRANGER THINGS/
-## caos/tile Hogwarts + S8 sistemi e polish)
+## CONTESTO (stato v18.0 — TUTTE le sessioni S1-S9 completate:
+## campagna 4 atti, ospiti HP/Naruto/ST, caos, S8 sistemi, S9 mobile/rete)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -210,6 +210,17 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   'incubi' dal titolo quando Incubo è ON); SLOT ×3 (hawk_slot, chiave
   storica = slot 1) + ESPORTA/IMPORTA base64 via prompt. GOTCHA: award()
   è muto con cheatDirty; le cut nei test si saltano con _hawk.next().
+- **V18.0 (S9 ✅ tutti i punti)**: TOUCH iPhone/iPad (TOUCH_BTNS mappati
+  sui tasti P1 → funzionano in gioco E nei menu, slide tra pulsanti,
+  compaiono al primo tocco, disegnati sopra il CRT); PWA offline (sw.js
+  cache-first — BUMPARE `CACHE='hawkthorne-vN'` a ogni release! —
+  manifest + icone 192/512, registrazione SOLO https, file:// intonso);
+  netcode: heartbeat 2s/drop 8s via net.lastMsg, onconnectionstatechange,
+  COPIA CODICE automatica negli appunti; CARTELLO fast travel nel hub
+  (tile 'j', GIÙ → state 'lvlsel', SAVE.maxLvl in loadLevel, fallback
+  SAVE.finished→8); ENDLESS ONLINE (snapshot gd:[seed,depth], l'ospite
+  rigenera con genLevel in locale — deterministico, verificato). Nei
+  test: TouchEvent veri con new Touch({target: cv, ...}).
 - Debug: `.goto(n | 'konoha'|'cane'|'paint'|'sotto'|'vecna') .char(id) .step .tp .soul
   (azzera anche i cd) .super(=castUlt) .pow .kill .dmg .beatRival .p2
   .give .gems .boon .forge .incubo .next .fakeGuest .reset .info(+mboss/
@@ -315,9 +326,13 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
   in CONTESTO V17.0). Residui possibili: più coppie nella matrice
   COMBO_SUPERS (ne esistono 6 + fallback); boss rush con Cornelius
   finale (ora solo i 10 mini-boss); classifica speedrun per personaggio.
-- **S9 — Nice-to-have**: touch iPhone/iPad + PWA offline; netcode robusto
-  (heartbeat, riconnessione, COPIA CODICE); selettore livello dal hub;
-  endless online (sync seed).
+- **S9 ✅ COMPLETATA (v18.0)** — tutti i punti (dettagli in CONTESTO
+  V18.0). La "riconnessione" vera resta fuori scope con la firma a
+  scambio manuale di codici: la linea che cade viene gestita con garbo
+  (host continua solo, ospite al titolo). ROADMAP S1-S9 TUTTA CHIUSA:
+  le prossime sessioni nascono dai residui (S-GRAFICA biomi 1-6, cast
+  Naruto restante, Ron/Hermione/Voldemort, Quidditch, lezioni-stanze,
+  Cornelius nel boss rush) o da richieste nuove dell'utente.
 
 ## §REGOLE DI LAVORO (lezioni cumulative)
 1. Animazioni: test frame-per-frame `_hawk.step(1)`; uno screenshot solo
