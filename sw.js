@@ -1,6 +1,6 @@
 // Service worker Hawkthorne (v18, S9): cache-first, il gioco funziona OFFLINE.
 // Bump del nome cache a ogni release per invalidare la copia vecchia.
-const CACHE = 'hawkthorne-v20.5';
+const CACHE = 'hawkthorne-v20.6';
 const CORE = ['./', './index.html', './manifest.webmanifest', './assets/icon-192.png', './assets/icon-512.png'];
 
 self.addEventListener('install', e => {

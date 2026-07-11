@@ -382,6 +382,15 @@ window.addEventListener('keydown', e => {
   initAudio();
 });
 window.addEventListener('keyup', e => { keys[e.code] = false; });
+// R2: perdita di focus = mani alzate — niente tasti fantasma dopo alt-tab/notifiche
+function releaseAllInputs(){
+  for (const k in keys) keys[k] = false;
+  for (const k in justPressed) delete justPressed[k];
+  for (const k in touchHeld) delete touchHeld[k];
+  stickRelease();
+}
+window.addEventListener('blur', releaseAllInputs);
+document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAllInputs(); });
 // ------------------------------------------------ TOUCH (v18, S9): iPhone/iPad
 // Pulsanti virtuali multi-touch mappati sui tasti P1: compaiono al PRIMO tocco.
 // ▲ = salto/nav-su, ✕ = salto/OK: gli stessi codici funzionano in gioco E nei menu.
@@ -1888,7 +1897,7 @@ function drawMount(p){
   }
   ctx.restore();
 }
-function kitOf(p){ return KITS[p.cdef.id] || KITS.jeff; }
+function kitOf(p){ return KITS[p && p.cdef && p.cdef.id] || KITS.jeff; }   // R2: blindata — un fake malformato non uccide il render ospite
 function baseLvl(p){ return 1 + (SAVE.meta.pbase2 ? 1 : 0) + (SAVE.meta.pbase3 ? 1 : 0) + Math.min(3, boons.baseUp || 0); }
 function execVerb(p, s, tier){
   const lv = tier === 'base' ? baseLvl(p) : 1;
@@ -3015,12 +3024,13 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v20.5';    // R1 ONESTÀ: verbo trap (la gabbia promessa), jail solo ad Abed, contabilità supremi
+const GAME_VERSION = 'v20.6';    // R2 FEEL: camera con lookahead/lerp/deadzone, igiene input, ospite online riparato
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
 let players = [];
 let cam = { x:0, y:0 };
+let camF = { x:0, y:0, look:0 };   // R2: camera vera — posizione float (lerp), lookahead nel facing
 let enemies = [], projs = [], parts = [], groups = [], babies = [];
 let boss = null, rival = null, monkey = null, mboss = null;
 let gilbertAlly = false, babyEventDone = false, villageBurning = false;
@@ -4611,12 +4621,24 @@ function updatePlay(){
     q.t--;
   }
   parts = parts.filter(q => q.t > 0);
+  if (parts.length > 600) parts.splice(0, parts.length - 600);   // R2: tetto — mai più spike da assalto+ult
 
-  // camera sul baricentro dei vivi
+  // camera sul baricentro dei vivi — R2: LOOKAHEAD nel facing + LERP + DEADZONE verticale
   const fx = alive.reduce((s,p)=>s+p.x+p.w/2,0)/alive.length;
   const fy = alive.reduce((s,p)=>s+p.y+p.h/2,0)/alive.length;
-  cam.x = Math.round(Math.max(0, Math.min(fx - W/2, lvl.w*TS - W)));
-  cam.y = Math.round(Math.max(0, Math.min(fy - H/2, Math.max(0, lvl.h*TS - H))));
+  const lookT = alive.reduce((s,p)=>s+p.face,0)/alive.length * 52;      // guarda dove corri (52: il lerp ne mangia un pezzo)
+  camF.look += (lookT - camF.look) * 0.06;
+  if (Math.abs(lookT - camF.look) < 0.5) camF.look = lookT;
+  const tx = Math.max(0, Math.min(fx - W/2 + camF.look, lvl.w*TS - W)); // il clamp vince sul lookahead (arene)
+  let bandC = camF.y + H/2;                                             // deadzone: i saltelli non muovono la camera
+  if (fy < bandC - 44) bandC = fy + 44; else if (fy > bandC + 44) bandC = fy - 44;
+  if (alive.some(p => p.vy > 7)) bandC = fy - 20;                       // in caduta la camera guarda GIÙ (vedi dove atterri)
+  const ty = Math.max(0, Math.min(bandC - H/2, Math.max(0, lvl.h*TS - H)));
+  if (Math.abs(tx - camF.x) > W || Math.abs(ty - camF.y) > H){ camF.x = tx; camF.y = ty; }  // tp/cambio livello: snap
+  camF.x += (tx - camF.x) * 0.12; if (Math.abs(tx - camF.x) < 0.5) camF.x = tx;   // snap finale anti-jitter
+  camF.y += (ty - camF.y) * 0.12; if (Math.abs(ty - camF.y) < 0.5) camF.y = ty;
+  cam.x = Math.round(camF.x);
+  cam.y = Math.round(camF.y);
   // P2 troppo lontano → teletrasporto
   if (alive.length === 2 && Math.abs(alive[0].x - alive[1].x) > W + 80){
     alive[1].x = alive[0].x; alive[1].y = alive[0].y - 20; alive[1].inv = 60;
@@ -6845,7 +6867,8 @@ function hostSnapshot(){
     lv: lvlIdx, st: state, cx: Math.round(cam.x), cy: Math.round(cam.y),
     pl: players.map(p => [sheetOf(p), Math.round(p.x), Math.round(p.y), p.face,
       p.hp <= 0 ? 'dead' : p.atkT > 0 ? 'attack' : !p.onGround ? 'jump' : Math.abs(p.vx) > 0.3 ? 'walk' : 'idle',
-      Math.round(p.anim), p.hp, p.maxhp, Math.round(p.soul), p.shield]),
+      Math.round(p.anim), p.hp, p.maxhp, Math.round(p.soul), p.shield,
+      p.cdef.id, Math.round(p.powCd), Math.round(p.ultCd)]),   // R2: senza kit l'HUD ospite CRASHAVA (drawSoul v13)
     en: enemies.map(e => [e.type, Math.round(e.x), Math.round(e.y), Math.round(e.anim), e.sprite || '', Math.sign(e.vx || -1), e.trapT > 0 ? (e.trapCol || '#fff') : 0]),
     pr: projs.map(pr => [Math.round(pr.x), Math.round(pr.y), pr.w, pr.h, pr.fire ? 1 : pr.from === 'ally' ? 2 : 0]),
     bb: babies.map(b => [Math.round(b.x), Math.round(b.y), Math.round(b.anim), b.vx > 0 ? 1 : -1]),
@@ -6935,7 +6958,7 @@ function drawGuest(){
   // HUD ospite
   for (let i = 0; i < s.pl.length; i++){
     const d = s.pl[i];
-    const fake = { hp:d[6], maxhp:d[7], soul:d[8] };
+    const fake = { hp:d[6], maxhp:d[7], soul:d[8], cdef: charById(d[10]) || CHARS[0], powCd:d[11] || 0, ultCd:d[12] || 0 };
     drawHearts(fake, i ? W - 14 : 14, !!i);
     drawSoul(fake, i ? W - 14 : 14, !!i);
   }
@@ -7187,7 +7210,7 @@ window._hawk = {
     if (!players.length) players = [mkPlayer(c, null, 0, 0, 0)];
     else players = players.map((p, k) => { const np = mkPlayer(c, null, p.x, p.y, k); np.wpn = p.wpn; np.wsel = p.wsel; return np; });
     return c.name; },
-  info(){ return { state, lvlIdx, players: players.map(p=>({id:p.cdef.id,hp:p.hp,x:Math.round(p.x),y:Math.round(p.y)})), menu: menu && menu.type, wallet:SAVE.wallet, cristalli, lavagun, boss: boss && boss.hp, rival: rival && rival.hp, gilbertAlly, villageBurning, assets: assetsDone + '/' + assetsTotal, fail: ASSET_FAIL.join(','),
+  info(){ return { cam: { x: Math.round(cam.x), y: Math.round(cam.y) }, state, lvlIdx, players: players.map(p=>({id:p.cdef.id,hp:p.hp,x:Math.round(p.x),y:Math.round(p.y)})), menu: menu && menu.type, wallet:SAVE.wallet, cristalli, lavagun, boss: boss && boss.hp, rival: rival && rival.hp, gilbertAlly, villageBurning, assets: assetsDone + '/' + assetsTotal, fail: ASSET_FAIL.join(','),
     mboss: mboss && { k: mboss.mk, hp: mboss.hp, dead: mboss.dead }, nEnemies: enemies.length, nGroups: groups.length,
     guests: { hp: !!SAVE.guestHP, konoha: !!SAVE.guestKonoha, st: !!SAVE.guestST } }; },
   kill(){ if (boss && !boss.dead) hitBoss(boss.hp); },
