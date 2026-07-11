@@ -4,8 +4,8 @@
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
 > `game-feel-expectations` (gusti dell'utente: juice + roguelite, PS5).
 
-## CONTESTO (stato v19.0 — S1-S9 complete + 41 GIOCABILI; prossima:
-## §S-VFX con scelte utente già prese — vedi sezione dedicata)
+## CONTESTO (stato v20.0 — S1-S9 + §S-VFX complete, 41 GIOCABILI; prossima:
+## residui §S-VFX (HP CC0, extra ninja, più jutsu autentici) o richieste nuove)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -244,32 +244,47 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   .give .gems .boon .forge .incubo .next .fakeGuest .reset .info(+mboss/
   nEnemies/nGroups/guests/fail) .quest .mbkill .gen .remix .arma .pom
   .maledici .syn .god .perk .shards .unlock .ui`.
+- **V20.0 (§S-VFX ✅)**: FIRME VFX PER-KIT — richiesta "ogni personaggio effetti
+  PROPRI, mai la mezzaluna uguale a tutti". Gli slot dei `KITS` accettano ora
+  `fx` (sprite jutsu AUTENTICO via `playFX`), `sig` (firma PROCEDURALE a canvas) e
+  `proj` (sprite del proiettile). Mappa `KIT_VFX` = overlay data-driven su tutti i
+  41 kit (idempotente, `Object.assign` per slot). `kitFX(p,k,tier)` in castPow/
+  castUlt usa la firma del kit; le doppie-mezzelune (slash/slash_p) restano SOLO come
+  ripiego. `spawnSig`/`drawSigs` = 10 firme procedurali tinte dal colore del kit
+  (orb=chakra, chidori=fulmine, sand=sabbia, wind/blade=vento/taglio, petals=fiore,
+  swarm=insetti, gates=porte/gioventù, rune=cerchio magico, holy=croce radiante);
+  vivono ~20-34f, si spawnano al centro player. `drawProjKind(pr)` = sprite
+  proiettile a canvas (kunai/shuriken/senbon/sabbia/foglia/petalo/insetto/scintilla/
+  stella) ruotati e tinti da `pr.pcol`; agganciato in execVerb `shoot` (kind/pcol/dir
+  sul proiettile) e nel render dei projs (solo `from==='player'`). ASSET AUTENTICI:
+  `fx_rasengan` (3f, Naruto pow) e `fx_katon` (3f, Sasuke/Troy ult) ritagliati dagli
+  sheet DS vs-Sasuke con `tools_fx_extract.py`. Base autofire tiene il flourish
+  leggero (differenziato dai proiettili); pow/ult sono le firme grandi.
 
-## §S-VFX — PROSSIMA SESSIONE (scelte utente GIÀ PRESE, vincolanti)
-Richiesta: ogni personaggio con effetti PROPRI, mondi distinti. Artifact
-proposte: claude.ai/code/artifact/c0f88173-43a8-4682-91ca-d0c6a05b4a90
-1. NARUTO ✅approvato: N3 = jutsu autentici dai fx_* di src_tsr/
-   narutoshippudennarutovssasuke (double_rasengan, fireball_rasengan,
-   rasenbomb, otto_porte, beast_hammer... — riquadri-cella da togliere
-   col key iterato) + upgrade animazioni dai loro sheet personaggi;
-   Dairansen fx_effects per gli impatti. ❌ NIENTE draghi ("pochi draghi
-   in Naruto, controsenso"). Meccanica: registro VFX per-kit (es. campo
-   fx nei KITS: proiettili sprite per kunai/shuriken, cast/ult dedicati)
-   al posto delle mezzelune uguali per tutti.
-2. HP ✅approvato H1+H2: pose bacchetta dallo sheet hp_harry (sezioni
-   Lumos/Spell Casting) + pack CC0 'Pixelart Spells' ricolorato canone
-   (hue: Chidori/Patronus +192, Rasengan +0, Lumos +64, Avada +128 —
-   già calibrato). Bestiario GBC (src_tsr/harrypotterthechamberofsecrets)
-   per Scuola/caos: Basilisco, folletti, mandragole, Weasley NPC.
-3. RON/HERMIONE/VOLDEMORT: ROM GBA = VICOLO CIECO (Griptonite,
-   compressione custom, zero LZ77 BIOS: sweep 0 blob su 16MB — NON
-   insistere; PSP idem: ' 3;1' CC2 e FX1? EA mai craccati). Strade vive:
-   (a) fan-sheet DeviantArt (the-super-spriters per Naruto esiste già;
-   per HP cercare) → PROPORRE IMMAGINI prima; (b) l'utente cattura da
-   emulatore (screenshot/gif) e li ricompongo io. Deidara: riprovare
-   con lo sheet Shinobi Rumble (73406).
-4. GIOCABILI EXTRA possibili gratis: Pain/Sai/Karin/Suigetsu/Jugo da
-   src_tsr/narutoshinrumble (layout DIVERSO da NC: mapper da adattare).
+## §S-VFX ✅ FATTO (v20.0) — firme per-kit; RESIDUI per la prossima
+Consegnato il CUORE: registro VFX per-kit (`fx`/`sig`/`proj` sugli slot dei KITS +
+mappa `KIT_VFX`), `kitFX`/`spawnSig`/`drawSigs`/`drawProjKind` — dettagli in CONTESTO
+V20.0. Jutsu autentici estratti: `fx_rasengan` (Naruto) e `fx_katon` (Sasuke/Troy) con
+`tools_fx_extract.py`. Artifact proposte originali: claude.ai/code/artifact/c0f88173.
+RESIDUI (scelte utente già prese, riprendili quando capita):
+1. NARUTO — più jutsu AUTENTICI dagli altri fx_* di src_tsr/
+   narutoshippudennarutovssasuke (rasenbomb #98915, otto_porte #98911,
+   beast_hammer #98917, shadow_bind #98916...): griglie IRREGOLARI a più
+   sezioni (bande e frame di dimensioni diverse) → usare `tools_fx_extract.py`
+   detect_bands()/detect_cols() e verificare a schermo 1 sheet alla volta;
+   assegnarli a `pow.fx`/`ult.fx` dei kit ninja al posto delle firme procedurali.
+   Upgrade animazioni ospiti dai loro sheet personaggi (opz.). ❌ NIENTE draghi.
+2. HP H2: pack CC0 'Pixelart Spells' ricolorato canone (hue: Chidori/Patronus
+   +192, Rasengan +0, Lumos +64, Avada +128 — già calibrato) → `harry.pow.fx`/
+   `harry.ult.fx` (ora Harry ha firme procedurali rune/holy + proiettili spark,
+   funzionanti ma non "autentici"). H1 pose bacchetta da hp_harry (Lumos/Spell
+   Casting) = upgrade animazione. Bestiario GBC (src_tsr/harrypotterthechamber
+   ofsecrets) per Scuola/caos: Basilisco, folletti, mandragole, Weasley NPC.
+3. RON/HERMIONE/VOLDEMORT: ROM GBA/PSP = VICOLO CIECO (regole 28-29). Strade vive:
+   (a) fan-sheet DeviantArt (the-super-spriters Naruto; per HP cercare) → PROPORRE
+   IMMAGINI prima; (b) l'utente cattura da emulatore e li ricompongo io.
+4. GIOCABILI EXTRA gratis: Pain/Sai/Karin/Suigetsu/Jugo da src_tsr/narutoshinrumble
+   (layout DIVERSO da NC: mapper da adattare); Deidara con Shinobi Rumble (73406).
 
 ## §RICERCA-GIOCHI — residuo utile
 - **Isaac**: pool drop che si espande ✅; restano stanze segrete nei chunk
@@ -377,6 +392,11 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
   le prossime sessioni nascono dai residui (S-GRAFICA biomi 1-6, cast
   Naruto restante, Ron/Hermione/Voldemort, Quidditch, lezioni-stanze,
   Cornelius nel boss rush) o da richieste nuove dell'utente.
+- **§S-VFX ✅ COMPLETATA (v20.0)** — firme VFX per-kit (fx autentico / sig
+  procedurale / proj sprite) su tutti i 41 kit; jutsu autentici rasengan+katon
+  estratti dagli sheet DS. Dettagli in CONTESTO V20.0. RESIDUI in §S-VFX qui sopra:
+  più jutsu autentici dagli altri fx_* (griglie irregolari), HP CC0 Pixelart Spells
+  (H2) + bestiario GBC, giocabili extra Pain/Sai/Karin/Suigetsu/Jugo.
 
 ## §REGOLE DI LAVORO (lezioni cumulative)
 1. Animazioni: test frame-per-frame `_hawk.step(1)`; uno screenshot solo
@@ -460,6 +480,21 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
 29. La cartella `iso/` è SOLO locale (copyright + dimensioni): niente
     GitHub. Il backup del gioco è il repo remoto; le ROM se le tiene
     l'utente. Cache PWA (sw.js): bump del nome a ogni release.
+30. Sheet fx_* DS (vs-Sasuke): fondo NON fisso (verde 0,136,64 / teal 0,160,160 /
+    verde-chiaro 80,152,80) + riquadri-cella ciano (0,255,255). Key robusto che
+    toglie tutto MA preserva orb (r≈g<b) e fiamme (r>g): `bg = a<20 OR (r<g-25
+    AND b<g+50)`. Griglie IRREGOLARI a più sezioni → `tools_fx_extract.py`
+    detect_bands/detect_cols, mai coordinate a mano; verifica a schermo 1 sheet
+    alla volta (montaggi con sprite personaggio misti agli fx). Il registro VFX usa
+    strip SINGLE-ROW (riga 0): estrai celle uniformi affiancate.
+31. Collaudo VFX: le firme (`spawnSig`) si spawnano al CENTRO player → se x è piccolo
+    finiscono DIETRO l'HUD (tp al centro). `_hawk.pow` su char col verbo `jail`
+    (gaara/ino/abed/eleven/sasori/kankuro) TRASFORMA il player in char casuale
+    (jailbreak): `_hawk.char` sembra rotto ma è il jail → RICARICA la pagina prima di
+    ogni char per test puliti. rAF del pannello in PAUSA: `_hawk.step(1)` in loop per
+    bruciare `wipeT`+animare, poi screenshot (il canvas trattiene l'ultimo frame).
+    Base autofire nei test: `dispatchEvent(new KeyboardEvent('keydown',{code:'KeyX'}))`
+    + step (il listener setta `keys[]`, che NON è su window).
 
 ## §FINE SESSIONE — rituale (obbligatorio)
 1. Verifica criteri accettazione; 2. commit+push (`vX.Y: sintesi`);
