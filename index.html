@@ -339,21 +339,24 @@ window.addEventListener('keyup', e => { keys[e.code] = false; });
 // Pulsanti virtuali multi-touch mappati sui tasti P1: compaiono al PRIMO tocco.
 // ▲ = salto/nav-su, ✕ = salto/OK: gli stessi codici funzionano in gioco E nei menu.
 let touchUI = false;
+// STICK VIRTUALE a sinistra (feedback utente: le 4 frecce erano scomode e disordinate).
+// Vettore → tasti freccia: soglie morbide per destra/sinistra, più dure per giù/su
+// (su = salto: non deve scattare per sbaglio mentre corri).
+const STICK = { x: 118, y: 436, r: 62, knob: 26, id: null, dx: 0, dy: 0, held: [] };
+// GRAPPOLO DESTRO: rombo PlayStation perfetto (4 tasti uguali attorno a un centro)
+// + colonna dorsali L1/R2/⇄ allineata, + pausa. Raggi UNIFORMI per famiglia.
+const TB_C = { x: 866, y: 452, off: 56, r: 30 };
 const TOUCH_BTNS = [
-  { x:  56, y: 466, r: 38, code:'ArrowLeft',  g:'◀' },
-  { x: 162, y: 466, r: 38, code:'ArrowRight', g:'▶' },
-  { x: 109, y: 392, r: 30, code:'ArrowUp',    g:'▲' },
-  { x: 109, y: 510, r: 26, code:'ArrowDown',  g:'▼' },
-  { x: 878, y: 496, r: 36, code:'Space',      g:'✕' },
-  { x: 798, y: 452, r: 30, code:'KeyX',       g:'▢' },
-  { x: 874, y: 396, r: 28, code:'KeyC',       g:'△' },
-  { x: 928, y: 442, r: 26, code:'ShiftLeft',  g:'◯' },
-  { x: 706, y: 500, r: 25, code:'KeyQ',       g:'L1' },
-  { x: 700, y: 424, r: 25, code:'KeyR',       g:'R2' },
-  { x: 700, y: 350, r: 21, code:'Tab',        g:'⇄' },
-  { x: 930, y:  26, r: 18, code:'KeyP',       g:'❚❚' },
+  { x: TB_C.x,            y: TB_C.y + TB_C.off, r: TB_C.r, code:'Space',     g:'✕', col:'#8ab4f8' },
+  { x: TB_C.x - TB_C.off, y: TB_C.y,            r: TB_C.r, code:'KeyX',      g:'▢', col:'#e8a0c8' },
+  { x: TB_C.x,            y: TB_C.y - TB_C.off, r: TB_C.r, code:'KeyC',      g:'△', col:'#7ae0c0' },
+  { x: TB_C.x + TB_C.off, y: TB_C.y,            r: TB_C.r, code:'ShiftLeft', g:'◯', col:'#f0a0a0' },
+  { x: 724, y: 404, r: 25, code:'KeyQ', g:'L1', col:'#d8d8e8' },
+  { x: 724, y: 472, r: 25, code:'KeyR', g:'R2', col:'#f5d442' },
+  { x: 724, y: 338, r: 20, code:'Tab',  g:'⇄',  col:'#d8d8e8' },
+  { x: 932, y:  24, r: 16, code:'KeyP', g:'❚❚', col:'#d8d8e8' },
 ];
-const touchHeld = {};   // touch.identifier -> code premuto
+const touchHeld = {};   // touch.identifier -> code premuto (solo pulsanti; lo stick fa da sé)
 function touchXY(t){
   const r = cv.getBoundingClientRect();
   return [(t.clientX - r.left) * (W / r.width), (t.clientY - r.top) * (H / r.height)];
@@ -362,40 +365,87 @@ function touchBtnAt(x, y){
   let best = null;
   for (const b of TOUCH_BTNS){
     const d = Math.hypot(x - b.x, y - b.y);
-    if (d < b.r + 16 && (!best || d < best.d)) best = { b, d };
+    if (d < b.r + 14 && (!best || d < best.d)) best = { b, d };
   }
   return best && best.b;
 }
-function touchPress(id, code){
-  if (touchHeld[id] === code) return;
-  if (touchHeld[id]) keys[touchHeld[id]] = false;
-  touchHeld[id] = code;
-  if (code){ if (!keys[code]) justPressed[code] = true; keys[code] = true; }
+function stickSet(x, y){
+  let dx = x - STICK.x, dy = y - STICK.y;
+  const len = Math.hypot(dx, dy);
+  if (len > STICK.r){ dx *= STICK.r / len; dy *= STICK.r / len; }
+  STICK.dx = dx; STICK.dy = dy;
+  const dirs = [];
+  if (dx < -0.32 * STICK.r) dirs.push('ArrowLeft');
+  if (dx >  0.32 * STICK.r) dirs.push('ArrowRight');
+  if (dy >  0.45 * STICK.r) dirs.push('ArrowDown');
+  if (dy < -0.60 * STICK.r) dirs.push('ArrowUp');
+  for (const c of STICK.held) if (!dirs.includes(c)) keys[c] = false;
+  for (const c of dirs) if (!STICK.held.includes(c)){ justPressed[c] = true; keys[c] = true; }
+  STICK.held = dirs;
+}
+function stickRelease(){
+  for (const c of STICK.held) keys[c] = false;
+  STICK.held = []; STICK.id = null; STICK.dx = 0; STICK.dy = 0;
 }
 cv.addEventListener('touchstart', ev => {
   ev.preventDefault(); touchUI = true; initAudio();
-  for (const t of ev.changedTouches){ const [x, y] = touchXY(t); touchPress(t.identifier, (touchBtnAt(x, y) || {}).code); }
+  for (const t of ev.changedTouches){
+    const [x, y] = touchXY(t);
+    // metà sinistra bassa = zona stick (generosa: si prende anche senza mirare)
+    if (STICK.id === null && x < 400 && y > 270){ STICK.id = t.identifier; stickSet(x, y); continue; }
+    const b = touchBtnAt(x, y);
+    if (b){ touchHeld[t.identifier] = b.code; if (!keys[b.code]) justPressed[b.code] = true; keys[b.code] = true; }
+  }
 }, { passive: false });
 cv.addEventListener('touchmove', ev => {
   ev.preventDefault();
-  for (const t of ev.changedTouches){ const [x, y] = touchXY(t); touchPress(t.identifier, (touchBtnAt(x, y) || {}).code); }
+  for (const t of ev.changedTouches){
+    const [x, y] = touchXY(t);
+    if (t.identifier === STICK.id){ stickSet(x, y); continue; }
+    const b = touchBtnAt(x, y);
+    const nuovo = b ? b.code : null;
+    if (touchHeld[t.identifier] !== nuovo){
+      if (touchHeld[t.identifier]) keys[touchHeld[t.identifier]] = false;
+      if (nuovo){ if (!keys[nuovo]) justPressed[nuovo] = true; keys[nuovo] = true; touchHeld[t.identifier] = nuovo; }
+      else delete touchHeld[t.identifier];
+    }
+  }
 }, { passive: false });
 for (const evn of ['touchend', 'touchcancel'])
   cv.addEventListener(evn, ev => {
     ev.preventDefault();
-    for (const t of ev.changedTouches){ if (touchHeld[t.identifier]) keys[touchHeld[t.identifier]] = false; delete touchHeld[t.identifier]; }
+    for (const t of ev.changedTouches){
+      if (t.identifier === STICK.id){ stickRelease(); continue; }
+      if (touchHeld[t.identifier]) keys[touchHeld[t.identifier]] = false;
+      delete touchHeld[t.identifier];
+    }
   }, { passive: false });
 function drawTouchUI(){
   if (!touchUI) return;
   ctx.save();
-  ctx.font = 'bold 20px "Courier New", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  // STICK: base, tacche direzionali, e la manopola che segue il dito
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath(); ctx.arc(STICK.x, STICK.y, STICK.r + 12, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(STICK.x, STICK.y, STICK.r + 12, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.30)'; ctx.font = 'bold 12px "Courier New", monospace';
+  ctx.fillText('◀', STICK.x - STICK.r + 2, STICK.y + 1); ctx.fillText('▶', STICK.x + STICK.r - 2, STICK.y + 1);
+  ctx.fillText('▲', STICK.x, STICK.y - STICK.r + 3);     ctx.fillText('▼', STICK.x, STICK.y + STICK.r - 1);
+  const attivo = STICK.id !== null;
+  ctx.fillStyle = attivo ? 'rgba(245,212,66,0.35)' : 'rgba(255,255,255,0.14)';
+  ctx.beginPath(); ctx.arc(STICK.x + STICK.dx, STICK.y + STICK.dy, STICK.knob, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = attivo ? 'rgba(245,212,66,0.85)' : 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(STICK.x + STICK.dx, STICK.y + STICK.dy, STICK.knob, 0, Math.PI * 2); ctx.stroke();
+  // PULSANTI: cerchi uniformi, glifo colorato alla PlayStation
   for (const b of TOUCH_BTNS){
     const on = keys[b.code];
     ctx.fillStyle = on ? 'rgba(245,212,66,0.30)' : 'rgba(255,255,255,0.08)';
     ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = on ? 'rgba(245,212,66,0.8)' : 'rgba(255,255,255,0.28)'; ctx.lineWidth = 2;
+    ctx.strokeStyle = on ? 'rgba(245,212,66,0.85)' : 'rgba(255,255,255,0.28)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = on ? '#f5d442' : 'rgba(255,255,255,0.6)';
+    ctx.fillStyle = on ? '#f5d442' : b.col;
+    ctx.font = 'bold ' + Math.round(b.r * 0.72) + 'px "Courier New", monospace';
     ctx.fillText(b.g, b.x, b.y + 1);
   }
   ctx.restore(); ctx.textBaseline = 'alphabetic';
@@ -2593,7 +2643,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v18.0';    // S9: touch iPhone/iPad + PWA offline, netcode heartbeat, cartello fast travel, endless online
+const GAME_VERSION = 'v18.1';    // fix touch: STICK virtuale + rombo PS simmetrico (feedback utente)
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
