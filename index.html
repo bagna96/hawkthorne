@@ -38,7 +38,19 @@ try {
     const lnk = document.createElement('link');
     lnk.rel = 'manifest'; lnk.href = 'manifest.webmanifest';
     document.head.appendChild(lnk);
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if ('serviceWorker' in navigator){
+      navigator.serviceWorker.register('sw.js').then(reg => reg.update()).catch(() => {});
+      // v20.2 — FIX iOS "gioco vecchio": il cache-first serviva la copia in cache e l'aggiornamento
+      // arrivava solo con una SECONDA ricarica manuale (che su iPhone non fa nessuno). Quando il
+      // nuovo SW prende il controllo (release nuova, skipWaiting+claim), UNA ricarica automatica
+      // entro i primi 30s — dopo, niente: non si butta via una partita in corso per un update.
+      const aveaControllo = !!navigator.serviceWorker.controller;
+      let ricaricato = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (ricaricato || !aveaControllo || performance.now() > 30000) return;
+        ricaricato = true; location.reload();
+      });
+    }
   }
 } catch(e){}
 const ctx = cv.getContext('2d');
@@ -2973,7 +2985,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v20.1';    // §S-VFX: spell autentiche di Harry (Lumos oro, Patronus argento) dal pack CC0
+const GAME_VERSION = 'v20.2';    // FIX iOS: auto-reload quando il nuovo service worker prende il controllo
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
