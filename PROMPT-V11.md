@@ -159,7 +159,18 @@ esiste su touch — il preferito da telefono passa SOLO dal pad/tastiera
 - ESAME: da pad e da touch, raggiungere QUALSIASI personaggio in <5 secondi;
   vincolo 6 (tutto navigabile da pad); niente regressioni online ('hello' invariato).
 
-### ☐ R7 — DEBITO & DIETA ASSET (prima di S-GRAFICA, obbligatoria)
+### ☑ R7 — DEBITO & DIETA ✅ FATTA (v21.6, commit 3ce8c0c)
+Potati SPELLS/castSpell e SUPER_OF/activateSuper (103 righe, call-site zero
+verificati; updateSupers è VIVO, non farsi ingannare dal nome). Dieta: il
+magazzino è la RIGA 22 (JSON 1.6MB) — quantizzati 23 asset (FASTOCTREE 128 +
+alpha binaria, solo risparmi >8%): 2.58→2.27MB. TETTO 3MB dichiarato: margine
+~0.7MB per S-GRAFICA. Verifica visiva passata (cast + sfondi dipinti).
+E PRIMA, fuori roadmap: HOGWARTS AL COMPLETO v21.5 — Ron/Hermione/TU-SAI-CHI
+giocabili (44 totali) dal fan-sheet mudkat101 approvato (walk 2 frame fabbricato,
+bacchetta disegnata; kit onesti: Accio=pull, Petrificus=trap, Marchio=mark,
+AVADA=beam verde; +3 combo). Residuo HP chiuso.
+--- testo originale (riferimento): ---
+### (era) R7 — DEBITO & DIETA ASSET (prima di S-GRAFICA, obbligatoria)
 - POTATURA: castSpell / activateSuper / ability-'ab' orfane — grep dei call-site
   PRIMA (devono essere zero), poi via. SPELLS registry: assorbito nei kit, via.
 - DIETA: script che stampa il peso per chiave di HAWK_ASSETS → quantizza i top-10
