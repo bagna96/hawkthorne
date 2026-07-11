@@ -2,12 +2,17 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hawkthorne">
+<meta name="theme-color" content="#0e0c2a">
 <title>Community 3×20 — Journey to the Center of Hawkthorne</title>
 <style>
   html,body{margin:0;padding:0;background:#000;height:100%;overflow:hidden}
   body{display:flex;align-items:center;justify-content:center}
   /* il canvas riempie lo schermo mantenendo il 16:9; la nitidezza la gestisce il backing store HD */
-  canvas{width:min(100vw,177.78vh);height:min(100vh,56.25vw);background:#000}
+  canvas{width:min(100vw,177.78vh);height:min(100vh,56.25vw);background:#000;touch-action:none}
 </style>
 </head>
 <body>
@@ -26,6 +31,16 @@ window.HAWK_ASSETS = {"en_betafish": "data:image/png;base64,iVBORw0KGgoAAAANSUhE
 // ============================================================
 
 const cv = document.getElementById('game');
+// v18 (S9): PWA — solo su https (Pages): manifest dinamico + service worker per l'offline.
+// Da file:// non tocca niente (zero errori console, regola 3).
+try {
+  if (location.protocol === 'https:'){
+    const lnk = document.createElement('link');
+    lnk.rel = 'manifest'; lnk.href = 'manifest.webmanifest';
+    document.head.appendChild(lnk);
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+} catch(e){}
 const ctx = cv.getContext('2d');
 const W = 960, H = 540, TS = 32, F = 48;
 // HD-2D: backing store a risoluzione doppia, coordinate logiche invariate (960×540)
@@ -320,6 +335,71 @@ window.addEventListener('keydown', e => {
   initAudio();
 });
 window.addEventListener('keyup', e => { keys[e.code] = false; });
+// ------------------------------------------------ TOUCH (v18, S9): iPhone/iPad
+// Pulsanti virtuali multi-touch mappati sui tasti P1: compaiono al PRIMO tocco.
+// ▲ = salto/nav-su, ✕ = salto/OK: gli stessi codici funzionano in gioco E nei menu.
+let touchUI = false;
+const TOUCH_BTNS = [
+  { x:  56, y: 466, r: 38, code:'ArrowLeft',  g:'◀' },
+  { x: 162, y: 466, r: 38, code:'ArrowRight', g:'▶' },
+  { x: 109, y: 392, r: 30, code:'ArrowUp',    g:'▲' },
+  { x: 109, y: 510, r: 26, code:'ArrowDown',  g:'▼' },
+  { x: 878, y: 496, r: 36, code:'Space',      g:'✕' },
+  { x: 798, y: 452, r: 30, code:'KeyX',       g:'▢' },
+  { x: 874, y: 396, r: 28, code:'KeyC',       g:'△' },
+  { x: 928, y: 442, r: 26, code:'ShiftLeft',  g:'◯' },
+  { x: 706, y: 500, r: 25, code:'KeyQ',       g:'L1' },
+  { x: 700, y: 424, r: 25, code:'KeyR',       g:'R2' },
+  { x: 700, y: 350, r: 21, code:'Tab',        g:'⇄' },
+  { x: 930, y:  26, r: 18, code:'KeyP',       g:'❚❚' },
+];
+const touchHeld = {};   // touch.identifier -> code premuto
+function touchXY(t){
+  const r = cv.getBoundingClientRect();
+  return [(t.clientX - r.left) * (W / r.width), (t.clientY - r.top) * (H / r.height)];
+}
+function touchBtnAt(x, y){
+  let best = null;
+  for (const b of TOUCH_BTNS){
+    const d = Math.hypot(x - b.x, y - b.y);
+    if (d < b.r + 16 && (!best || d < best.d)) best = { b, d };
+  }
+  return best && best.b;
+}
+function touchPress(id, code){
+  if (touchHeld[id] === code) return;
+  if (touchHeld[id]) keys[touchHeld[id]] = false;
+  touchHeld[id] = code;
+  if (code){ if (!keys[code]) justPressed[code] = true; keys[code] = true; }
+}
+cv.addEventListener('touchstart', ev => {
+  ev.preventDefault(); touchUI = true; initAudio();
+  for (const t of ev.changedTouches){ const [x, y] = touchXY(t); touchPress(t.identifier, (touchBtnAt(x, y) || {}).code); }
+}, { passive: false });
+cv.addEventListener('touchmove', ev => {
+  ev.preventDefault();
+  for (const t of ev.changedTouches){ const [x, y] = touchXY(t); touchPress(t.identifier, (touchBtnAt(x, y) || {}).code); }
+}, { passive: false });
+for (const evn of ['touchend', 'touchcancel'])
+  cv.addEventListener(evn, ev => {
+    ev.preventDefault();
+    for (const t of ev.changedTouches){ if (touchHeld[t.identifier]) keys[touchHeld[t.identifier]] = false; delete touchHeld[t.identifier]; }
+  }, { passive: false });
+function drawTouchUI(){
+  if (!touchUI) return;
+  ctx.save();
+  ctx.font = 'bold 20px "Courier New", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const b of TOUCH_BTNS){
+    const on = keys[b.code];
+    ctx.fillStyle = on ? 'rgba(245,212,66,0.30)' : 'rgba(255,255,255,0.08)';
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = on ? 'rgba(245,212,66,0.8)' : 'rgba(255,255,255,0.28)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = on ? '#f5d442' : 'rgba(255,255,255,0.6)';
+    ctx.fillText(b.g, b.x, b.y + 1);
+  }
+  ctx.restore(); ctx.textBaseline = 'alphabetic';
+}
 function jp(code){ return !!justPressed[code]; }
 function anyDown(list){ return list.some(k => keys[k]); }
 function anyJP(list){ return list.some(k => justPressed[k]); }
@@ -2142,7 +2222,7 @@ const LEVELS = [
 "                                        ",
 "                                        ",
 "                                        ",
-"   P        M      G       C       X 7  ",
+"   P   j    M      G       C       X 7  ",
 "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 ]},
@@ -2513,7 +2593,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v17.0';    // S8: combo super co-op, LIV supremi, boss rush, achievement, incubi Hades, slot
+const GAME_VERSION = 'v18.0';    // S9: touch iPhone/iPad + PWA offline, netcode heartbeat, cartello fast travel, endless online
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -2749,6 +2829,8 @@ function joinP2(){
 // ------------------------------------------------ CARICAMENTO LIVELLO
 function loadLevel(i){
   const def = (typeof i === 'object') ? i : LEVELS[i];
+  // v18: memoria del progresso — il cartello del hub sblocca i mondi già raggiunti
+  if (typeof i === 'number' && i > 0 && i < LEVELS.length && !endless && i > (SAVE.maxLvl || 0)){ SAVE.maxLvl = i; saveGame(); }
   lvlIdx = (typeof i === 'object') ? -1 : i;   // -1: livello generato, fuori campagna
   net.tileLog = []; net.tileSent = 0;
   const wMax = Math.max(...def.rows.map(r => r.length));
@@ -3192,6 +3274,7 @@ function pullLever(tx, ty, p){
 // ---------------- MINI-GUIDE: hint-on-approach una-tantum, voce Abed (invisible tutorial) ----------------
 const GUIDE = {
   konoha: 'ABED: benvenuto nel crossover. Sconfiggi ZABUZA in fondo al bosco e i ninja diventano GIOCABILI. Canone? No. Fantastico? Sì.',
+  cartello: 'ABED: il cartello delle destinazioni. GIÙ e scegli il mondo: il fast travel è canone dal 1986.',
   sottosopra: 'ABED: il Sottosopra. Due stanze: il DEMOGORGONE fa da buttafuori, VECNA da padrone di casa. Battili entrambi e UNDICI e HOPPER si uniscono al cast.',
   fuffi:  'ABED: cane a tre teste. Nei film si addormenta con la musica, ma la nostra è procedurale: picchia forte e schiva i balzi.',
   moves:  'ABED: hai doppio salto, SCATTO (Shift/R1, invulnerabile) e rimbalzo sui muri.',
@@ -3604,6 +3687,10 @@ function updateOnePlayer(p, atkBoxes){
         { who:'narr', text:'Dietro la sezione manga della biblioteca: un torii rosso. Targhetta del Dean: "SCAMBIO CULTURALE (non vincolante)".' },
         { who:'abed', text:'Due franchise dentro un fan-game di un terzo franchise. Inception legale. Entro per primo.' },
       ], () => { loadLevel(KONOHA_DEF); state = 'play'; showToast(lvl.name); showGuide('konoha'); });
+    }
+    else if (c === 'j'){   // CARTELLO delle destinazioni (hub): GIÙ per il fast travel
+      if (pDown(p, 'down') && (p.onGround || p.coyote > 0)){ state = 'lvlsel'; lvlSelIdx = 0; sfx('text'); }
+      else showGuide('cartello');
     }
     else if (c === 'ψ'){   // la CREPA nelle Caverne: pulsa, respira, e dentro è tutto capovolto
       startCut([
@@ -5058,6 +5145,13 @@ function drawTiles(){
         ctx.fillText('葉', x + 16, y + 21); ctx.textAlign = 'left';
         addLight(x + 16, y + 16, 55, [255, 120, 80], 0.28);
         break; }
+      case 'j': {   // CARTELLO di legno con le frecce (fast travel, v18)
+        ctx.fillStyle = '#6b4a2e'; ctx.fillRect(x + 14, y + 6, 5, 26);
+        ctx.fillStyle = '#8a6a3a';
+        ctx.fillRect(x + 2, y + 4, 24, 8); ctx.fillRect(x + 6, y + 15, 24, 8);
+        ctx.fillStyle = '#3a2412'; ctx.font = 'bold 8px "Courier New", monospace';
+        ctx.fillText('M1→', x + 6, y + 11); ctx.fillText('←M' + Math.min(8, SAVE.finished ? 8 : (SAVE.maxLvl || 1)), x + 9, y + 22);
+        break; }
       case 'ψ': {   // la CREPA del Sottosopra: carne vegetale luminescente (v16)
         const puls = 0.6 + Math.sin(frame * 0.06 + tx) * 0.3;
         ctx.fillStyle = '#2a0d14'; ctx.beginPath();
@@ -5824,6 +5918,26 @@ function drawAch(){
   if (achScroll + 14 < ACHIEVEMENTS.length) text('▼', W/2, H - 30, 12, '#f5d442', 'center');
   text('✕/INVIO torna al titolo', W/2, H - 12, 12, 'rgba(255,255,255,0.5)', 'center');
 }
+// v18 (S9): SELETTORE LIVELLO dal cartello del hub
+let lvlSelIdx = 0;
+function lvlSelItems(){
+  const maxL = SAVE.finished ? 8 : Math.min(8, SAVE.maxLvl || 1);
+  const it = [];
+  for (let i = 1; i <= maxL; i++)
+    it.push({ label: LEVELS[i].name, act(){ loadLevel(i); state = 'play'; showToast(lvl.name); sfx('coin'); } });
+  it.push({ label:'RESTA NELLA SALA D\'ATTESA', act(){ state = 'play'; sfx('text'); } });
+  return it;
+}
+function updateLvlSel(){
+  const items = lvlSelItems();
+  if (jp('ArrowUp') || jp('KeyW') || gpJP(0,'jump'))  { lvlSelIdx = (lvlSelIdx + items.length - 1) % items.length; sfx('text'); }
+  if (jp('ArrowDown') || jp('KeyS') || gpJP(0,'down')){ lvlSelIdx = (lvlSelIdx + 1) % items.length; sfx('text'); }
+  if (jp('Enter') || jp('Space') || gpJP(0,'ok')) items[lvlSelIdx].act();
+  if (jp('Escape') || jp('KeyX') || gpJP(0,'atk')){ state = 'play'; sfx('text'); }
+}
+function drawLvlSel(){
+  drawMenuList('DOVE ANDIAMO?', 'Il cartello conosce solo i mondi che hai già calpestato.', lvlSelItems(), lvlSelIdx, '#5ae87a');
+}
 function incubiItems(){
   const it = INCUBI.map(m => ({
     label: ((SAVE.incubi || {})[m.id] ? '☠ ' : '· ') + m.nome + ' — ' + m.desc,
@@ -6179,8 +6293,17 @@ async function netSetup(role){
     if (role === 'guest'){ state = 'select'; showToast('CONNESSO! Scegli il personaggio.'); }
     else showToast('OSPITE CONNESSO!');
   };
+  net.pc.onconnectionstatechange = () => {   // v18: la linea cade? Lo diciamo subito, senza drammi
+    const st = net.pc && net.pc.connectionState;
+    if (st === 'failed' || st === 'disconnected' || st === 'closed'){
+      if (net.open) showToast('📡 Linea caduta (' + st + '). Si continua in locale.');
+      netDrop();
+    }
+  };
   const onMsg = ev => {
     let m; try { m = JSON.parse(ev.data); } catch(e){ return; }
+    net.lastMsg = performance.now();   // v18: qualsiasi messaggio è un battito
+    if (m.t === 'hb'){ return; }
     if (m.t === 'in'){ netIn.prev = netIn.cur; netIn.cur = m.b; }
     else if (m.t === 'hello'){ net.hello = m; }
     else if (m.t === 'st'){ net.snap = m.s; }
@@ -6199,7 +6322,8 @@ async function netSetup(role){
     await net.pc.setLocalDescription(offer);
     await iceDone();
     const code = btoa(JSON.stringify(net.pc.localDescription));
-    prompt('CODICE 1 — copialo e mandalo all\'amico (che sceglie UNISCITI):', code);
+    try { if (navigator.clipboard) navigator.clipboard.writeText(code); } catch(e){}   // v18: COPIA CODICE automatica
+    prompt('CODICE 1 — già copiato negli appunti (se il browser lo permette). Mandalo all\'amico:', code);
     const ans = prompt('Ora incolla qui il CODICE 2 che ti manda l\'amico:');
     if (ans){ try { await net.pc.setRemoteDescription(JSON.parse(atob(ans.trim()))); } catch(e){ alert('Codice non valido.'); netDrop(); } }
     else netDrop();
@@ -6216,7 +6340,9 @@ async function netSetup(role){
       const answer = await net.pc.createAnswer();
       await net.pc.setLocalDescription(answer);
       await iceDone();
-      prompt('CODICE 2 — copialo e rimandalo all\'host:', btoa(JSON.stringify(net.pc.localDescription)));
+      const code2 = btoa(JSON.stringify(net.pc.localDescription));
+      try { if (navigator.clipboard) navigator.clipboard.writeText(code2); } catch(e){}   // v18: COPIA CODICE
+      prompt('CODICE 2 — già copiato negli appunti (se il browser lo permette). Rimandalo all\'host:', code2);
     } catch(e){ alert('Codice non valido.'); netDrop(); }
   }
   function iceDone(){
@@ -6250,6 +6376,7 @@ function hostSnapshot(){
     bo: boss && !boss.dead ? [Math.round(boss.x), Math.round(boss.y), boss.hp, boss.maxhp, boss.mode, boss.hurtT] : null,
     ri: rival && !rival.defeated ? [Math.round(rival.x), Math.round(rival.y), rival.face, rival.hp, Math.abs(rival.vx) > 0.3 ? 'walk' : 'idle', Math.round(rival.anim)] : null,
     mb: mboss && !mboss.dead ? [Math.round(mboss.x), Math.round(mboss.y), mboss.hp, mboss.maxhp, Math.round(mboss.anim), mboss.intro ? 1 : 0, mboss.mk || 'Q'] : null,
+    gd: endless ? [endless.seed, endless.depth] : null,   // v18: ENDLESS ONLINE — l'ospite rigenera dallo stesso seme
     td: net.tileLog.slice(net.tileSent),
     hud: { w: SAVE.wallet, c: cristalli, lg: lavagun, nm: lvl.name, tst: toast ? toast.text : null, cb: combo.n, ally: gilbertAlly && lvl.def.boss },
     mn: menu ? { sel: menu.sel, items: menu.items.map(it => ({ n: it.name, c: menuCost(it) })) } : null,
@@ -6276,7 +6403,13 @@ function updateGuest(){
   netSend({ t:'in', b: netEncodeInput() });
   const s = net.snap;
   if (!s) return;
-  if (s.lv !== lvlIdx || !lvl){ loadLevel(s.lv); players = []; }
+  if (s.gd){   // v18: endless online — stesso seme+profondità = stessa mappa, generata in locale
+    if (!net.gd || net.gd[0] !== s.gd[0] || net.gd[1] !== s.gd[1]){
+      net.gd = s.gd;
+      loadLevel(genLevel(s.gd[0], s.gd[1])); players = [];
+    }
+  }
+  else if (s.lv !== lvlIdx || !lvl){ net.gd = null; loadLevel(s.lv); players = []; }
   for (const d of s.td) lvl.rows[d[1]][d[0]] = d[2];
   s.td = [];
   cam.x = s.cx; cam.y = s.cy;
@@ -6428,6 +6561,14 @@ function update(){
   }
   if (net.role === 'host') updateHostNet();
   if (net.role === 'guest' && (state === 'guestplay')) updateGuest();
+  // v18: HEARTBEAT — battito ogni 2s da entrambi i lati; 8s di silenzio = linea persa
+  if (net.open){
+    if (frame % 120 === 0) netSend({ t:'hb' });
+    if (net.lastMsg && performance.now() - net.lastMsg > 8000){
+      showToast('📡 Connessione persa: nessun battito da 8 secondi.');
+      netDrop();
+    }
+  }
   switch(state){
     case 'tv':
       if (!ready()) break;
@@ -6489,6 +6630,7 @@ function update(){
     case 'options': updateOptions(); break;
     case 'ach': updateAch(); break;
     case 'incubi': updateIncubi(); break;
+    case 'lvlsel': updateLvlSel(); break;
     case 'cheats': updateCheats(); break;
     case 'abilities': updateAbilities(); break;
     case 'cut': updateCut(); break;
@@ -6524,6 +6666,7 @@ function draw(){
     case 'options': drawOptions(); break;
     case 'ach': drawAch(); break;
     case 'incubi': drawIncubi(); break;
+    case 'lvlsel': drawLvlSel(); break;
     case 'cheats': drawCheats(); break;
     case 'abilities': drawAbilities(); break;
     case 'cut':    drawCut(); break;
@@ -6535,6 +6678,7 @@ function draw(){
     case 'win':    drawWin(); break;
   }
   if (state !== 'tv') drawCRT();
+  drawTouchUI();   // v18: i comandi touch stanno sopra tutto (CRT compreso: sono UI, non gioco)
 }
 
 let last = 0, acc = 0;

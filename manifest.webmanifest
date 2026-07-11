@@ -1,0 +1,15 @@
+{
+  "name": "Community 3×20 — Journey to the Center of Hawkthorne",
+  "short_name": "Hawkthorne",
+  "description": "Fan-game tributo a Community S3E20. 27 giocabili, 4 atti, un multiverso che perde i pezzi.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0e0c2a",
+  "theme_color": "#0e0c2a",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
