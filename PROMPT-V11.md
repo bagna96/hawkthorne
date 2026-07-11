@@ -171,7 +171,18 @@ Tutte e 4 le richieste approvate dall'utente:
 - ESAME: un giocatore NUOVO capisce dove si trova in ogni istante? Ogni porta
   dichiara la destinazione? Il ritorno dal bonus ti ri-ancora (banner)?
 
-### ☐ R9 — VERTICALITÀ E SAGOME (feedback utente: "il mondo sembra piatto…
+### ☑ R9 — VERTICALITÀ E SAGOME ✅ FATTA (v21.0, commit a9747a6)
+Cantine M1+M3 (underfill+cave in tools_build_maps, griglie a 23 righe, pozzo
+d'uscita 4 col con 3 molle); molla -17.5 + ginLeapT (prima il taglio la castrava);
+runt ×0.72 / brute ×1.38 (hitbox+sprite, velocità inversa); mboss +20% visivo;
+pesante per arma: slam (smash), 360° (arco), combo 1-2 (pugni). Bot M1/M3 passano.
+PASS RECENSORE: molla debole (buffata, misurata), pozzo stretto (allargato),
+e BUG PRE-ESISTENTE dal v13: atkT>12 (mazza) = frame anim negativi = crash draw
+a ogni fendente — clampato in drawActor. RESIDUO: strato per M5 (lava, serve idea
+diversa: grotta di ossidiana?); M2 chiome e M4 gin già verticali di loro.
+LEZIONE: bot con skip-cut NEL loop; occhio allo stato 'perk' che assorbe input.
+--- testo originale (riferimento): ---
+### (era) R9 — VERTICALITÀ E SAGOME (feedback utente: "il mondo sembra piatto…
 ### non si può andare sotto o sopra"; "nemici e personaggi tutti grandi uguali")
 - SOTTOSUOLO/SOPRA nei mondi 1-5 via tools_build_maps.py: ogni mondo guadagna
   UNO strato extra — caverna sotterranea (ingresso-buco + risalita, tesoro/
