@@ -4,8 +4,8 @@
 > Leggi PRIMA le memorie `hawkthorne-assets`, `fan-content-fidelity` e
 > `game-feel-expectations` (gusti dell'utente: juice + roguelite, PS5).
 
-## CONTESTO (stato v16.0 — Sessioni 1-7 + kit LoL + ridisegno livelli +
-## S-OSPITI (HP/Naruto) + STRANGER THINGS/caos/tile Hogwarts)
+## CONTESTO (stato v17.0 — Sessioni 1-8 + S-OSPITI + STRANGER THINGS/
+## caos/tile Hogwarts + S8 sistemi e polish)
 Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
 "Digital Estate Planning". Live: https://bagna96.github.io/hawkthorne/
 (repo `bagna96/hawkthorne`, branch main, GitHub Pages).
@@ -195,6 +195,21 @@ Progetto `~/hawkthorne`: platformer 8-bit tributo a Community S3E20
   i muri GBA veri di Hogwarts (g_hogtiles da hp_hallways, bordi rattoppati
   via builder). Luce automatica sul mboss nei livelli dark. Strip pesanti:
   quantizzazione FASTOCTREE+alpha binaria nel builder (37KB→4KB).
+- **V17.0 (S8 ✅ tutti gli 8 punti)**: COMBO_SUPERS (2 supremi entro 90f
+  in co-op = attacco combinato; chiave = id ordinati '+', fallback
+  _default; Troy+Abed SPARANO LAVA); LIVELLI supremo I→III ogni 5 usi
+  (SAVE.ultUses, castUlt scala dmg/r/t/n, numerale nel banner, ach
+  super3); BOSS RUSH dal titolo post-game (RUSH_SEQ 10 mini-boss in
+  arena RUSH_DEF def.rush, cuore di cortesia tra i capi, cronometro,
+  SAVE.rushBest, rushMode da azzerare anche in 'over'); pagina
+  ACHIEVEMENT (state 'ach', contatori progresso); TIMER SPEEDRUN
+  (opts().timer, HUD basso-destra, SAVE.speedBest al win); TRANSIZIONE
+  A IRIDE (wipeKind 3 al 70%, cerchio (1-k) sul player, kitsch al 30%);
+  MODIFICATORI INCUBO alla Hades (registro INCUBI, SAVE.incubi, effetti
+  in addWallet/loadLevel/startRun/updateRaid, +15% monete l'uno, menu
+  'incubi' dal titolo quando Incubo è ON); SLOT ×3 (hawk_slot, chiave
+  storica = slot 1) + ESPORTA/IMPORTA base64 via prompt. GOTCHA: award()
+  è muto con cheatDirty; le cut nei test si saltano con _hawk.next().
 - Debug: `.goto(n | 'konoha'|'cane'|'paint'|'sotto'|'vecna') .char(id) .step .tp .soul
   (azzera anche i cd) .super(=castUlt) .pow .kill .dmg .beatRival .p2
   .give .gems .boon .forge .incubo .next .fakeGuest .reset .info(+mboss/
@@ -296,10 +311,10 @@ Side-quest ancora aperte (registro QUESTS, atto 0): Annie's Boobs riporta
   altre 8 celle pronte); (3) sprite ambiente hi-res (arredi dai tileset
   Hogwarts, lampioni, alberi); (4) VFX con più frame e glow; (5) sprite
   ambiente a 2× nativo per l'HD interno già attivo.
-- **S8 — Sistemi e polish**: combo super co-op (matrice COMBO_SUPERS,
-  Troy+Abed="SPARANO LAVA"), livelli super (I→III ogni 5 usi), boss rush,
-  pagina achievement al titolo, speedrun timer, transizioni a cerchio
-  retro, Incubo con modificatori alla Hades, slot save + export/import.
+- **S8 ✅ COMPLETATA (v17.0)** — tutti gli 8 punti consegnati (dettagli
+  in CONTESTO V17.0). Residui possibili: più coppie nella matrice
+  COMBO_SUPERS (ne esistono 6 + fallback); boss rush con Cornelius
+  finale (ora solo i 10 mini-boss); classifica speedrun per personaggio.
 - **S9 — Nice-to-have**: touch iPhone/iPad + PWA offline; netcode robusto
   (heartbeat, riconnessione, COPIA CODICE); selettore livello dal hub;
   endless online (sync seed).
