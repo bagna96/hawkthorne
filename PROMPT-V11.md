@@ -197,7 +197,16 @@ LEZIONE: bot con skip-cut NEL loop; occhio allo stato 'perk' che assorbe input.
 - ESAME: silhouette leggibili a colpo d'occhio; lo strato extra si trova
   senza guida?; il pesante di 3 armi diverse SI SENTE diverso.
 
-### ☐ R10 — ONBOARDING (feedback utente: "non c'è un'introduzione, non si
+### ☑ R10 — ONBOARDING ✅ FATTA (v21.1, commit 59ca28f)
+onboardingTick + 5 GUIDE (base/dodge/pow/ult/heavy, voce Abed, una-tantum):
+▢ al primo nemico, ◯ nel SUO momento (colpo subito o pericolo — la catena
+sequenziale bloccava tutto: lezione del Recensore), L1 a potere pronto, R1
+dopo 4 kill, spaziate 7.5s. itemCard sulle armi (nome + cosa fa il △ per
+tipo + hint cambio; assorbe il toast che la copriva). Obiettivo in PAUSA.
+DA FARE COL PROSSIMO UMANO NUOVO: il test dei 2 minuti (meccanica verificata,
+efficacia da giudicare dal vivo).
+--- testo originale (riferimento): ---
+### (era) R10 — ONBOARDING (feedback utente: "non c'è un'introduzione, non si
 ### capisce cosa fanno gli oggetti, quali sono gli attacchi, obiettivi poco chiari")
 - PRIMA PARTITA GUIDATA: nel mondo 1, i primi 60 secondi insegnano GIOCANDO:
   pannellini contestuali una-tantum al primo uso possibile (▢ quando appare
