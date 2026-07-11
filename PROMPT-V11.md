@@ -275,6 +275,19 @@ right-align/banner/cartelli clampati, dead code potato, GROTTA DI OSSIDIANA sott
 Perf con texture: 0.4ms/frame. LEZIONE (verify-before-flag): il claim M5-scavalcabile
 era sbagliato — leggere TUTTA la funzione prima di flaggare, il soffitto era alla riga sopra.
 
+## ☑ v22.0 — QR + AIRDROP + menu titolo (12 lug, richiesta utente)
+LINK D'INVITO: CODICE 1 = URL `#join=…` (pendingJoin al title-tick, hash ripulito con
+replaceState; ATTENZIONE test: navigare da index.html a index.html#join è SAME-DOCUMENT,
+serve query-buster per forzare il load). QR del link nel modal host (qrcode-generator MIT
+Kazuhiko Arase inlinata come 3° script, ~93 moduli a 700 char, createDataURL(3,4));
+INVIA… condivide {url} → AirDrop/WhatsApp; netUnpack accetta il link intero. HEARTBEAT
+A OROLOGIO (setInterval 2s, NON nel rAF: share sheet/tastiera iOS fermano il rAF durante
+lo scambio codici — era un drop garantito) + grazia lastMsg su visibilitychange.
+Menu titolo: spaziatura dinamica (9-11 voci sforavano: scritte tagliate, segnalate
+dall'utente), footer clampato, evidenziatore scalato. COLLAUDO E2E fra due tab COMPLETO:
+QR→auto-join→codici→connessione→P2 SPAWNATO in play (players [jeff,jeff]) — prima volta
+sul banco, merito del battito a orologio. Resta la prova su due iPhone veri.
+
 ## ☑ v21.9 — CO-OP DA IPHONE (12 lug, feedback utente: "per scegliere la modalità servono i numeri")
 Menu 'online' a CURSORE (onlineSel, stick/✕/▢ — i Digit1/2 restano da tastiera);
 codici corti 'HK2.' = deflate-raw via CompressionStream + base64url (~670 char vs ~1800,
