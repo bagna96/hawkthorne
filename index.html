@@ -1920,16 +1920,23 @@ for (const id in KIT_VFX){
   if (m.ult  && k.ult)  Object.assign(k.ult,  m.ult);
 }
 // ------------------------------------------------ CAVALCATURE (v13, dpad-su / E)
-const MOUNTS = [
-  { id:'scopa',    nome:'SCOPA DEL CUSTODE',  icona:'🧹', cost:250, spd:1.5,  glide:true,
-    desc:'"È per pulire." Plana e corre. Il custode non deve saperlo.' },
+const MOUNTS = [   // R11: una IDENTITÀ di movimento a testa (feedback: "la scopa non vola!")
+  { id:'scopa',    nome:'SCOPA DEL CUSTODE',  icona:'🧹', cost:250, spd:1.5,  fly:260,
+    desc:'"È per pulire." VOLA (tieni ✕ in aria). Il custode non deve saperlo.' },
   { id:'unicorno', nome:'UNICORNO DI PIERCE', icona:'🦄', cost:450, spd:1.75, ram:true,
     desc:'Rosa, offeso di esistere, velocissimo. In corsa travolge chiunque.' },
-  { id:'drago',    nome:'DRAGO DI FELTRO',    icona:'🐉', cost:700, spd:1.4,  fly:200,
-    desc:'Cugino del serpente di Chang. Vola per 3 secondi veri. Poi si vergogna.' },
+  { id:'drago',    nome:'DRAGO DI FELTRO',    icona:'🐉', cost:700, spd:1.4,  fly:380, firetrail:true,
+    desc:'VOLA a lungo e semina fuoco. Cugino del serpente di Chang, ma laureato.' },
+  { id:'rospo',    nome:'ROSPO DEL MONTE',    icona:'🐸', cost:400, spd:1.2,  jmul:1.5, slam:true,
+    desc:'Salta ALTISSIMO e atterra come un mutuo: onda d\'urto inclusa. Jiraiya approva.' },
+  { id:'carrello', nome:'CARRELLO DELLA MENSA', icona:'🛒', cost:350, spd:2.1, ram:true, jmul:0.8,
+    desc:'Velocità da denuncia, salto da carrello. Travolge. Le scale non sono d\'accordo.' },
+  { id:'scimmia',  nome:'ANNIE\'S BOOBS',     icona:'🐒', cost:550, spd:1.3,  magnet:220,
+    desc:'La scimmia di Troy RUBA PER TE: monete attratte da lontano. Legalmente sua.' },
 ];
 function ownedMounts(){ return MOUNTS.filter(m => SAVE.meta['mount_' + m.id]); }
 function mountDef(p){ return p.mount ? MOUNTS.find(m => m.id === p.mount) : null; }
+function jmulOf(p){ return (mountDef(p) || {}).jmul || 1; }   // R11: il rospo salta, il carrello no
 function cycleMount(p){
   const own = ownedMounts();
   if (!own.length){ showGuide('mount'); return; }
@@ -1968,6 +1975,29 @@ function drawMount(p){
     ctx.fillStyle = '#e85a5a'; ctx.fillRect(22, -12, 4, 3);
     ctx.fillStyle = '#f5d442';
     for (let k = 0; k < 3; k++) ctx.fillRect(-14 + k*9, -10, 3, 3);   // bottoni cuciti: È di feltro
+  } else if (m.id === 'rospo'){
+    ctx.fillStyle = '#4a9a4a'; rrect(-16, -10, 32, 18, 9); ctx.fill();
+    ctx.fillStyle = '#8ac88a'; rrect(-10, 0, 20, 8, 4); ctx.fill();          // pancia
+    ctx.fillStyle = '#fff'; ctx.fillRect(6, -14, 7, 7); ctx.fillRect(-4, -14, 7, 7);
+    ctx.fillStyle = '#1a1a24'; ctx.fillRect(9, -12, 3, 3); ctx.fillRect(-1, -12, 3, 3);
+    const zq = Math.floor(frame / 8) % 2 ? 2 : 0;
+    ctx.fillStyle = '#2e6a2e'; ctx.fillRect(-16, 6 + zq, 7, 4); ctx.fillRect(9, 6 - zq, 7, 4);   // zampotte
+  } else if (m.id === 'carrello'){
+    ctx.strokeStyle = '#b8c0cc'; ctx.lineWidth = 2;
+    ctx.strokeRect(-16, -12, 30, 14);
+    for (let k = -12; k <= 10; k += 6){ ctx.beginPath(); ctx.moveTo(k, -12); ctx.lineTo(k, 2); ctx.stroke(); }   // griglia
+    ctx.strokeStyle = '#8a92a0'; ctx.beginPath(); ctx.moveTo(14, -12); ctx.lineTo(22, -18); ctx.stroke();        // manico
+    const wr = (frame * 0.4) % 6.28;
+    for (const wxc of [-10, 8]){ ctx.fillStyle = '#3a3a44'; ctx.beginPath(); ctx.arc(wxc, 6, 4, 0, 6.28); ctx.fill();
+      ctx.strokeStyle = '#9aa'; ctx.beginPath(); ctx.moveTo(wxc, 6); ctx.lineTo(wxc + Math.cos(wr)*4, 6 + Math.sin(wr)*4); ctx.stroke(); }
+    if (Math.abs(p.vx) > 3 && frame % 3 === 0) parts.push({ x:p.x + p.w/2 - p.face*16, y:p.y + p.h, vx:-p.face*0.8, vy:-0.3, t:10, txt:'✧', sz:7, color:'#f5d442' });
+  } else if (m.id === 'scimmia'){
+    ctx.fillStyle = '#8a5a36'; rrect(-12, -10, 24, 16, 8); ctx.fill();
+    ctx.fillStyle = '#c89a6a'; rrect(-6, -4, 14, 9, 4); ctx.fill();          // muso
+    ctx.fillStyle = '#1a1a24'; ctx.fillRect(2, -6, 3, 3); ctx.fillRect(8, -6, 3, 3);
+    ctx.strokeStyle = '#8a5a36'; ctx.lineWidth = 3;                           // coda a ricciolo
+    ctx.beginPath(); ctx.arc(-16, -6, 6, 0.5, 3.6); ctx.stroke();
+    if (frame % 7 === 0) parts.push({ x:p.x + p.w/2 - p.face*14, y:p.y + p.h - 10, vx:0, vy:-0.5, t:12, txt:'¢', sz:8, color:'#f5d442' });
   }
   ctx.restore();
 }
@@ -2697,6 +2727,9 @@ const ABILITIES = [
   // — cavalcature (richiamale con E / dpad-su) —
   { id:'mount_scopa',    nome:'SCOPA DEL CUSTODE',  icona:'🧹', cost:250, desc:'"È per pulire." Corre +50% e PLANA. Il custode non deve saperlo.' },
   { id:'mount_unicorno', nome:'UNICORNO DI PIERCE', icona:'🦄', cost:450, desc:'Rosa, offeso, velocissimo (+75%). In corsa TRAVOLGE i nemici.' },
+  { id:'mount_rospo',    nome:'ROSPO DEL MONTE',    icona:'🐸', cost:400, desc:'Salto ×1.5 e SCHIANTO all\'atterraggio. Jiraiya approva, Naruto pure.' },
+  { id:'mount_carrello', nome:'CARRELLO DELLA MENSA', icona:'🛒', cost:350, desc:'Velocità ×2.1, travolge, salta male. Il pranzo è compreso? No.' },
+  { id:'mount_scimmia',  nome:'ANNIE\'S BOOBS',     icona:'🐒', cost:550, desc:'Magnete-monete vivente. Tecnicamente refurtiva. Moralmente tua.' },
   { id:'mount_drago',    nome:'DRAGO DI FELTRO',    icona:'🐉', cost:700, desc:'Cugino del serpente di Chang. VOLA per 3 secondi veri. Di feltro.' },
 ];
 let abilSel = 0;
@@ -3192,7 +3225,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v21.1';    // R10 ONBOARDING: i 4 tasti si imparano giocando, card COSA FA, obiettivo in pausa
+const GAME_VERSION = 'v21.2';    // R11 CAVALCATURE VERE: la scopa VOLA, 3 nuove (rospo/carrello/scimmia), identità per tutte
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -3915,6 +3948,7 @@ const GUIDE = {
   pow:    'ABED: L1 (Q) = il tuo POTERE. Si ricarica da solo, quindi usarlo non è mai un errore.',
   ult:    'ABED: R1 (R) = SUPREMO. Se lo tieni "per dopo", il dopo non arriva mai. Statistica, non filosofia.',
   heavy:  'ABED: △ (C) = ATTACCO PESANTE. Ogni arma lo fa a modo suo: la card ti dice come.',
+  inSella:'ABED: possiedi una CAVALCATURA. Croce SU (o E): monta. Assorbe un colpo e ha un talento suo.',
   bounce: 'ABED: una molla. Saltaci sopra e ti sparerà in alto.',
   secret: 'ABED: blocco incrinato = finto. Sfondalo con lo SCATTO e prendi il premio.',
   spesa:  'ABED: le Monete comprano abilità permanenti al NEGOZIO (dal titolo).',
@@ -4136,11 +4170,11 @@ function updateOnePlayer(p, atkBoxes){
   }
   if (!inGin && pJP(p,'jump')){
     if (p.wallDir){                                    // rimbalzo dal muro
-      p.vy = -p.cdef.jump; p.vx = -p.wallDir * p.cdef.speed * 1.5; p.face = -p.wallDir;
+      p.vy = -p.cdef.jump * jmulOf(p); p.vx = -p.wallDir * p.cdef.speed * 1.5; p.face = -p.wallDir;
       p.jumps = 1; p.jbuf = 0; sfx('jump'); burst(p.x + p.w/2, p.y + p.h/2, '#b8e8f0', 8, 2);
-    } else if (p.onGround || p.coyote > 0){ p.vy = -p.cdef.jump; p.jumps = 1; p.coyote = 0; p.jbuf = 0; sfx('jump'); }
+    } else if (p.onGround || p.coyote > 0){ p.vy = -p.cdef.jump * jmulOf(p); p.jumps = 1; p.coyote = 0; p.jbuf = 0; sfx('jump'); }
     else if (p.jumps < maxJumps){                      // doppio salto: più ALTO se sbloccato
-      p.vy = -p.cdef.jump * (hasAbil('djump') ? 1.02 : 0.92); p.jumps++; p.jbuf = 0; sfx('jump');
+      p.vy = -p.cdef.jump * jmulOf(p) * (hasAbil('djump') ? 1.02 : 0.92); p.jumps++; p.jbuf = 0; sfx('jump');
       burst(p.x + p.w/2, p.y + p.h, '#cccccc', 8, 1.8);
     }
   }
@@ -4195,7 +4229,9 @@ function updateOnePlayer(p, atkBoxes){
   const mdf = mountDef(p);
   if (flyMode){ p.vy = pDown(p,'jump') ? -4.5 : pDown(p,'down') ? 4.5 : 0; p.jumps = 0; p.airDashes = 0; }
   else if (mdf && mdf.fly && !p.onGround && pDown(p,'jump') && p.mountFuel > 0){
-    p.vy = Math.max(p.vy - 1.2, -3.4); p.mountFuel--;   // il drago di feltro vola. Per poco. Con dignità.
+    p.vy = Math.max(p.vy - 1.7, -4.6); p.mountFuel--;   // R11: il VOLO si sente (era una planata travestita)
+    if (mdf.firetrail && frame % 6 === 0)   // il drago semina fuoco: scia che morde
+      projs.push({ from:'player', owner:p, x:p.x + p.w/2 - p.face*14, y:p.y + p.h, w:8, h:8, vx:0, vy:2.2, t:34, fire:true, dmg:1 });
     if (frame % 4 === 0) parts.push({ x:p.x + p.w/2 - p.face*16, y:p.y + p.h, vx:-p.face, vy:0.8, t:12, ng:1, sz:2, color:'rgba(90,232,122,0.6)' });
   }
   if (mdf && mdf.fly && p.onGround) p.mountFuel = mdf.fly;
@@ -4215,8 +4251,15 @@ function updateOnePlayer(p, atkBoxes){
       for (let dx = -2; dx <= 2; dx++){ const tb = tileAt(btx+dx, bty); if (tb === 'k') breakCrate(btx+dx, bty, p); else if (tb === 'x') breakCursed(btx+dx, bty, p); }
       if (boss && !boss.dead && Math.abs(boss.x + 48 - p.x) < 110 && Math.abs(boss.y + 96 - p.y - p.h) < 60) hitBoss(1);
     } else {
-      if (p.jbuf > 0){ p.jbuf = 0; p.vy = -p.cdef.jump; p.jumps = 1; sfx('jump'); }  // salto bufferizzato
-      else if (p.preVy > 3) p.squashT = Math.min(9, 3 + Math.round(p.preVy * 0.5));  // schiacciamento
+      if (p.jbuf > 0){ p.jbuf = 0; p.vy = -p.cdef.jump * jmulOf(p); p.jumps = 1; sfx('jump'); }  // salto bufferizzato
+      else if (p.preVy > 3) p.squashT = Math.min(9, 3 + Math.round(p.preVy * 0.5));
+      const mS = mountDef(p);
+      if (mS && mS.slam && p.preVy > 7){   // R11: il rospo atterra come un mutuo
+        addShake(5); sfx('stomp');
+        for (const d2 of [-1, 1])
+          projs.push({ from:'player', owner:p, x:p.x + p.w/2, y:p.y + p.h - 10, w:14, h:10, vx:d2*5, vy:0, pierce:true, t:26, dmg:1 });
+        parts.push({ ring:true, x:p.x + p.w/2, y:p.y + p.h, r:12, vx:0, vy:0, t:12, color:'#5ae87a' });
+      }  // schiacciamento
       if (p.preVy > 4) burst(p.x + p.w/2, p.y + p.h, 'rgba(200,190,170,0.8)', Math.min(14, Math.round(p.preVy)), 1.8);
     }
   }
@@ -4511,6 +4554,7 @@ function onboardingTick(p){
   if (!seen.base){ if (enemies.some(e => e.hp > 0)) fire('base'); return; }
   if (!seen.pow){ if (p.powCd <= 0) fire('pow'); return; }
   if (!seen.ult){ if (p.ultCd <= 0 && killsRun >= 4) fire('ult'); return; }
+  if (!seen.inSella){ if (ownedMounts().length && !p.mount) fire('inSella'); return; }
 }
 function updatePlay(){
   onboardingTick(players[0]);
@@ -4606,7 +4650,7 @@ function updatePlay(){
       parts.push({ txt:'💬 ' + ['Bel tempo, per essere un videogioco.','Io lavoravo nell\'episodio di D&D.','Non calpestare le aiuole. Sono pagato per dirlo.','Sesta stagione quando?'][Math.floor(Math.random()*4)], x: g2.x + 20, y: g2.y - 26, vx: 0, vy: -0.15, t: 130, ng: 1, color:'#d8d8f0' });
   }
   // calamita: attira le monete vicine (boon della run o CALAMITA ETERNA comprata)
-  if ((boons.calamita || hasAbil('coinmagnet')) && frame % 4 === 0){
+  if ((boons.calamita || hasAbil('coinmagnet') || players.some(pm => (mountDef(pm) || {}).magnet)) && frame % 4 === 0){
     for (const p of alive){
       const ctx0 = Math.floor(p.x / TS) - 3, cty0 = Math.floor(p.y / TS) - 3;
       for (let ty = cty0; ty < cty0 + 7; ty++) for (let tx = ctx0; tx < ctx0 + 7; tx++)
