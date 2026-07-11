@@ -79,7 +79,18 @@ LIMITE loggato: il modal non è pad-only (serve tastiera/appunti di sistema:
 accettato). LEZIONE: su iOS ogni input DOM va a 16px, e la copia va testata
 col fallback — mai fidarsi del solo navigator.clipboard.
 
-### ☐ R4 — COMBATTIMENTO LEGGIBILE (espansa col feedback utente 11 lug sera:
+### ☑ R4 — COMBATTIMENTO LEGGIBILE ✅ FATTA (v20.8, commit b6ff1e4)
+Caos cap 0.35; eliteMod scudo/vendetta/campo con glifi 🛡💀📣 + barriera/alone
+visibili, spd 1.4→1.2; tiratori 22% (dado PRIMA dell'élite — il Recensore li ha
+trovati introvabili col dado dopo); ghost con wind-up lampeggiante; Re Ghianda
+lancia 2 ghiande ad arco a ogni atterraggio (cd 50f: senza, 56 projs misurati —
+gotcha 11 colpisce anche i mboss!); El Tigre ventaglio di 3 uscendo dallo stun.
+FINDING aperti: (a) ventaglio Tigre e lampeggio ghost verificati a codice, DA
+VEDERE giocando (mondo 6 / livelli dark); (b) assalti/imboscate non assegnano
+mod élite né tiratori (solo loadLevel+notte) — da estendere quando capita;
+(c) debug nuovi: nProjs/nShooters/cam in _hawk.info.
+--- testo originale della sessione (per riferimento): ---
+### (era) R4 — COMBATTIMENTO LEGGIBILE (espansa col feedback utente 11 lug sera:
 ### "i boss non sparano, i nemici fanno male solo al tocco — peccato")
 - CAOS: grep "0.12 + lvlIdx" → cap 0.35 (oggi 0.82 al mondo 7).
 - ÉLITE COMPORTAMENTALI: e.mod ∈ {scudo (immune dal FRONTE, colpiscila da
