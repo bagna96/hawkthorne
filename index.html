@@ -3284,7 +3284,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v21.3';    // R5 ROSTER: bunshin/cani/marionette VERI, orbite, marchio, ipnosi, +11 combo super
+const GAME_VERSION = 'v21.4';    // R6 SELECT: gruppi per serie, preferiti ☆, salto rapido Q/R, icone kit sulle card
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -6838,6 +6838,21 @@ function updateIncubi(){
 function drawIncubi(){
   drawMenuList('MODIFICATORI INCUBO', 'Ogni tormento attivo paga +15% monete. Alla Hades: soffri, ma con stipendio.', incubiItems(), incubiSel, '#e84a4a');
 }
+// R6 — LA BUSSOLA DEL ROSTER: gruppi per serie, preferiti in testa, salto rapido.
+function charGroup(c){
+  return c.needs === 'guestHP' ? 'HOGWARTS' : c.needs === 'guestKonoha' ? 'KONOHA' :
+         c.needs === 'guestST' ? 'HAWKINS' : 'GREENDALE';
+}
+const GROUP_ORDER = ['PREFERITI','GREENDALE','HOGWARTS','KONOHA','HAWKINS'];
+function selectOrder(){
+  const favs = SAVE.favs || {};
+  const idx = CHARS.map((c, i) => i);
+  return idx.sort((a, b) => {
+    const ga = favs[CHARS[a].id] ? 0 : GROUP_ORDER.indexOf(charGroup(CHARS[a]));
+    const gb = favs[CHARS[b].id] ? 0 : GROUP_ORDER.indexOf(charGroup(CHARS[b]));
+    return ga - gb || a - b;
+  });
+}
 function drawSelect(){
   ctx.fillStyle = '#0e0c2a'; ctx.fillRect(0, 0, W, H);
   text('SELEZIONA GIOCATORE 1', W/2, 44, 24, '#f5d442', 'center');
@@ -6846,19 +6861,25 @@ function drawSelect(){
   text('x ' + SAVE.wallet, 38, 43, 16, '#fff');
   // v19: il cast ha sfondato i 40 — la griglia SCORRE (finestra di 3 file, segue la selezione)
   const cols = 7, cw = 128, chh = 92, visRows = 3;
-  const totRows = Math.ceil(CHARS.length / cols);
-  const selRow = Math.floor(selIdx / cols);
+  const ord = selectOrder();
+  const selPos = Math.max(0, ord.indexOf(selIdx));
+  const totRows = Math.ceil(ord.length / cols);
+  const selRow = Math.floor(selPos / cols);
   const scrollRow = Math.max(0, Math.min(totRows - visRows, selRow - 1));
   const ox = W/2 - (cols * cw) / 2;
+  const gSel = (SAVE.favs || {})[CHARS[selIdx].id] ? '☆ PREFERITI' : charGroup(CHARS[selIdx]);
+  text('◄ Q   ' + gSel + '   R ►', W - 24, 44, 14, '#8ae8e8', 'right');   // R6: dove sei nel roster
   if (scrollRow > 0) text('▲', W/2, 84, 14, '#f5d442', 'center');
   if (scrollRow + visRows < totRows) text('▼  altri personaggi sotto', W/2, 88 + visRows * chh + 10, 12, '#f5d442', 'center');
-  for (let i = 0; i < CHARS.length; i++){
+  for (let pI = 0; pI < ord.length; pI++){
+    const i = ord[pI];
     const c = CHARS[i];
-    const col = i % cols, row = Math.floor(i / cols);
+    const col = pI % cols, row = Math.floor(pI / cols);
     if (row < scrollRow || row >= scrollRow + visRows) continue;
     const x = ox + col * cw + 10, y = 88 + (row - scrollRow) * chh;
     const sel = i === selIdx;
     const unlocked = isUnlocked(c);
+    if ((SAVE.favs || {})[c.id]) text('☆', x + cw - 32, y + 12, 12, '#f5d442', 'center');   // R6: stellina
     ctx.fillStyle = sel ? '#2a2a55' : '#181834';
     ctx.fillRect(x, y, cw - 20, chh - 12);
     if (sel){ ctx.strokeStyle = '#f5d442'; ctx.lineWidth = 2; ctx.strokeRect(x, y, cw - 20, chh - 12); }
@@ -6874,21 +6895,25 @@ function drawSelect(){
       }
     }
     text(shortName(c), x + (cw-20)/2, y + chh - 20, 11, sel ? '#fff' : '#8a8ab0', 'center');
+    if (unlocked){   // R6: il kit si legge dalla card (base·pow·ult)
+      const kkc = KITS[c.id] || KITS.jeff;
+      text(kkc.base.icona + ' ' + kkc.pow.icona + ' ' + kkc.ult.icona, x + (cw-20)/2, y + chh - 34, 9, 'rgba(255,255,255,0.8)', 'center');
+    }
   }
   const c = CHARS[selIdx];
   const unlocked = isUnlocked(c);
-  ctx.fillStyle = '#181834'; ctx.fillRect(W/2 - 350, H - 96, 700, 66);
-  ctx.strokeStyle = '#f5d442'; ctx.lineWidth = 2; ctx.strokeRect(W/2 - 350, H - 96, 700, 66);
-  text(c.name + '  —  ' + c.ability + '  ·  ❤ ' + c.hp + ' · vel ' + c.speed + ' · salto ' + c.jump, W/2, H - 72, 14, '#f5d442', 'center');
-  text(c.desc, W/2, H - 52, 13, '#fff', 'center');
+  ctx.fillStyle = '#181834'; ctx.fillRect(W/2 - 350, H - 108, 700, 82);
+  ctx.strokeStyle = '#f5d442'; ctx.lineWidth = 2; ctx.strokeRect(W/2 - 350, H - 108, 700, 82);
+  text(c.name + '  —  ' + c.ability + '  ·  ❤ ' + c.hp + ' · vel ' + c.speed + ' · salto ' + c.jump, W/2, H - 88, 14, '#f5d442', 'center');
+  text(c.desc, W/2, H - 70, 13, '#fff', 'center');
   const costumes = COSTUMES[c.id];
   let hint = unlocked ? 'INVIO gioca' : c.needs ? c.lockHint : (SAVE.wallet >= c.cost ? 'INVIO sblocca (' + c.cost + ' monete)' : 'Servono ' + c.cost + ' monete');
   if (unlocked && costumes) hint += ' · [C/◯] costume';
   if (SAVE.finished) hint += ' · [N/△] Incubo: ' + (nightmare ? 'SÌ ☠' : 'no');
-  text(hint, W/2, H - 38, 12, unlocked || SAVE.wallet >= c.cost ? '#5ae87a' : '#e84a4a', 'center');
+  text(hint + ' · [SHIFT/◯] ☆ preferito', W/2, H - 38, 12, unlocked || SAVE.wallet >= c.cost ? '#5ae87a' : '#e84a4a', 'center');
   { const kk = KITS[c.id] || KITS.jeff;
     text('KIT — ▢ ' + kk.base.nome + ' · L1 ' + kk.pow.icona + ' ' + kk.pow.nome + ' (' + kk.pow.cd + 's) · R1 ' + kk.ult.icona + ' ' + kk.ult.nome + ' (' + kk.ult.cd + 's)', W/2, H - 24, 11, '#8a6ae8', 'center');
-    text('TRATTO: ' + (TRAITS[c.id] || '—'), W/2, H - 52, 11, 'rgba(255,255,255,0.55)', 'center'); }
+    text('TRATTO: ' + (TRAITS[c.id] || '—'), W/2, H - 54, 11, 'rgba(255,255,255,0.55)', 'center'); }   // R6: non pesta più la desc
   if (selCostume) text('COSTUME: ' + selCostume.toUpperCase(), W/2, H - 8, 13, '#5ae8e8', 'center');
   if (selMsg) text(selMsg, W/2, H - 8, 13, '#e84a4a', 'center');
 }
@@ -7596,10 +7621,31 @@ function update(){
     case 'select': {
       selMsg = '';
       const cols = 7;
-      if (jp('ArrowRight') || jp('KeyD') || gpJP(0,'right')) { selIdx = (selIdx + 1) % CHARS.length; selCostume = null; sfx('text'); }
-      if (jp('ArrowLeft')  || jp('KeyA') || gpJP(0,'left'))  { selIdx = (selIdx + CHARS.length - 1) % CHARS.length; selCostume = null; sfx('text'); }
-      if (jp('ArrowDown')  || jp('KeyS') || gpJP(0,'down'))  { selIdx = Math.min(CHARS.length - 1, selIdx + cols); selCostume = null; sfx('text'); }
-      if (jp('ArrowUp')    || jp('KeyW')) { selIdx = Math.max(0, selIdx - cols); selCostume = null; sfx('text'); }
+      const ord = selectOrder();                       // R6: si naviga l'ORDINE, non l'indice grezzo
+      let pos = ord.indexOf(selIdx); if (pos < 0) pos = 0;
+      const mv = np => { pos = Math.max(0, Math.min(ord.length - 1, np)); selIdx = ord[pos]; selCostume = null; sfx('text'); };
+      if (jp('ArrowRight') || jp('KeyD') || gpJP(0,'right')) mv((pos + 1) % ord.length);
+      if (jp('ArrowLeft')  || jp('KeyA') || gpJP(0,'left'))  mv((pos + ord.length - 1) % ord.length);
+      if (jp('ArrowDown')  || jp('KeyS') || gpJP(0,'down'))  mv(pos + cols);
+      if (jp('ArrowUp')    || jp('KeyW')) mv(pos - cols);
+      if (jp('KeyQ') || jp('KeyR') || gpJP(0,'pow')){        // salto di GRUPPO (Q indietro, R/L1 avanti)
+        const dirG = jp('KeyQ') ? -1 : 1;
+        const gNow = (SAVE.favs || {})[CHARS[selIdx].id] ? 'PREFERITI' : charGroup(CHARS[selIdx]);
+        let np = pos;
+        for (let k = 1; k <= ord.length; k++){
+          const cand = (pos + dirG * k + ord.length * k) % ord.length;
+          const cc = CHARS[ord[cand]];
+          const gg = (SAVE.favs || {})[cc.id] ? 'PREFERITI' : charGroup(cc);
+          if (gg !== gNow){ np = cand; break; }
+        }
+        mv(np);
+      }
+      if (jp('ShiftLeft') || jp('ShiftRight') || gpJP(0,'roll')){   // ☆ preferito (resta selezionato)
+        SAVE.favs = SAVE.favs || {};
+        const cid = CHARS[selIdx].id;
+        if (SAVE.favs[cid]) delete SAVE.favs[cid]; else SAVE.favs[cid] = 1;
+        saveGame(); sfx('coin');
+      }
       if (jp('KeyC') || gpJP(0,'heavy')){
         const c = CHARS[selIdx];
         if (isUnlocked(c) && COSTUMES[c.id]){
