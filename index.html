@@ -2473,12 +2473,75 @@ function updateCheats(){
 function pauseItems(){
   return [
     { label:'RIPRENDI', act(){ state = 'play'; sfx('text'); } },
+    { label:'🗺 MAPPA DEL MONDO', act(){ state = 'wmap'; sfx('text'); } },
     { label:'COMANDI', act(){ state = 'help'; sfx('text'); } },
     { label:'OPZIONI', act(){ menuFrom = 'pause'; state = 'options'; optSel = 0; confirmReset = false; sfx('text'); } },
     { label:'TRUCCHI · IL CASSETTO DI PIERCE' + (cheatDirty ? ' ☠' : ''), act(){ menuFrom = 'pause'; state = 'cheats'; cheatSel = 0; sfx('organ'); } },
     { label: confirmQuit ? '⚠ SICURO? LA RUN FINISCE QUI (INVIO/✕)' : 'TORNA AL MENU PRINCIPALE',
       act(){ if (!confirmQuit){ confirmQuit = true; sfx('hurt'); return; } quitToTitle(); } },
   ];
+}
+// R8 — MAPPA DEL MONDO alla Super Mario World: nodi, linee, TU SEI QUI. I segreti
+// compaiono solo da SCOPERTI (SAVE.found). Data-driven: posizioni fisse su 960×540.
+const WMAP_POS = [ [100,430],[220,390],[340,430],[460,390],[580,430],[690,370],[620,260],[480,220],[330,270],[180,220] ];
+const WMAP_SECRETS = [
+  { id:'sotto',  nome:'IL SOTTOSOPRA',      x:780, y:300, host:5 },
+  { id:'paint',  nome:'PAINTBALL',          x:740, y:180, host:6 },
+  { id:'konoha', nome:'KONOHA',             x:400, y:120, host:7 },
+  { id:'cane',   nome:'CORRIDOIO VIETATO',  x:580, y:120, host:7 },
+];
+function wmapNodes(){
+  const maxL = SAVE.finished ? 8 : Math.min(8, SAVE.maxLvl || 1);
+  const found = SAVE.found || {};
+  const N = [];
+  for (let i = 0; i <= 9; i++){
+    const on = i === 0 || i <= maxL || (i === 9 && SAVE.finished);
+    if (i === 9 && !SAVE.finished) continue;   // il post-game non si spoilera
+    N.push({ lv:i, nome: LEVELS[i].name, x: WMAP_POS[i][0], y: WMAP_POS[i][1], on });
+  }
+  for (const sN of WMAP_SECRETS)   // un segreto compare solo se ANCHE il suo mondo è noto (niente spoiler)
+    if (found[sN.id] && (sN.host <= maxL)) N.push({ id:sN.id, nome:sN.nome, x:sN.x, y:sN.y, host:sN.host, on:true, secret:true });
+  return N;
+}
+function drawWorldMap(interactive, selLv){
+  ctx.fillStyle = '#0a0a1e'; ctx.fillRect(0, 0, W, H);
+  for (let k = 0; k < 40; k++){ ctx.fillStyle = 'rgba(255,255,255,' + (0.1 + (k % 3) * 0.1) + ')'; ctx.fillRect((k * 227) % W, (k * 131) % (H - 80), 2, 2); }
+  text('MAPPA DEL MONDO', W/2, 56, 30, '#f5d442', 'center');
+  const nodes = wmapNodes();
+  const byLv = {}; for (const n of nodes) if (n.lv !== undefined) byLv[n.lv] = n;
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 9; i++){   // il sentiero della campagna
+    const a = byLv[i], b = byLv[i + 1]; if (!a || !b) continue;
+    ctx.strokeStyle = b.on ? 'rgba(138,232,232,0.5)' : 'rgba(120,120,140,0.2)';
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  ctx.setLineDash([5, 5]);
+  for (const n of nodes) if (n.secret && byLv[n.host]){   // i segreti pendono dai loro mondi
+    ctx.strokeStyle = 'rgba(164,74,232,0.55)';
+    ctx.beginPath(); ctx.moveTo(byLv[n.host].x, byLv[n.host].y); ctx.lineTo(n.x, n.y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  const qui = lvlIdx >= 0 ? ('lv' + lvlIdx) : (lvl && lvl.def && lvl.def.mapId ? lvl.def.mapId : null);
+  for (const n of nodes){
+    const tag = n.lv !== undefined ? 'lv' + n.lv : n.id;
+    const isSel = interactive && n.lv === selLv;
+    ctx.beginPath();
+    if (n.secret){ ctx.fillStyle = '#a44ae8'; const r = 9; ctx.moveTo(n.x, n.y - r); ctx.lineTo(n.x + r, n.y); ctx.lineTo(n.x, n.y + r); ctx.lineTo(n.x - r, n.y); ctx.closePath(); }
+    else { ctx.fillStyle = n.on ? (n.lv === 0 ? '#f5d442' : '#5ae87a') : '#2c2c40'; ctx.arc(n.x, n.y, 12, 0, Math.PI * 2); }
+    ctx.fill();
+    ctx.strokeStyle = isSel ? '#f5d442' : 'rgba(255,255,255,0.5)'; ctx.lineWidth = isSel ? 3 : 1.5; ctx.stroke();
+    text(n.on || n.secret ? n.nome.replace(/^(MONDO \d+ · |LIVELLO SEGRETO · |MONDO BONUS · )/, '') : '???',
+      n.x, n.y + 28, isSel ? 13 : 10, n.on ? (isSel ? '#f5d442' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.35)', 'center');
+    if (!n.on && !n.secret) text('?', n.x, n.y + 5, 14, 'rgba(255,255,255,0.5)', 'center');
+    if (tag === qui){   // TU SEI QUI: lampeggia
+      if (Math.floor(frame / 20) % 2){ text('▼ TU SEI QUI', n.x, n.y - 22, 13, '#f5d442', 'center'); }
+      ctx.strokeStyle = '#f5d442'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(n.x, n.y, 17 + Math.sin(frame * 0.1) * 2, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  const quiN = wmapNodes().some(n => (n.lv !== undefined ? 'lv' + n.lv : n.id) === qui);
+  if (!quiN) text(endless ? '∞ SEI IN PARTITA INFINITA — fuori mappa' : '✦ SEI IN UN LUOGO FUORI MAPPA', W/2, 92, 14, '#8ae8e8', 'center');
+  text(interactive ? '◀ ▶ scegli · ✕/INVIO viaggia · ▢ indietro' : '✕/▢ indietro', W/2, H - 22, 13, 'rgba(255,255,255,0.6)', 'center');
 }
 function quitToTitle(){
   endless = null; menu = null; nightWave = null; cut = null; pendingCut = null;
@@ -2930,6 +2993,7 @@ const LEVELS = [
 ];
 // LIVELLO SEGRETO: il seminterrato del paintball (si entra dalla porta '8' di Greendale)
 const PAINT_DEF = {
+  mapId:'paint',
   name:'LIVELLO SEGRETO · PAINTBALL ASSASSIN', song:'village', sky:['#e85a9a','#f5c9e0'], paint:true, exitTo:6, givewpn:'paintball',
   spawn:{ e:'paintball_b', f:'bat' },
   rows:[
@@ -2952,6 +3016,7 @@ const PAINT_DEF = {
 // MONDO BONUS (S-OSPITI): il torii '@' alla Scuola porta a KONOHA — sfida ninja, Zabuza in fondo.
 // La porta X è bloccata finché il mini-boss vive: la sfida non si aggira. exitTo: si torna a scuola.
 const KONOHA_DEF = {
+  mapId:'konoha',
   name:'MONDO BONUS · KONOHA — LA SFIDA NINJA', song:'village', sky:['#7ec8e8','#eaf5d8'],
   bgImg:'g_konoha_bg', exitTo:7, spawn:{ e:'n_ninja', f:'n_corvo', y:'n_tigre' },
   rows:[
@@ -2970,6 +3035,7 @@ const KONOHA_DEF = {
 ]};
 // Dietro la porta '³' della Scuola: il corridoio vietato. Con l'inquilino canonico.
 const CANE_DEF = {
+  mapId:'cane',
   name:'IL CORRIDOIO DEL TERZO PIANO (VIETATO)', song:'school', sky:['#241a3e','#3a2a5e'],
   dark:true, tiles:'hog', exitTo:7, spawn:{ e:'gnomo', f:'doxy' },
   rows:[
@@ -3015,6 +3081,7 @@ function rushSpawn(){
 // SOTTOSOPRA (v16): la crepa 'ψ' nelle Caverne apre il gauntlet di Stranger Things.
 // Stanza 2 PRIMA della 1 (la 1 la referenzia in exitTo — loadLevel accetta anche def).
 const SOTTO2_DEF = {
+  mapId:'sotto',
   name:'LA TANA DI VECNA', song:'boss', sky:['#1a0508','#3a0f14'], dark:true,
   bgImg:'st_upside_far', bgImg2:'st_upside_near', exitTo:5, spawn:{ e:'demogrey', f:'demobat' },
   rows:[
@@ -3030,6 +3097,7 @@ const SOTTO2_DEF = {
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 ]};
 const SOTTOSOPRA_DEF = {
+  mapId:'sotto',
   name:'IL SOTTOSOPRA — LA CREPA DI HAWKINS', song:'cave', sky:['#160a10','#2a0d14'],
   bgImg:'st_upside_far', bgImg2:'st_upside_near', exitTo:SOTTO2_DEF, spawn:{ e:'demodog', f:'demobat', z:'demogrey' },
   rows:[
@@ -3098,7 +3166,7 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v20.8';    // R4: combattimento leggibile — élite con mod, tiratori, telegrafi, boss che sparano, caos 35%
+const GAME_VERSION = 'v20.9';    // R8 BUSSOLA: mappa del mondo, cartelli sulle porte, portale, minimappa ricca
 let titleT = 0, titleSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
@@ -3351,6 +3419,11 @@ function joinP2(){
 // ------------------------------------------------ CARICAMENTO LIVELLO
 function loadLevel(i){
   const def = (typeof i === 'object') ? i : LEVELS[i];
+  // R8 — la BUSSOLA: ricordo da dove vengo (per il banner "DI NUOVO A…") e scopro i luoghi
+  const daSegreto = lvl && lvl.def && lvl.def.mapId;
+  SAVE.found = SAVE.found || {};
+  if (def.mapId && !SAVE.found[def.mapId]){ SAVE.found[def.mapId] = true; saveGame(); }
+  if (i === 9 && !SAVE.found.dream){ SAVE.found.dream = true; saveGame(); }
   // v18: memoria del progresso — il cartello del hub sblocca i mondi già raggiunti
   if (typeof i === 'number' && i > 0 && i < LEVELS.length && !endless && i > (SAVE.maxLvl || 0)){ SAVE.maxLvl = i; saveGame(); }
   lvlIdx = (typeof i === 'object') ? -1 : i;   // -1: livello generato, fuori campagna
@@ -3456,14 +3529,16 @@ function loadLevel(i){
   spawnCritters();
   // 15%: transizione "PowerPoint" volutamente kitsch (estetica, non tocca il gameplay)
   // v17: la transizione c'è SEMPRE (retro come si deve): 70% iride a cerchio, 30% le kitsch storiche
-  if (!def.hub){ wipeT = 44; wipeKind = Math.random() < 0.7 ? 3 : Math.floor(Math.random() * 3); }
+  if (def.mapId || daSegreto){ wipeT = 44; wipeKind = 4; sfx('door'); }   // R8: il viaggio si SENTE (portale)
+  else if (!def.hub){ wipeT = 44; wipeKind = Math.random() < 0.7 ? 3 : Math.floor(Math.random() * 3); }
   // banner d'ingresso: dove sei, e SOPRATTUTTO cosa devi fare
   {
     const qHere = lvlIdx > 0 ? QUESTS.find(q => q.mondo === lvlIdx && !questDone(q.id)) : null;
     const ob = def.hub ? '🚪 Parla col cast, poi entra nella PORTA: inizia la campagna'
       : def.boss ? '👑 OBIETTIVO: detronizza CORNELIUS' :
         qHere ? '❖ OBIETTIVO: ' + qHere.nome : '🚪 OBIETTIVO: raggiungi la porta in fondo (e saccheggia tutto)';
-    lvlBanner = { t: 260, nome: def.name, ob };
+    const pre = def.mapId ? '✦ BENVENUTO — ' : daSegreto ? '↩ DI NUOVO A — ' : '';
+    lvlBanner = { t: 260, nome: pre + def.name, ob };
   }
   setSong(def.song);
 }
@@ -6274,6 +6349,7 @@ function drawMinimap(){
     else if (c === 'Z') dot(tx, ty, '#f5d442', 2);
     else if (c === 'x') dot(tx, ty, '#a44ae8', 2);
     else if (c === 'C' || c === 'c') dot(tx, ty, '#5ae87a', 1.5);
+    else if ('8ψ¾@³7'.includes(c) && c !== ' ') dot(tx, ty, '#e85ae8', 2.6);   // R8: le porte speciali si vedono
   }
   ctx.fillStyle = 'rgba(232,90,90,0.85)';
   for (const e of enemies) if (e.hp > 0) ctx.fillRect(ox + (e.x/TS)*sx, oy + (e.y/TS)*sy, 2, 2);
@@ -6530,15 +6606,18 @@ function lvlSelItems(){
   it.push({ label:'RESTA NELLA SALA D\'ATTESA', act(){ state = 'play'; sfx('text'); } });
   return it;
 }
-function updateLvlSel(){
+function updateLvlSel(){   // R8: il cartello del hub ORA È la mappa (frecce ◀▶ tra i mondi)
   const items = lvlSelItems();
-  if (jp('ArrowUp') || jp('KeyW') || gpJP(0,'jump'))  { lvlSelIdx = (lvlSelIdx + items.length - 1) % items.length; sfx('text'); }
-  if (jp('ArrowDown') || jp('KeyS') || gpJP(0,'down')){ lvlSelIdx = (lvlSelIdx + 1) % items.length; sfx('text'); }
+  if (jp('ArrowLeft') || jp('KeyA') || gpJP(0,'left') || jp('ArrowUp') || jp('KeyW'))  { lvlSelIdx = (lvlSelIdx + items.length - 1) % items.length; sfx('text'); }
+  if (jp('ArrowRight') || jp('KeyD') || gpJP(0,'right') || jp('ArrowDown') || jp('KeyS')){ lvlSelIdx = (lvlSelIdx + 1) % items.length; sfx('text'); }
   if (jp('Enter') || jp('Space') || gpJP(0,'ok')) items[lvlSelIdx].act();
   if (jp('Escape') || jp('KeyX') || gpJP(0,'atk')){ state = 'play'; sfx('text'); }
 }
 function drawLvlSel(){
-  drawMenuList('DOVE ANDIAMO?', 'Il cartello conosce solo i mondi che hai già calpestato.', lvlSelItems(), lvlSelIdx, '#5ae87a');
+  const items = lvlSelItems();
+  const selLv = lvlSelIdx < items.length - 1 ? lvlSelIdx + 1 : -1;   // l'ultima voce è "resta"
+  drawWorldMap(true, selLv);
+  text(items[lvlSelIdx].label, W/2, H - 48, 16, '#5ae87a', 'center');
 }
 function incubiItems(){
   const it = INCUBI.map(m => ({
@@ -6649,6 +6728,47 @@ function drawWin(){
   if (!SAVE.chars.gilbert && SAVE.finished) text('SBLOCCATO: GILBERT LAWSON giocabile!', W/2, 400, 14, '#5ae8e8', 'center');
   if (Math.floor(frame / 30) % 2 === 0) text('INVIO PER TORNARE AL TITOLO', W/2, 450, 16, '#5ae87a', 'center');
   text('Cool. Cool cool cool.', W/2, H - 20, 14, 'rgba(255,255,255,0.5)', 'center');
+}
+// R8 — CARTELLI SULLE PORTE: vicino a una porta/crepa/armadietto compare la destinazione.
+// I luoghi mai visitati restano "???" (la sorpresa si rispetta, il disorientamento no).
+function doorLabel(c){
+  const found = SAVE.found || {};
+  if (c === 'X'){
+    const ex = lvl.def.exitTo;
+    if (ex !== undefined && ex !== null) return '↩ ' + (typeof ex === 'object' ? ex.name : (LEVELS[ex] ? LEVELS[ex].name : 'RITORNO'));
+    if (lvlIdx >= 0 && lvlIdx < 9 && LEVELS[lvlIdx + 1]) return '→ ' + LEVELS[lvlIdx + 1].name;
+    return '→ USCITA';
+  }
+  if (c === '8') return found.paint  ? '→ PAINTBALL ASSASSIN' : '→ ??? (porta fuori posto)';
+  if (c === 'ψ') return found.sotto  ? '→ IL SOTTOSOPRA'      : '→ ??? (crepa che respira)';
+  if (c === '¾') return (SAVE.maxLvl || 0) >= 7 ? '→ SCUOLA DI MAGIA (premi GIÙ)' : '→ ??? (armadietto sospetto, GIÙ)';
+  if (c === '@') return found.konoha ? '→ KONOHA'             : '→ ??? (torii misterioso)';
+  if (c === '³') return found.cane   ? '→ CORRIDOIO VIETATO'  : '→ ??? (VIETATO. Quindi entra)';
+  if (c === '7') return found.dream  ? '→ DREAMATORIUM'       : '→ ??? (serve il finale)';
+  return null;
+}
+function drawDoorSigns(){
+  if (!players.length || !lvl) return;
+  const p = players[0];
+  const tx0 = Math.max(0, Math.floor(cam.x / TS) - 1), tx1 = Math.min(lvl.w, tx0 + Math.ceil(W / TS) + 3);
+  const ty0 = Math.max(0, Math.floor(cam.y / TS) - 1), ty1 = Math.min(lvl.h, ty0 + Math.ceil(H / TS) + 3);
+  for (let ty = ty0; ty < ty1; ty++) for (let tx = tx0; tx < tx1; tx++){
+    const c = lvl.rows[ty][tx];
+    if (!'Xψ¾@³78'.includes(c)) continue;
+    if (c === '8' && !lvl.def.campus) continue;   // il glifo 8 è una porta solo a Greendale
+    if (c === '7' && !lvl.def.hub) continue;      // e il 7 solo nel hub
+    if (ty > 0 && lvl.rows[ty - 1][tx] === c) continue;   // porte alte 3 tile: etichetta solo in cima
+    const wx = tx * TS + TS/2, wy = ty * TS;
+    if (Math.abs(p.x + p.w/2 - wx) > 120 || Math.abs(p.y + p.h/2 - wy) > 140) continue;
+    const lbl = doorLabel(c); if (!lbl) continue;
+    const bob = Math.sin(frame * 0.06) * 2;
+    const lx = wx - cam.x, ly = wy - 26 - cam.y + bob;
+    ctx.font = '12px "Courier New", monospace';
+    const tw = ctx.measureText(lbl).width;
+    ctx.fillStyle = 'rgba(8,8,20,0.85)'; ctx.fillRect(lx - tw/2 - 7, ly - 12, tw + 14, 18);
+    ctx.strokeStyle = 'rgba(245,212,66,0.6)'; ctx.lineWidth = 1; ctx.strokeRect(lx - tw/2 - 7, ly - 12, tw + 14, 18);
+    text(lbl, lx, ly + 1, 12, '#f5d442', 'center');
+  }
 }
 function drawPlayer(p){
   if (p.hp <= 0){
@@ -6837,6 +6957,7 @@ function drawPlay(){
     drawActor(sheetOf(p), 'idle', 0, p.x + p.w/2 - 24 - cam.x, p.y + p.h - 46 - cam.y, p.face, 1);
     ctx.restore(); ctx.globalAlpha = 1;
   }
+  drawDoorSigns();   // R8: ogni porta dichiara dove porta
   drawGhosts();   // scie del dash aereo: sbiadiscono SOTTO i player
   for (const p of players) drawPlayer(p);
   for (const p of players) if (p.boltT > 0) drawBolt(p.x + p.w/2 - cam.x, p.y - cam.y, 0.6);
@@ -6900,6 +7021,19 @@ function drawPlay(){
     } else if (wipeKind === 2){
       const nrow = 8, rh = H / nrow;
       for (let i = 0; i < nrow; i++) ctx.fillRect(0, i*rh, W, rh*k);
+    } else if (wipeKind === 4){
+      // R8 — PORTALE: anelli concentrici rotanti, il viaggio verso un ALTRO luogo si sente
+      ctx.save(); ctx.translate(W/2, H/2); ctx.rotate((1 - k) * 2.2);
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.rect(-W/2, -H/2, W, H);
+      const rP = k * 620;
+      ctx.arc(0, 0, Math.max(0, rP), 0, Math.PI * 2, true); ctx.fill('evenodd');
+      for (let i = 0; i < 3; i++){
+        ctx.strokeStyle = ['rgba(164,74,232,0.9)','rgba(138,232,232,0.7)','rgba(245,212,66,0.5)'][i];
+        ctx.lineWidth = 4 - i;
+        ctx.beginPath(); ctx.arc(0, 0, Math.max(1, rP + i * 14), (1 - k) * 3 + i, (1 - k) * 3 + i + 4.6); ctx.stroke();
+      }
+      ctx.restore();
     } else {
       // IRIDE a cerchio sul giocatore (come i cartoni del sabato mattina, legalmente distinta)
       const p0 = players[0];
@@ -6910,7 +7044,7 @@ function drawPlay(){
       ctx.strokeStyle = 'rgba(245,212,66,0.7)'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(icx, icy, ir, 0, Math.PI * 2); ctx.stroke();
     }
-    if (wipeT > 18) text(['Transizione: Scacchiera (licenza scaduta)','Transizione: Stella a 5 punte ★ (versione di prova)','Transizione: Veneziana — l\'ha scelta Abed','Transizione: Iride del sabato mattina (legalmente distinta)'][wipeKind], W/2, H/2 + 4, 14, '#f5d442', 'center');
+    if (wipeT > 18) text(['Transizione: Scacchiera (licenza scaduta)','Transizione: Stella a 5 punte ★ (versione di prova)','Transizione: Veneziana — l\'ha scelta Abed','Transizione: Iride del sabato mattina (legalmente distinta)','Transizione: Portale Interdimensionale™ (brevetto Abed)'][wipeKind], W/2, H/2 + 4, 14, '#f5d442', 'center');
   }
   if (menu) drawMenu();
 }
@@ -7287,6 +7421,7 @@ function update(){
     case 'ach': updateAch(); break;
     case 'incubi': updateIncubi(); break;
     case 'lvlsel': updateLvlSel(); break;
+    case 'wmap': if (OKJ() || jp('Escape') || jp('KeyX') || gpJP(0,'atk')){ state = 'pause'; sfx('text'); } break;
     case 'cheats': updateCheats(); break;
     case 'abilities': updateAbilities(); break;
     case 'cut': updateCut(); break;
@@ -7323,6 +7458,7 @@ function draw(){
     case 'ach': drawAch(); break;
     case 'incubi': drawIncubi(); break;
     case 'lvlsel': drawLvlSel(); break;
+    case 'wmap': drawWorldMap(false); break;
     case 'cheats': drawCheats(); break;
     case 'abilities': drawAbilities(); break;
     case 'cut':    drawCut(); break;
