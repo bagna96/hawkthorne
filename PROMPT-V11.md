@@ -110,6 +110,10 @@ mod élite né tiratori (solo loadLevel+notte) — da estendere quando capita;
   il mondo 7 è tornato SUO; nessun pattern che spamma.
 
 ### ☐ R5 — ROSTER PROFONDO (basta fotocopie) — la più grande, può spezzarsi in 2
+- (0) SBLOCCABILI HARRY POTTER (promemoria utente 12 lug, PRIORITÀ):
+  Ron/Hermione/Voldemort (+Draco se esiste) — fan-sheet DeviantArt con immagini
+  PROPOSTE all'utente prima di integrare, o cattura emulatore sua. Pipeline
+  guest esistente (GUESTS + needs/lockHint + sblocco da boss a tema).
 - (a) AUDIT: script che stampa la tabella id/base/pow/ult (verb+numeri) dei 41
   kit → individua i ~10 più fotocopia (bolt+nova+volley re-颜色ati).
 - (b) 4-6 VERBI/TWIST nuovi che cambiano le decisioni: es. 'clone' (bunshin veri
@@ -218,6 +222,14 @@ efficacia da giudicare dal vivo).
   in PAUSA e sulla minimappa (icona bersaglio).
 - ESAME: un giocatore che NON ha mai visto il gioco capisce i 4 tasti nei
   primi 2 minuti senza leggere tabelle? (test: utente o amico).
+
+### ☑ R11 — CAVALCATURE VERE ✅ FATTA (v21.2, commit af0a58f) — dal feedback 12 lug
+Scopa VOLA (fly 260, misurati 453px), drago fly 380 + scia di fuoco, salita
+1.7/cap -4.6; nuove: ROSPO (jmul 1.5 + slam), CARRELLO (spd 2.1, ram, jmul 0.8),
+ANNIE'S BOOBS (magnet 220); jmulOf sui 4 siti di salto; guida 'inSella';
+sagome procedurali. RISCHIO LOGGATO: il volo sorvola torri/cancelli nei livelli
+aperti in alto — tenere d'occhio i puzzle leva (M3/M5); se rompe, tetto di volo
+o soffitti nei punti-puzzle. Misure col taglio del salto: presa LUNGA nei test.
 
 ## §RESIDUI-EXTRA (non-review, quando capita o su richiesta)
 S-GRAFICA mondi 1-6 (texture/sfondi, DOPO R7); jutsu autentici extra (in R5c);
