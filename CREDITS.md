@@ -63,3 +63,4 @@ Tutti gli asset sono incorporati in base64 dentro `index.html` (vincolo single-f
 
 ## Musica e suoni
 - Interamente procedurali (WebAudio), nessun asset esterno.
+- **QR Code generator** — [kazuhikoarase/qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT, © 2009 Kazuhiko Arase) — QR del link d'invito co-op (v22.0). "QR Code" è marchio registrato di DENSO WAVE.
