@@ -275,6 +275,20 @@ right-align/banner/cartelli clampati, dead code potato, GROTTA DI OSSIDIANA sott
 Perf con texture: 0.4ms/frame. LEZIONE (verify-before-flag): il claim M5-scavalcabile
 era sbagliato — leggere TUTTA la funzione prima di flaggare, il soffitto era alla riga sopra.
 
+## ☑ v21.9 — CO-OP DA IPHONE (12 lug, feedback utente: "per scegliere la modalità servono i numeri")
+Menu 'online' a CURSORE (onlineSel, stick/✕/▢ — i Digit1/2 restano da tastiera);
+codici corti 'HK2.' = deflate-raw via CompressionStream + base64url (~670 char vs ~1800,
+legacy base64 accettato in ricezione; Safari <16.4 senza DecompressionStream → messaggio
+onesto); codeBox: INVIA… (navigator.share = share sheet iOS → WhatsApp diretto, solo con
+o.share) e INCOLLA (clipboard.readText, solo o.input). FIX PRE-ESISTENTE scovato dal
+collaudo E2E a due tab: host connesso ma ancora nei MENU → hostSnapshot leggeva lvl.name
+di null = crash a ogni frame (guardia !lvl in updateHostNet). Collaudato: handshake
+completo tra due tab (HK2 roundtrip, entrambi connessi, guest a select→guestplay);
+NON coperto: spawn P2 in play (il tab in background non pompa il heartbeat → drop 8s
+da banco di prova) — DA PROVARE su due dispositivi veri. Riferimenti: fippo/sdp-minimizer
+(minimizzazione a ~100 char, non adottata: munging fragile), MadLittleMods/sdp-blob (lz),
+magarcia/qwbp (QR 55-100 byte, idea futura).
+
 ## §RESIDUI-EXTRA (non-review, quando capita o su richiesta)
 S-GRAFICA: sfondi dipinti mondi 1-5 ✅ v21.7 (celle nrpg_battlebg 3×3, inset
 2px + taglio 16px barre a mezza larghezza, quantizzate 160 col, ~12KB l'una;

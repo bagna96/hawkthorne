@@ -438,12 +438,18 @@ function codeBox(o){   // { title, msg, value (mostra/copia), input (chiedi test
     const mkBtn = (label, fn, col) => { const b = document.createElement('button'); b.textContent = label;
       b.style.cssText = 'background:' + (col || '#1c1c3a') + ';color:#fff;border:1px solid #666;border-radius:6px;padding:9px 16px;font-family:inherit;font-size:13px;cursor:pointer;';
       b.onclick = fn; row.appendChild(b); };
+    if (o.value && o.share && navigator.share) mkBtn('INVIA…', async () => {   // v21.9: share sheet nativo (WhatsApp diretto su iPhone)
+      try { await navigator.share({ text: o.value }); } catch(e){}
+    }, '#27354a');
     if (o.value) mkBtn('COPIA', async () => {
       let okc = false;
       try { await navigator.clipboard.writeText(o.value); okc = true; } catch(e){}
       if (!okc){ try { ta.readOnly = false; ta.focus(); ta.setSelectionRange(0, ta.value.length); okc = document.execCommand('copy'); ta.readOnly = true; } catch(e){} }   // iOS: select() nudo non basta
       showToast(okc ? 'Copiato ✔' : 'Copia manuale: seleziona il testo');
     });
+    if (o.input && navigator.clipboard && navigator.clipboard.readText) mkBtn('INCOLLA', async () => {   // v21.9: niente long-press acrobatici
+      try { const t = await navigator.clipboard.readText(); if (t) ta.value = t.trim(); } catch(e){ showToast('Permesso appunti negato: incolla a mano nel riquadro'); }
+    }, '#27354a');
     if (o.input) mkBtn('ANNULLA', () => done(null));
     mkBtn(o.input ? 'CONFERMA' : 'OK', () => done(o.input ? ta.value.trim() : true), '#274a27');
     pane.append(h, msg, ta, row); wrap.appendChild(pane); document.body.appendChild(wrap);
@@ -3307,8 +3313,8 @@ function nameOf(id){ if (id === 'narr') return ''; if (NAMES[id]) return NAMES[i
 // ------------------------------------------------ STATO
 let state = 'tv';
 let tvT = 0;
-const GAME_VERSION = 'v21.8';    // REVIEW-FIX: loop chiusi (ambush/Trono), texture per bioma, bg_m6, Tigre col costume, 3 firme nuove, grotta M5
-let titleT = 0, titleSel = 0;
+const GAME_VERSION = 'v21.9';    // CO-OP DA IPHONE: menu online a cursore (via i tasti 1/2), codici corti HK2 (deflate), INVIA…/INCOLLA nel modal, fix host-nei-menu
+let titleT = 0, titleSel = 0, onlineSel = 0;
 let selIdx = 0, selMsg = '';
 let lvlIdx = 0, lvl = null;
 let players = [];
@@ -7305,6 +7311,31 @@ function netEncodeInput(){
   if (jp('Enter') || jp('Space') || jp('KeyZ') || gpJP(0,'ok')) b |= NETBITS.ok;   // v18.2: ✕ touch anche per l'ospite
   return b;
 }
+// v21.9: CODICI CORTI — deflate del SDP via CompressionStream (Safari 16.4+), ~65% più corti.
+// Prefisso 'HK2.': i codici legacy (base64 puro) restano accettati in ricezione.
+async function netPack(desc){
+  const raw = JSON.stringify(desc);
+  if (window.CompressionStream){
+    try {
+      const buf = await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer();
+      let s = ''; for (const b of new Uint8Array(buf)) s += String.fromCharCode(b);
+      return 'HK2.' + btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    } catch(e){}
+  }
+  return btoa(raw);
+}
+async function netUnpack(code){
+  code = (code || '').trim().replace(/\s+/g, '');
+  if (code.startsWith('HK2.')){
+    if (!window.DecompressionStream) throw new Error('serve un browser più recente per questo codice');
+    let b64 = code.slice(4).replace(/-/g, '+').replace(/_/g, '/');
+    b64 += '='.repeat((4 - b64.length % 4) % 4);
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const txt = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+    return JSON.parse(txt);
+  }
+  return JSON.parse(atob(code));
+}
 async function netSetup(role){
   net.role = role;
   net.pc = new RTCPeerConnection({ iceServers: [{ urls:'stun:stun.l.google.com:19302' }] });
@@ -7346,11 +7377,11 @@ async function netSetup(role){
     const offer = await net.pc.createOffer();
     await net.pc.setLocalDescription(offer);
     await iceDone();
-    const code = btoa(JSON.stringify(net.pc.localDescription));
+    const code = await netPack(net.pc.localDescription);
     try { if (navigator.clipboard) navigator.clipboard.writeText(code); } catch(e){}   // v18: COPIA CODICE automatica
-    await codeBox({ title:'CODICE 1 — mandalo all\'amico', msg:'Già copiato negli appunti (se il browser lo permette). WhatsApp, mail, come volete.', value: code });
-    const ans = await codeBox({ title:'CODICE 2 — dall\'amico', msg:'Incolla qui il CODICE 2 che ti rimanda l\'amico.', input:true });
-    if (ans){ try { await net.pc.setRemoteDescription(JSON.parse(atob(ans.trim()))); } catch(e){ showToast('Codice non valido. Riprovate con calma.'); netDrop(); } }
+    await codeBox({ title:'CODICE 1 — mandalo all\'amico', msg:'Usa INVIA… (WhatsApp, mail) o COPIA. Poi fatti rimandare il CODICE 2.', value: code, share:true });
+    const ans = await codeBox({ title:'CODICE 2 — dall\'amico', msg:'Incolla qui il CODICE 2 che ti rimanda l\'amico (tasto INCOLLA).', input:true });
+    if (ans){ try { await net.pc.setRemoteDescription(await netUnpack(ans)); } catch(e){ showToast('Codice non valido. Riprovate con calma.'); netDrop(); } }
     else netDrop();
   } else {
     net.pc.ondatachannel = ev => {
@@ -7358,16 +7389,16 @@ async function netSetup(role){
       net.ch.onopen = onOpen; net.ch.onmessage = onMsg;
       net.ch.onclose = () => netDrop();
     };
-    const off = await codeBox({ title:'CODICE 1 — dall\'host', msg:'Incolla il CODICE 1 che ti ha mandato chi ospita.', input:true });
+    const off = await codeBox({ title:'CODICE 1 — dall\'host', msg:'Incolla il CODICE 1 che ti ha mandato chi ospita (tasto INCOLLA).', input:true });
     if (!off){ netDrop(); return; }
     try {
-      await net.pc.setRemoteDescription(JSON.parse(atob(off.trim())));
+      await net.pc.setRemoteDescription(await netUnpack(off));
       const answer = await net.pc.createAnswer();
       await net.pc.setLocalDescription(answer);
       await iceDone();
-      const code2 = btoa(JSON.stringify(net.pc.localDescription));
+      const code2 = await netPack(net.pc.localDescription);
       try { if (navigator.clipboard) navigator.clipboard.writeText(code2); } catch(e){}   // v18: COPIA CODICE
-      await codeBox({ title:'CODICE 2 — rimandalo all\'host', msg:'Già copiato negli appunti (se il browser lo permette).', value: code2 });
+      await codeBox({ title:'CODICE 2 — rimandalo all\'host', msg:'Usa INVIA… o COPIA e rimandalo a chi ospita.', value: code2, share:true });
     } catch(e){ showToast('Codice non valido. Riprovate con calma.'); netDrop(); }
   }
   function iceDone(){
@@ -7413,6 +7444,7 @@ function hostSnapshot(){
 }
 function updateHostNet(){
   if (net.role !== 'host' || !net.open) return;
+  if (!lvl){ net.sendT++; return; }   // v21.9 FIX pre-esistente: host connesso ma ancora nei menu → hostSnapshot leggeva lvl.name di null (crash a ogni frame)
   if (net.hello && players.length === 1 && (state === 'play' || state === 'cut')){
     const cdef = charById(net.hello.id) || charById('abed');
     const p1 = players[0];
@@ -7531,13 +7563,23 @@ function drawGuest(){
 }
 function drawOnlineMenu(){
   ctx.fillStyle = '#0e0c2a'; ctx.fillRect(0, 0, W, H);
-  text('CO-OP ONLINE (P2P)', W/2, 130, 32, '#f5d442', 'center');
-  text('Niente server: vi scambiate due codici (WhatsApp, mail, come volete).', W/2, 170, 14, '#9a9ac0', 'center');
-  text('[1]  OSPITA una partita  (genera il CODICE 1)', W/2, 250, 20, '#5ae87a', 'center');
-  text('[2]  UNISCITI  (incolla il CODICE 1, genera il CODICE 2)', W/2, 300, 20, '#8ae8e8', 'center');
-  text('[X]  indietro', W/2, 370, 16, 'rgba(255,255,255,0.6)', 'center');
-  text('Ospita: scegli il personaggio e parti; l\'amico si vede assegnato il Giocatore 2.', W/2, 430, 13, 'rgba(255,255,255,0.5)', 'center');
-  if (net.open) text('✔ CONNESSO', W/2, 470, 16, '#5ae87a', 'center');
+  text('CO-OP ONLINE (P2P)', W/2, 120, 32, '#f5d442', 'center');
+  text('Niente server: vi scambiate due codici con INVIA… (WhatsApp, mail, come volete).', W/2, 158, 14, '#9a9ac0', 'center');
+  const voci = [
+    ['OSPITA una partita', 'genera il CODICE 1 e mandalo all\'amico', '#5ae87a'],
+    ['UNISCITI a un amico', 'incolla il suo CODICE 1, rimandagli il CODICE 2', '#8ae8e8'],
+    ['INDIETRO', '', 'rgba(255,255,255,0.7)'],
+  ];
+  for (let i = 0; i < voci.length; i++){
+    const y = 235 + i * 62, sel = i === onlineSel;
+    if (sel){ ctx.fillStyle = 'rgba(245,212,66,0.10)'; ctx.fillRect(W/2 - 300, y - 24, 600, 48);
+      text('▶', W/2 - 280, y + 2, 20, '#f5d442'); }
+    text(voci[i][0], W/2, y, 20, sel ? voci[i][2] : 'rgba(255,255,255,0.55)', 'center');
+    if (voci[i][1]) text(voci[i][1], W/2, y + 20, 12, sel ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.35)', 'center');
+  }
+  text(touchUI ? 'stick per scegliere · ✕ conferma · ▢ indietro' : '↑↓ scegli · INVIO/✕ conferma · X indietro', W/2, 440, 13, 'rgba(255,255,255,0.5)', 'center');
+  if (net.role === 'host' && !net.open) text('… in attesa del CODICE 2: la connessione parte da sola', W/2, 468, 13, '#f5d442', 'center');
+  if (net.open) text(net.role === 'host' ? '✔ OSPITE CONNESSO — premi ✕/INVIO e scegli il personaggio' : '✔ CONNESSO', W/2, 468, 15, '#5ae87a', 'center');
 }
 
 // ------------------------------------------------ LOOP
@@ -7623,12 +7665,20 @@ function update(){
       if (titleSel >= items.length) titleSel = 0;
       if (jp('Enter') || jp('Space') || jp('KeyZ') || gpJP(0,'ok')) items[titleSel].act();
       break; }
-    case 'online':
-      if (jp('Digit1')){ netSetup('host'); sfx('coin'); }
+    case 'online': {
+      // v21.9: menu a CURSORE — su iPhone i tasti 1/2 non esistono (bug segnalato dall'utente)
+      if (net.role === 'host' && net.open && OKJ()){ state = 'select'; sfx('coin'); break; }
+      if (jp('ArrowUp') || jp('KeyW') || gpJP(0,'jump'))  { onlineSel = (onlineSel + 2) % 3; sfx('text'); }
+      if (jp('ArrowDown') || jp('KeyS') || gpJP(0,'down')){ onlineSel = (onlineSel + 1) % 3; sfx('text'); }
+      if (OKJ()){
+        if (onlineSel === 0){ netSetup('host'); sfx('coin'); }
+        else if (onlineSel === 1){ netSetup('guest'); sfx('coin'); }
+        else { state = 'title'; sfx('text'); }
+      }
+      if (jp('Digit1')){ netSetup('host'); sfx('coin'); }      // scorciatoie legacy da tastiera
       if (jp('Digit2')){ netSetup('guest'); sfx('coin'); }
       if (jp('KeyX') || jp('Escape')){ state = 'title'; }
-      if (net.role === 'host' && net.open && OKJ()){ state = 'select'; sfx('coin'); }
-      break;
+      break; }
     case 'select': {
       selMsg = '';
       const cols = 7;
